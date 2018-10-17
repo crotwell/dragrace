@@ -1,0 +1,106 @@
+
+
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'eclipse' 
+apply plugin: 'project-report'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+group = 'edu.sc.seis'
+version = '0.1'
+
+repositories {
+    flatDir {
+      name 'localXBee'
+      dirs 'lib'
+    }
+    maven {
+            url 'file:/Users/crotwell/.m2/repository'
+//            url "https://plugins.gradle.org/m2/"
+        }
+    maven {
+      url "http://repository.jboss.org/nexus/content/groups/public-jboss/"
+    }
+    ivy {
+        name "nrjavaserial"
+        artifactPattern 'http://nrjavaserial.googlecode.com/files/[module]-[revision].[ext]'
+//http://nrjavaserial.googlecode.com/files/nrjavaserial-3.8.4.jar
+    }
+    mavenCentral()
+}
+
+dependencies {
+    compile "edu.sc.seis:seisFile:2.0.0-SNAPSHOT"
+    compile "com.rapplogic:xbee-api:0.9.3"
+    compile "org.rxtx:rxtx:2.1.7"
+    compile "com.martiansoftware:jsap:2.1"
+    compile "log4j:log4j:1.2.16"
+}
+
+def dirName = project.name+'-'+version
+
+def binDistFiles = copySpec {
+
+    from('build/output') {
+        fileMode=0755
+        include('bin/**')
+    }
+    from('build/output') {
+        include('lib/**')
+    }
+    from('lib') {
+        include('**')
+        into('lib')
+    }
+}
+
+def distFiles = copySpec {
+    with(binDistFiles)
+    from('.') {
+        include('src/**')
+        include('lib/**')
+        include('gradleWrapper/**')
+        include('gradlew')
+        include('gradlew.bat')
+    }
+}
+
+
+task tarDist(type: Tar, dependsOn: ['explodeDist']) {
+    group = 'dist'
+    compression = Compression.GZIP
+    into(dirName) {
+        with distFiles
+    }
+}
+
+task explodeBin(type: Sync, dependsOn: ['makeScript']) {
+    group = 'dist'
+    with binDistFiles
+    into file("$buildDir/explode")
+}
+task explodeDist(type: Sync, dependsOn: ['explodeBin', 'wrapper']) {
+    group = 'dist'
+    with distFiles
+    into file("$buildDir/explode")
+}
+
+def getDExtras() {
+    return [ 'java.library.path':'lib' ]
+}
+
+    task copyToLib(type: CopyToLib) {}
+
+task makeScript(dependsOn: copyToLib) << { task ->
+    group = 'build'
+    def dExtras = getDExtras()
+    def doBat = true
+    ScriptBuilder.create('horseyTime', 'org.crotwell.horseyTime.HorseyTime', task.project, dExtras:dExtras, bat:false)
+    ScriptBuilder.create('profilehorseyTime', 'org.crotwell.horseyTime.HorseyTime', task.project, dExtras:dExtras, bat:false, yourkit:true)
+    ScriptBuilder.create('postprocess', 'org.crotwell.horseyTime.PostProcessAcceleration', task.project, dExtras:dExtras, bat:false)
+}
+
+assemble.dependsOn(tarDist)
+
