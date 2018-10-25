@@ -58,7 +58,6 @@ var parseAndPlot = function(arrayB, svgDiv) {
           seis.y[n] = seis.y[n]/4096*9.80665;
         }
         seis.yUnit = 'm/s^2';
-        inst =
       }
     }
     //let svgParent = wp.d3.select("div.seismograms");
