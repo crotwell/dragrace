@@ -19,6 +19,7 @@ public class PostProcessAcceleration {
         HorseyTime.loadPropsConfigLogging();
         if (args.length < 2) {
             System.out.println("Usage: postProcess.sh accerationfilename staCode");
+            return;
         }
         File inFile = new File(args[0]);
         if ( ! inFile.isFile()) {
@@ -28,6 +29,8 @@ public class PostProcessAcceleration {
         String staCode = "UKNWN";
         if (args.length > 1) {
             staCode = args[1];
+        } else {
+          System.out.println("no station given, using UNKWN");
         }
         int loop=0;
         BufferedInputStream in = new BufferedInputStream(new FileInputStream(inFile));
