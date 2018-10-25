@@ -29,7 +29,7 @@ import edu.sc.seis.seisFile.mseed.DataRecord;
 import edu.sc.seis.seisFile.mseed.SeedFormatException;
 
 public class MiniseedGenerator implements TimeSeriesListener {
-    
+
     public MiniseedGenerator(Map<String, String> stationCodeMap) {
         this.stationCodeMap = stationCodeMap;
         logger.info("MiniseedGenerator constructor");
@@ -51,7 +51,7 @@ public class MiniseedGenerator implements TimeSeriesListener {
             e.printStackTrace();
         }
     }
-    
+
     public String createKey(String staCode, int chanIndex) {
         return staCode+"_"+chanIndex;
     }
@@ -147,7 +147,7 @@ public class MiniseedGenerator implements TimeSeriesListener {
         btime.sec = zdt.getSecond();
         return btime;
     }
-    
+
     private void sendDataRecord(DataRecord current, String key) {
         String sta = current.getHeader().getStationIdentifier().trim();
         String chan = current.getHeader().getChannelIdentifier();
@@ -156,7 +156,7 @@ public class MiniseedGenerator implements TimeSeriesListener {
         DataOutputStream dos = null;
         try {
         if (filenameByChan.get(key) != filename) {
-            if (dosByChan.get(key) != null) { 
+            if (dosByChan.get(key) != null) {
                 try {
                     dosByChan.get(key).close();
                 } catch (IOException e) {
@@ -177,7 +177,7 @@ public class MiniseedGenerator implements TimeSeriesListener {
             logger.info("sending... samp period="+(Duration.between(current.getStartBtime().toInstant(), current.getPredictedNextStartBtime().toInstant()).dividedBy(current.getHeader().getNumSamples()))+" "+current.getHeader().getNumSamples());
             //current.writeASCII(printer, "  ");
             //printer.flush();
-            
+
             current.write(dos);
             //logger.info("Write data record: "+current.getHeader().getDataBlocketteOffset());
         } catch (FileNotFoundException e) {
@@ -189,7 +189,7 @@ public class MiniseedGenerator implements TimeSeriesListener {
         } finally {
         }
     }
-    
+
     public void flush() {
         for (String key : stationCodeMap.keySet()) {
             DataRecord current;
@@ -204,19 +204,25 @@ public class MiniseedGenerator implements TimeSeriesListener {
     }
 
     public DataRecord createDataRecord(int chanIndex, TimeSeriesPacket tsp) throws SeedFormatException {
-        String staCode = "UNKNW";
+        String staCode = null;
         if (stationCodeMap != null) {
-            staCode = stationCodeMap.get(tsp.getXBeeResponse().getRemoteAddress64().toString());
-            if (staCode == null) {
-                staCode = "UNKNW";
+            if (tsp.getXBeeResponse() != null) {
+              // real xbee
+              staCode = stationCodeMap.get(tsp.getXBeeResponse().getRemoteAddress64().toString());
             }
+        }
+        if (staCode == null && tsp.getStaCode() != null) {
+            staCode = tsp.getStaCode();
+        }
+        if (staCode == null) {
+            staCode = "UNKNW";
         }
         DataHeader dh = new DataHeader(0, 'D', false);
         dh.setNetworkCode(networkCode);
         dh.setStationIdentifier(staCode);
         dh.setLocationIdentifier(locationCode);
         dh.setChannelIdentifier(channelCodes[chanIndex]);
-        dh.setNumSamples((short)tsp.getNumSamples()); 
+        dh.setNumSamples((short)tsp.getNumSamples());
         dh.setSampleRate(tsp.getNominalSPS()); // will set actual in B100
         Btime btime = getBtime(tsp);
         Btime start = new Btime(getStartInstant(tsp));
@@ -233,7 +239,7 @@ public class MiniseedGenerator implements TimeSeriesListener {
         //logger.info("createDataRecord blockette offset=" +dh.getDataBlocketteOffset()+"  "+b1000.getDataRecordLength());
         return dr;
     }
-    
+
     public Instant getStartInstant(TimeSeriesPacket tsp) {
         Btime btime = getBtime(tsp);
         double seconds = (tsp.getNumSamples()-1)/tsp.getSPS();
@@ -242,7 +248,7 @@ public class MiniseedGenerator implements TimeSeriesListener {
         //logger.debug("getStartInstant   tsp: "+btime+"  dur "+dur+"  start: "+out);
         return out;
     }
-    
+
     public DataRecord combine(DataRecord current, int[] appendData) throws SeedFormatException {
         byte[] curData = current.getData();
         byte[] appendBytes = CODEC.encodeAsBytes(intToShort(appendData));
@@ -260,7 +266,7 @@ public class MiniseedGenerator implements TimeSeriesListener {
         //logger.info("combine blockette offset=" +current.getHeader().getDataBlocketteOffset());
         return current;
     }
-    
+
     public static short[] intToShort(int[] data) {
         short[] out = new short[data.length];
         for (int i = 0; i < out.length; i++) {
@@ -268,32 +274,32 @@ public class MiniseedGenerator implements TimeSeriesListener {
         }
         return out;
     }
-    
+
     public static final Codec CODEC = new Codec();
 
     public static final byte BIG_ENDIAN = (byte)1;
 
     public static final byte MSEED_512 = (byte)9;
-    
+
     public static final byte MSEED_4096 = (byte)12;
 
     public static final int DATA_HEADER_SIZE = 48;
-    
+
     public static final int MAX_SHORTS_IN_DR = (512 - DATA_HEADER_SIZE - Blockette1000.B1000_SIZE - Blockette100.B100_SIZE) / 2;
-    
+
     File dataDir;
 
     Map<String, DataRecord> dataRecordCache = new HashMap<String, DataRecord>();
-    
+
     String networkCode = "CO";
     Map<String, String> stationCodeMap;
     String locationCode = "00";
     String[] channelCodes = { "HNX", "HNY", "HNZ" };
-    
+
     Map<String, DataOutputStream> dosByChan = new HashMap<String, DataOutputStream>();
-    
+
     Map<String, String> filenameByChan = new HashMap<String, String>();
-    
+
     PrintWriter printer = new PrintWriter(new OutputStreamWriter(System.out));
 
     private static final Logger logger = Logger.getLogger(MiniseedGenerator.class);
