@@ -149,6 +149,7 @@ public class MiniseedGenerator implements TimeSeriesListener {
     }
 
     private void sendDataRecord(DataRecord current, String key) {
+        flushedRecordEnd = key+" "+current.getLastSampleTime();
         String sta = current.getHeader().getStationIdentifier().trim();
         String chan = current.getHeader().getChannelIdentifier();
         int hour = current.getStartBtime().hour;
@@ -191,16 +192,36 @@ public class MiniseedGenerator implements TimeSeriesListener {
     }
 
     public void flush() {
+        if (stationCodeMap == null) {
+          return;
+        }
         for (String key : stationCodeMap.keySet()) {
             DataRecord current;
             if (dataRecordCache.get(key) == null) {
                 // nothing to flush
             } else {
                 current = dataRecordCache.get(key);
+                flushedRecordEnd = current.getLastSampleTime();
                 dataRecordCache.put(key, null);
                 sendDataRecord(current, key);
             }
         }
+    }
+
+    public void printCurrentRecordEndTimes() {
+      if (stationCodeMap == null) {
+        System.out.println("last flushed record end "+flushedRecordEnd);
+        return;
+      }
+      for (String key : stationCodeMap.keySet()) {
+          DataRecord current;
+          if (dataRecordCache.get(key) == null) {
+              // nothing to print
+          } else {
+              current = dataRecordCache.get(key);
+              System.out.println(key+" record end "+current.getLastSampleTime());
+          }
+      }
     }
 
     public DataRecord createDataRecord(int chanIndex, TimeSeriesPacket tsp) throws SeedFormatException {
@@ -295,6 +316,8 @@ public class MiniseedGenerator implements TimeSeriesListener {
     Map<String, String> stationCodeMap;
     String locationCode = "00";
     String[] channelCodes = { "HNX", "HNY", "HNZ" };
+
+    String flushedRecordEnd = null;
 
     Map<String, DataOutputStream> dosByChan = new HashMap<String, DataOutputStream>();
 
