@@ -33,6 +33,7 @@ pin = 18  # GPIO interrupt
 MAX_SAMPLES = -1
 #MAX_SAMPLES = 1
 
+doXbee = False
 
 
 MAC_TTY = "/dev/tty.usbserial-DN04R2D1"
@@ -50,8 +51,8 @@ elif pi_usb_tty_file.exists():
 elif pi_s_tty_file.exists():
     port = PI_S_TTY
 else:
-    print("no tty file found")
-    sys.exit(1)
+    print("no tty file found looking for xbee, disable send")
+    doXbee = False
 
 # Initialize I2C bus.
 i2c = busio.I2C(board.SCL, board.SDA)
@@ -69,9 +70,9 @@ sensor.range = adafruit_mma8451.RANGE_2G  # +/- 2G
 # Optionally change the data rate from its default of 800hz:
 #sensor.data_rate = adafruit_mma8451.DATARATE_800HZ  #  800Hz (default)
 #sensor.data_rate = adafruit_mma8451.DATARATE_400HZ  #  400Hz
-#sensor.data_rate = adafruit_mma8451.DATARATE_200HZ  #  200Hz
+sensor.data_rate = adafruit_mma8451.DATARATE_200HZ  #  200Hz
 #sensor.data_rate = adafruit_mma8451.DATARATE_100HZ  #  100Hz
-sensor.data_rate = adafruit_mma8451.DATARATE_50HZ   #   50Hz
+#sensor.data_rate = adafruit_mma8451.DATARATE_50HZ   #   50Hz
 #sensor.data_rate = adafruit_mma8451.DATARATE_12_5HZ # 12.5Hz
 #sensor.data_rate = adafruit_mma8451.DATARATE_6_25HZ # 6.25Hz
 #sensor.data_rate = adafruit_mma8451.DATARATE_1_56HZ # 1.56Hz
@@ -187,7 +188,9 @@ def do_work(now, status, samplesAvail, data):
     dataPacket[9:11] = int(round(now.microsecond/1000)).to_bytes(2, byteorder='big')
     dataPacket[11] = sps
     dataPacket[dataOffset:dataOffset+len(data)] = data
-    try:
+    sendToFile(now, dataPacket)
+    if doXbee:
+      try:
         with xbeeMutex:
             device, remote = getXBee()
             if (device is not None and remote is not None and startACQ):
@@ -196,25 +199,24 @@ def do_work(now, status, samplesAvail, data):
                 print("no startACQ")
             else:
                 print("xbee device or remote is None, skipping send packet")
-    except Exception as eee:
+      except Exception as eee:
         print("unable to send: {0}".format(eee))
-    sentSamples += samplesAvail
-    #if sentSamples % 6000 == 0:
-    if loops % 18 == 0:
-        print("sent data async samplesSent={0:d} of {1:d} {2}".format(sentSamples, totalSamples, now.strftime("%Y-%m-%d %H:%M:%S")))
-        #print("{0:d} {1:d} {2:d}:{3:d}:{4:d}.{5:3.3f}    sps={6:d}  npts={7:d}".format(now.year, now.timetuple().tm_yday, now.hour, now.minute, now.second, now.microsecond/1000, sps, samplesAvail));
-        #xData, yData, zData = sensor.demux(data)
-        #for i in range(len(xData)):
-        #    print("  {0:d} {1:d} {2:d}".format(xData[i], yData[i], zData[i]))
-    if sentSamples > 1000000:
-        sentSamples = 0
-    sendToFile(now, dataPacket)
+      sentSamples += samplesAvail
+      #if sentSamples % 6000 == 0:
+      if loops % 18 == 0:
+          print("sent data async samplesSent={0:d} of {1:d} {2}".format(sentSamples, totalSamples, now.strftime("%Y-%m-%d %H:%M:%S")))
+          #print("{0:d} {1:d} {2:d}:{3:d}:{4:d}.{5:3.3f}    sps={6:d}  npts={7:d}".format(now.year, now.timetuple().tm_yday, now.hour, now.minute, now.second, now.microsecond/1000, sps, samplesAvail));
+          #xData, yData, zData = sensor.demux(data)
+          #for i in range(len(xData)):
+          #    print("  {0:d} {1:d} {2:d}".format(xData[i], yData[i], zData[i]))
+      if sentSamples > 1000000:
+          sentSamples = 0
 
 def getXBee():
     global port
     global baud
     global device, remote
-    if (device is None):
+    if (doXbee and device is None):
         device, remote = initXBee(port, baud)
     if remote is None:
         controller16Addr = XBee16BitAddress.COORDINATOR_ADDRESS
@@ -311,7 +313,7 @@ try:
     sps = getSps()
     gain = getGain()
 
-    if device == None:
+    if doXbee and device == None:
         try:
             with xbeeMutex:
                 device, remote = getXBee()
