@@ -5,7 +5,7 @@
 import time
 import queue
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta
 import sys, os
 from pathlib import Path
 #import logging
@@ -20,6 +20,8 @@ from digi.xbee.devices import XBeeDevice
 #from digi.xbee.devices import ZigBeeDevice
 from digi.xbee.models.address import XBee16BitAddress
 from digi.xbee.exception import TimeoutException
+
+import simpleMiniseed
 
 xbeeMutex = threading.Lock()
 
@@ -76,6 +78,11 @@ sensor.data_rate = adafruit_mma8451.DATARATE_200HZ  #  200Hz
 #sensor.data_rate = adafruit_mma8451.DATARATE_12_5HZ # 12.5Hz
 #sensor.data_rate = adafruit_mma8451.DATARATE_6_25HZ # 6.25Hz
 #sensor.data_rate = adafruit_mma8451.DATARATE_1_56HZ # 1.56Hz
+
+sta="UNKNW"
+net = "XX"
+loc = "00"
+chanList = [ "HNX", "HNY", "HNZ" ]
 
 def getSps():
     sps = 1
@@ -189,6 +196,7 @@ def do_work(now, status, samplesAvail, data):
     dataPacket[11] = sps
     dataPacket[dataOffset:dataOffset+len(data)] = data
     sendToFile(now, dataPacket)
+    sendToMseed(now, status, samplesAvail, data)
     if doXbee:
       try:
         with xbeeMutex:
@@ -233,6 +241,26 @@ def sendToFile(now, dataPacket):
             curFile.close()
         curFile = open(filename, "ab")
     curFile.write(dataPacket)
+
+def sendToMseed(now, status, samplesAvail, data):
+    global staString
+    global sta
+    global net
+    global loc
+    global chanList
+    dataIdx = 0
+    start = now - timedelta(seconds=1.0*(samplesAvail-1)/sps)
+    for chan in chanList:
+        chanData = []
+        for i in range(samplesAvail):
+            chanData.append( data[3*i+dataIdx] )
+        filename = "{}.{}_{}.mseed".format(sta, chan, start.strftime("%Y-%m-%d_%H"))
+        msh = simpleMiniseed.createMiniseedHeader(net, sta, loc, chan, start, samplesAvail, sps)
+        msr = simpleMiniseed.createMiniseedRecord(msh, chanData)
+        msFile = open(filename, "ab")
+        msFile.write(msr)
+        msFile.close()
+        dataIdx+=1
 
 def xbee_status_callback(status):
     print("Modem status: %s" % status.description)
@@ -298,6 +326,14 @@ def initXBee(port, baud):
         print("Could not find the remote device {0}".format(controller16Addr))
     print("init, nodeId= {0}".format(device.get_node_id()))
     return device, remote_device
+
+def getHost():
+    with open("/etc/hostname") as hF:
+        hostname = hF.read()
+    return hostname.strip()
+
+sta = getHost()[0:5].upper()
+print("set station code to {}".format(sta))
 
 dataQueue = queue.Queue()
 infoQueue = queue.Queue()
