@@ -93,13 +93,15 @@ def getDExtras() {
 
     task copyToLib(type: CopyToLib) {}
 
-task makeScript(dependsOn: copyToLib) << { task ->
+task makeScript(dependsOn: copyToLib)  {
+  doLast() { 
     group = 'build'
     def dExtras = getDExtras()
     def doBat = true
     ScriptBuilder.create('horseyTime', 'org.crotwell.horseyTime.HorseyTime', task.project, dExtras:dExtras, bat:false)
     ScriptBuilder.create('profilehorseyTime', 'org.crotwell.horseyTime.HorseyTime', task.project, dExtras:dExtras, bat:false, yourkit:true)
     ScriptBuilder.create('postprocess', 'org.crotwell.horseyTime.PostProcessAcceleration', task.project, dExtras:dExtras, bat:false)
+  }
 }
 
 assemble.dependsOn(tarDist)
