@@ -4,12 +4,12 @@ After=multi-user.target
 [Service]
 User=pi
 Group=pi
-WorkingDirectory=/home/pi/dragrace/sensorNode
+WorkingDirectory=/home/pi/mma8451
 StandardOutput=inherit
 StandardError=inherit
-Restart=always
+Restart=no
 Type=idle
-ExecStart=/home/pi/dragrace/sensorNode/startACQ.sh
+ExecStart=/home/pi/mma8451/startACQ.sh
 
 [Install]
 WantedBy=default.target

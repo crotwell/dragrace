@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="utf-8" />
+
+   <link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+
+   <h3>Huddle Test </h3>
+
+
+ <form action="">
+   <div>
+     <label>Stations</label><input name="sta" type="text" value="3605,PI01,PI03,PI04,PI06,PI07">
+   </div>
+   <div>
+     <label>Year</label><input name="year" type="text" value="2019">
+     <label>Month</label><input name="month" type="text" value="2">
+     <label>Day</label><input name="day" type="text" value="1">
+     <label>Hour</label> <input name="hour" type="text" value="19">
+     <label>Min</label> <input name="min" type="text" value="40">
+     <label>Sec</label> <input name="sec" type="text" value="0">
+     <input type="checkbox" name="doNow" value="doNow" id="doNow" checked=true ><label for="doNow">Now</label>
+   </div>
+   <div>
+   <label>DurMin</label> <input name="dur" type="text" value="10">
+    <label>Channels</label><input name="channels" type="text" value="HNZ,HNX,HNY">
+  </div>
+  <p>
+    <input type="checkbox" name="doRmean" value="rmean" id="rmean"><label for="rmean">RMean</label>
+    <input type="checkbox" name="doGain" value="gain" id="gain"><label for="gain">Gain</label>
+    <input type="checkbox" name="doTen" value="ten" id="ten"><label for="ten">x10</label>
+    <input type="checkbox" name="doOverlay" value="overlay" id="overlay"><label for="overlay">Overlay</label>
+  </p>
+    <button type="button" id="render" onClick="loadData()">Load</button>
+ </form>
+
+<div class="fail">
+</div>
+
+<h3>Seismograms <span id="start"></span> to <span id="end"></span></h3>
+<p id="error"></p>
+<div class="seismograms" >
+</div>
+
+<div id="minmax"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/6.26.0/polyfill.min.js"></script>
+<script src="seisplotjs_2.0.0-alpha.1_standalone.js"></script>
+<script src="huddle.js"></script>
+</body>
+</html>
