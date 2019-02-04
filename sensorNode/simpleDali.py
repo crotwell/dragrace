@@ -16,12 +16,14 @@ class DataLink:
 
     @asyncio.coroutine
     def send(self, header, data):
-        h = header.encode()
-        pre = "DL{:d}".format(len(h))
+        h = header.encode('UTF-8')
+        pre = "DL"
         if self.reader is None or self.writer is None:
             yield from self.createDaliConnection()
-        self.writer.write(pre.encode())
-        print("send pre {}".format(pre))
+        self.writer.write(pre.encode('UTF-8'))
+        lenByte = len(h).to_bytes(1, byteorder='big', signed=False)
+        self.writer.write(lenByte)
+        print("send pre {} as {}{:d}".format(pre, pre.encode('UTF-8'),lenByte[0]))
         self.writer.write(h)
         print("send head {}".format(header))
         if(data):
@@ -33,22 +35,34 @@ class DataLink:
     @asyncio.coroutine
     def parseResponse(self):
         pre = yield from self.reader.readexactly(3)
-        if pre[0] == b'D' and pre[1] == b'L':
+        # D ==> 68, L ==> 76
+        if pre[0] == 68 and pre[1] == 76:
             hSize = pre[2]
         else:
-            print("did not receive DL from read pre")
+            print("did not receive DL from read pre {:d}{:d}{:d}".format(pre[0],pre[1],pre[2]))
             self.close()
             raise Exception("did not receive DL from read pre")
-        h = yield from self.reader.readexactly(hSize).decode("utf-8")
+        h = yield from self.reader.readexactly(hSize)
+        header = h.decode("utf-8")
         type=None
         value=None
         message=None
-        if (h.startswith("OK ") or h.startswith("ERROR ")):
-            s = h.split(" ")
+        if header.startswith("ID "):
+            s = header.split(" ")
+            type = s[0]
+            value = ""
+            message = header[3:]
+            return DaliResponse(type, value, message)
+        elif (header.startswith("INFO ") or header.startswith("OK ") or header.startswith("ERROR ")):
+            s = header.split(" ")
             type = s[0]
             value = s[1]
             dSize = int(s[2])
-            message = yield from self.reader.readexactly(dSize)
+            m = yield from self.reader.readexactly(dSize)
+            message = m.decode("utf-8")
+            return DaliResponse(type, value, message)
+        else:
+            print("Header does not start with OK or ERROR: {}".format(header))
         return DaliResponse(type, value, message)
 
     def write(self, streamid, hpdatastart, hpdataend, flags, data):
@@ -72,12 +86,16 @@ class DataLink:
         id = yield from self.parseResponse()
         return id
 
+    def info(self, type):
+        header = "INFO {}".format(type)
+        yield from self.send(header, None)
+        response = yield from self.parseResponse()
+        return response
+
     def close(self):
         if self.writer is not None:
             self.writer.close()
             self.writer = None
-        if self.reader is not None:
-            self.reader.close()
             self.reader = None
 
     def reconnect(self):
@@ -91,5 +109,5 @@ class DaliResponse:
         self.value=value
         self.message = message
 
-    def toString():
+    def toString(self):
         return "type={} value={} message={}".format(self.type, self.value, self.message)
