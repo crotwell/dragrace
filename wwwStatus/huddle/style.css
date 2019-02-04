@@ -8,6 +8,10 @@ canvas.seismograph {
   width: 100%;
 }
 
+div.fftplot svg {
+  width="600px";
+  height="500px";
+}
 div.particleMotion {
 }
 .predicted polygon {

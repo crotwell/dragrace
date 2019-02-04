@@ -20,10 +20,15 @@ fdsnstation.RSVP.on('error', function(reason) {
   console.assert(false, reason);
 });
 
+const EPISENSOR_Q330_SENSITIVITY = new seisplotjs.model.InstrumentSensitivity(427692.8, 0, "m/s/s", "count")
+const MMA8451_SENSITIVITY = new seisplotjs.model.InstrumentSensitivity(4096.0, 0, "m/s/s", "count")
+
 function loadData() {
   let hash = {}
   hash.svgParent = seisplotjs.d3.select("div.seismograms");
   hash.svgParent.selectAll('div').remove();
+  seisplotjs.d3.select("div.fftplot").selectAll("svg").remove();
+  seisplotjs.d3.select("#minmax").selectAll("li").remove();
   hash.stations = document.getElementsByName('sta')[0].value.split(',');
   // dayOfY and hour need 0 if not 3/2 digits
   hash.doNow = document.getElementsByName('doNow')[0].checked;
@@ -32,12 +37,12 @@ function loadData() {
   hash.day = document.getElementsByName('day')[0].value;
   hash.hour = document.getElementsByName('hour')[0].value;
   hash.min = parseInt(document.getElementsByName('min')[0].value, 0);
-  hash.sec = parseInt(document.getElementsByName('sec')[0].value, 0);
+  hash.sec = parseFloat(document.getElementsByName('sec')[0].value, 0);
   hash.durMin = parseFloat(document.getElementsByName('dur')[0].value, 10);
   hash.channels = document.getElementsByName('channels')[0].value.split(',');
   hash.doRmean = document.getElementsByName('doRmean')[0].checked;
   hash.doGain = document.getElementsByName('doGain')[0].checked;
-  hash.doTen = document.getElementsByName('doTen')[0].checked;
+  hash.doFFT = document.getElementsByName('doFFT')[0].checked;
   hash.doOverlay = document.getElementsByName('doOverlay')[0].checked;
   let clockOffset = 0;
 
@@ -53,8 +58,8 @@ function loadData() {
     start.date(hash.day);
     start.hour(hash.hour);
     start.minute(hash.min);
-    start.second(hash.sec);
-    start.millisecond(0);
+    start.second(0);
+    start.millisecond(hash.sec*1000);
     end = null;
   }
   hash.timeWindow = seisplotjs.fdsndataselect.calcStartEndDates(start, end, hash.durMin*60, clockOffset);
@@ -80,14 +85,47 @@ function loadData() {
           });
     }
   }
-
+  let protocol = 'http:';
+  if ("https:" == document.location.protocol) {
+    protocol = 'https:'
+  }
+  const host = document.location.hostname;
+  let subdir = "mseed"
+  if (host === 'www.seis.sc.edu') {
+    subdir = "dragrace";
+  }
   let mseedQ = new seisplotjs.seedlink.MSeedArchive(
-    "http://dragrace.seis.sc.edu/mseed",
+    `${protocol}//${host}/${subdir}`,
     "%n/%s/%Y/%j/%n.%s.%l.%c.%Y.%j.%H");
   hash.traceMap = mseedQ.loadTraces(hash.chanTR);
   return seisplotjs.RSVP.hash(hash)
   .then(hash => {
-
+    if (hash.doGain) {
+      let outMap = new Map()
+      hash.traceMap.forEach((value, key) => {
+        // 2G for MMA8451 (14 bit) => gain = 4096 counts per m/s/s
+        let instSensitivity = MMA8451_SENSITIVITY;
+        if (key.startsWith("CO")) {
+          // assume episensor, 2G => gain = 427692.8 counts per m/s/s
+          instSensitivity = EPISENSOR_Q330_SENSITIVITY;
+        }
+        let trace = seisplotjs.filter.gainCorrect(instSensitivity, value)
+        outMap.set(key, trace);
+      });
+      hash.traceMap = outMap;
+    }
+    return hash;
+  }).then(hash => {
+    if (hash.doRmean) {
+      let outMap = new Map()
+      hash.traceMap.forEach((value, key) => {
+        let trace = seisplotjs.filter.rMean(value)
+        outMap.set(key, trace);
+      });
+      hash.traceMap = outMap;
+    }
+    return hash;
+  }).then(hash => {
       if (hash.traceMap.size == 0) {
         hash.svgParent.append("p").text("No Data Found").style("color", "red");
         console.log("data from miniseedArchive found none");
@@ -116,24 +154,40 @@ function loadData() {
       } else {
 
         let seisPlotList = []
-        hash.traceMap.forEach((value, key) => {
+        hash.traceMap.forEach((trace, key) => {
+          if (hash.doFFT) {
+            let plotDiv = hash.svgParent.append("div");
+            let trimTrace = trace.trim(hash.timeWindow);
+            let dataArray = trimTrace.seisArray.reduce((acc, s) => {
+                return acc.concat(s.y);
+              }, []);
+            let fftOut = seisplotjs.filter.calcDFT(dataArray, dataArray.length );
+            wp.createSimpleFFTPlot(fftOut, "div.fftplot", trace.sampleRate);
 
-          let plotDiv = hash.svgParent.append("div");
-          plotDiv.style("position", "relative");
-          plotDiv.style("width", "100%");
-          plotDiv.style("height", "450px");
-          let seisPlotConfig = new wp.SeismographConfig();
-          seisPlotConfig.disableWheelZoom = false;
-          seisPlotConfig.doRMean = hash.doRMean;
-          seisPlotConfig.doGain = hash.doGain;
-          seisPlotConfig.xLabel = key;
-          let seisPlot = new wp.CanvasSeismograph(plotDiv,
-              seisPlotConfig,
-              value, hash.timeWindow.start, hash.timeWindow.end);
-          seisPlot.draw();
-          seisPlotList.push(seisPlot);
+          } else {
+            let plotDiv = hash.svgParent.append("div");
+            plotDiv.style("position", "relative");
+            plotDiv.style("width", "100%");
+            plotDiv.style("height", "450px");
+            let seisPlotConfig = new wp.SeismographConfig();
+            seisPlotConfig.disableWheelZoom = false;
+            seisPlotConfig.doRMean = hash.doRMean;
+            seisPlotConfig.doGain = hash.doGain;
+            seisPlotConfig.xLabel = key;
+            let seisPlot = new wp.CanvasSeismograph(plotDiv,
+                seisPlotConfig,
+                trace, hash.timeWindow.start, hash.timeWindow.end);
+            seisPlot.draw();
+            seisPlotList.push(seisPlot);
+          }
         });
       }
-
+      return hash;
+    }).then(hash => {
+      hash.traceMap.forEach((trace, key) => {
+        minMaxMean = seisplotjs.filter.minMaxMean(trace);
+        seisplotjs.d3.select("#minmax").append("li").text(`${key}   ${minMaxMean.min}     ${minMaxMean.max}      ${minMaxMean.mean}`);
+      });
+      return hash;
   });
 }
