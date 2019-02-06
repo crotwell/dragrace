@@ -26,10 +26,10 @@ def doTest(loop):
     dali = simpleDali.DataLink(host, port)
     serverId = yield from dali.id(programname, username, processid, architecture)
     print("Resp: {}".format(serverId.toString()))
-    serverInfo = yield from dali.info("STATUS")
-    print("Info: {} ".format(serverInfo.message))
-    serverInfo = yield from dali.info("STREAMS")
-    print("Info: {} ".format(serverInfo.message))
+    #serverInfo = yield from dali.info("STATUS")
+    #print("Info: {} ".format(serverInfo.message))
+    #serverInfo = yield from dali.info("STREAMS")
+    #print("Info: {} ".format(serverInfo.message))
     network = "YY"
     station = "TEST"
     location = "00"
@@ -42,7 +42,9 @@ def doTest(loop):
         shortData.append(i)
     msh = simpleMiniseed.MiniseedHeader(network, station, location, channel, starttime, numsamples, samprate)
     msr = simpleMiniseed.MiniseedRecord(msh, shortData)
-    #dali.write()
+    print("before writeMSeed")
+    resp = yield from dali.writeMSeed(msr)
+    print("writemseed resp {}".format(resp));
     dali.close()
 
 

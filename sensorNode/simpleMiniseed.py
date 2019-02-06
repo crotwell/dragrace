@@ -1,6 +1,8 @@
 import struct
 from datetime import datetime, timedelta
 
+MICRO = 1000000
+
 EMPTY_SEQ = "      ".encode('UTF-8')
 ENC_SHORT = 1
 ENC_INT = 3
@@ -10,8 +12,8 @@ LITTLE_ENDIAN = 0
 
 HEADER_SIZE = 48
 B1000_SIZE = 8
-MAX_INT_PER_512 = (512-HEADER_SIZE-B1000_SIZE)/4
-MAX_SHORT_PER_512 = (512-HEADER_SIZE-B1000_SIZE)/2
+MAX_INT_PER_512 = (512-HEADER_SIZE-B1000_SIZE)//4
+MAX_SHORT_PER_512 = (512-HEADER_SIZE-B1000_SIZE)//2
 
 
 class MiniseedHeader:
@@ -31,6 +33,8 @@ class MiniseedHeader:
             self.endianChar = '>'
         else:
             self.endianChar = '<'
+
+        self.sampPeriod = timedelta(microseconds = MICRO/samprate)  # Nominal sample period (Sec) */
 
     def codes(self):
         return "{}.{}.{}.{}".format(self.network, self.station, self.location, self.channel)
@@ -64,7 +68,7 @@ class MiniseedRecord:
         return self.header.starttime
 
     def endtime(self):
-        return (self.starttime.epochSeconds() + timedelta(seconds=self.header.samprate * (self.header.numsamples-1)))
+        return self.starttime() + self.header.sampPeriod * (self.header.numsamples-1)
 
     def pack(self):
         record = bytearray(512)

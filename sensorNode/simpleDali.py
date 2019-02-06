@@ -1,5 +1,7 @@
 import asyncio
 
+MICROS = 1000000
+
 class DataLink:
 
     def __init__(self, host, port):
@@ -67,18 +69,20 @@ class DataLink:
 
     def write(self, streamid, hpdatastart, hpdataend, flags, data):
         header = "WRITE {} {:d} {:d} {} {:d}".format(streamid, hpdatastart, hpdataend, flags, len(data))
-        self.send(header, data)
+        yield from self.send(header, data)
         return self.parseResponse()
 
     def writeAck(self, streamid, hpdatastart, hpdataend, data):
-        self.write(streamid, hpdatastart, hpdataend, 'A', data)
-        return self.parseResponse()
+        yield from self.write(streamid, hpdatastart, hpdataend, 'A', data)
+        resp = yield from self.parseResponse()
+        return resp
 
     def writeMSeed(self, msr):
         streamid = "{}/MSEED".format(msr.codes())
-        hpdatastart = long(msr.starttime().timestamp() * 1000000)
-        hpdataend = long(msr.endtime().timestamp() * 1000000)
-        return self.writeAck(streamid, hpdatastart, hpdataend, msr.pack())
+        hpdatastart = int(msr.starttime().timestamp() * MICROS)
+        hpdataend = int(msr.endtime().timestamp() * MICROS)
+        resp = yield from self.writeAck(streamid, hpdatastart, hpdataend, msr.pack())
+        return resp
 
     def id(self, programname, username, processid, architecture):
         header = "ID {}:{}:{}:{}".format(programname, username, processid, architecture)
@@ -100,7 +104,7 @@ class DataLink:
 
     def reconnect(self):
         self.close()
-        self.createDaliConnection(host, port)
+        yield from self.createDaliConnection(host, port)
 
 class DaliResponse:
 
