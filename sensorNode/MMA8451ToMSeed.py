@@ -171,19 +171,6 @@ def do_work(now, status, samplesAvail, data):
     #if status & 0x40 > 0:
     #    preMsg += "Watermark "
     #print("{0} load {1:d} samples: {2:b} {3:b}".format(preMsg, samplesAvail, (status & 128)>0, (status & 64)>0))
-    dataOffset = 12
-    dataPacket = bytearray(len(data)+dataOffset)
-    dataPacket[0] = ord('A')
-    dataPacket[1] = samplesAvail & 0xff;
-    dataPacket[2:4] = now.year.to_bytes(2, byteorder='big')
-    dataPacket[4:6] = now.timetuple().tm_yday.to_bytes(2, byteorder='big')
-    dataPacket[6] = now.hour
-    dataPacket[7] = now.minute
-    dataPacket[8] = now.second
-    dataPacket[9:11] = int(round(now.microsecond/1000)).to_bytes(2, byteorder='big')
-    dataPacket[11] = sps
-    dataPacket[dataOffset:dataOffset+len(data)] = data
-    #sendToFile(now, dataPacket)
     sendToMseed(now, status, samplesAvail, data)
 
 def getDali():
