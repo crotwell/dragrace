@@ -42,6 +42,7 @@ function loadData() {
   hash.channels = document.getElementsByName('channels')[0].value.split(',');
   hash.doRmean = document.getElementsByName('doRmean')[0].checked;
   hash.doGain = document.getElementsByName('doGain')[0].checked;
+  hash.doTaper = document.getElementsByName('doTaper')[0].checked;
   hash.doFFT = document.getElementsByName('doFFT')[0].checked;
   hash.doOverlay = document.getElementsByName('doOverlay')[0].checked;
   let clockOffset = 0;
@@ -158,12 +159,44 @@ function loadData() {
           if (hash.doFFT) {
             let plotDiv = hash.svgParent.append("div");
             let trimTrace = trace.trim(hash.timeWindow);
-            let dataArray = trimTrace.seisArray.reduce((acc, s) => {
-                return acc.concat(s.y);
-              }, []);
-            let fftOut = seisplotjs.filter.calcDFT(dataArray, dataArray.length );
-            wp.createSimpleFFTPlot(fftOut, "div.fftplot", trace.sampleRate);
+            let dataArray;
 
+            // this is bad as gaps may be present
+            dataArray = trimTrace.seisArray.reduce((acc, s) => {
+              return acc.concat(s.y);
+            }, []);
+            if (hash.doTaper) {
+              let taperWidth = 0.05;
+              let taperType = seisplotjs.filter.taper.HANNING;
+              let w = Math.floor(dataArray.length * taperWidth);
+              let coeff = seisplotjs.filter.taper.getCoefficients(taperType, w);
+              const omega = coeff[0];
+              const f0 = coeff[1];
+              const f1 = coeff[2];
+              for(let i = 0; i < w; i++) {
+                const taperFactor = (f0 - f1 * Math.cos(omega * i));
+                dataArray[i] = dataArray[i] * taperFactor;
+                dataArray[dataArray.length - i - 1] = dataArray[dataArray.length - i - 1] * taperFactor;
+              }
+
+            }
+            let fftOut = seisplotjs.filter.calcDFT(dataArray, dataArray.length );
+            let fftSvg = wp.createSimpleFFTPlot(fftOut, "div.fftplot", trace.sampleRate);
+            // wrong, but works
+            let margin = {top: 20, right: 20, bottom: 30, left: 50};
+            const styleWidth = 900;
+            let width = +styleWidth - margin.left - margin.right;
+
+            fftSvg.select("g")
+              .append("g")
+                .attr("transform", "translate("+margin.left+width/2+","+  margin.top + ")")
+              .append("text")
+                .attr("fill", "#000")
+                .attr("y", 0)
+                .attr("x", width/2)
+                .attr("dy", "0.71em")
+                .attr("text-anchor", "middle")
+                .text(key);
           } else {
             let plotDiv = hash.svgParent.append("div");
             plotDiv.style("position", "relative");
