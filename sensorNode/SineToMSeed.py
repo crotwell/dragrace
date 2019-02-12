@@ -45,3 +45,7 @@ for i in range(int(numPackets)):
         sineArg+=sineStep
     miniseedBuffers[chan].push(start, chanData)
     nextStart = nextStart+timedelta(seconds=1.0*(samplesAvail)/sps)
+
+
+for chan in chanList:
+    miniseedBuffers[chan].flush()
