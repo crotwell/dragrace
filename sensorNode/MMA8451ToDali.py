@@ -3,6 +3,7 @@
 # Simple demo of fifo mode on the MMA8451.
 # Author: Philip Crotwell
 import time
+import struct
 import queue
 import threading
 from datetime import datetime, timedelta
@@ -26,6 +27,7 @@ from digi.xbee.exception import TimeoutException
 import simpleMiniseed
 import simpleDali
 
+dali = None
 daliMutex = threading.Lock()
 
 daliHost="129.252.35.36"
@@ -36,7 +38,7 @@ pin = 18  # GPIO interrupt
 MAX_SAMPLES = -1
 #MAX_SAMPLES = 1
 
-doDali = False
+doDali = True
 
 # Initialize I2C bus.
 i2c = busio.I2C(board.SCL, board.SDA)
@@ -66,9 +68,14 @@ net = "XX"
 loc = "00"
 chanList = [ "HNX", "HNY", "HNZ" ]
 
+
 def getSps():
     sps = 1
-    if sensor.data_rate == adafruit_mma8451.DATARATE_200HZ:
+    if sensor.data_rate == adafruit_mma8451.DATARATE_800HZ:
+        sps = 800
+    elif sensor.data_rate == adafruit_mma8451.DATARATE_400HZ:
+        sps = 400
+    elif sensor.data_rate == adafruit_mma8451.DATARATE_200HZ:
         sps = 200
     elif sensor.data_rate == adafruit_mma8451.DATARATE_100HZ:
         sps = 100
@@ -177,30 +184,18 @@ def do_work(now, status, samplesAvail, data):
     dataPacket[9:11] = int(round(now.microsecond/1000)).to_bytes(2, byteorder='big')
     dataPacket[11] = sps
     dataPacket[dataOffset:dataOffset+len(data)] = data
-    sendToFile(now, dataPacket)
-    msrList = sendToMseed(now, status, samplesAvail, data)
-    if doDali:
-      try:
-        with daliMutex:
-            dali = getDali()
-            if (dali is not None and startACQ):
-                for msr in msrList:
-                    dali.writeMseed(msr)
-            elif not startACQ:
-                print("no startACQ")
-            else:
-                print("xbee device or remote is None, skipping send packet")
-      except Exception as eee:
-        print("unable to send: {0}".format(eee))
-      sentSamples += samplesAvail
-      #if sentSamples % 6000 == 0:
-      if loops % 18 == 0:
+    #sendToFile(now, dataPacket)
+    sendToMseed(now, status, samplesAvail, data)
+
+    sentSamples += samplesAvail
+    #if sentSamples % 6000 == 0:
+    if loops % 18 == 0:
           print("sent data async samplesSent={0:d} of {1:d} {2}".format(sentSamples, totalSamples, now.strftime("%Y-%m-%d %H:%M:%S")))
           #print("{0:d} {1:d} {2:d}:{3:d}:{4:d}.{5:3.3f}    sps={6:d}  npts={7:d}".format(now.year, now.timetuple().tm_yday, now.hour, now.minute, now.second, now.microsecond/1000, sps, samplesAvail));
           #xData, yData, zData = sensor.demux(data)
           #for i in range(len(xData)):
           #    print("  {0:d} {1:d} {2:d}".format(xData[i], yData[i], zData[i]))
-      if sentSamples > 1000000:
+    if sentSamples > 1000000:
           sentSamples = 0
 
 def getDali():
@@ -227,67 +222,20 @@ def sendToMseed(now, status, samplesAvail, data):
     global net
     global loc
     global chanList
-    msrList = []
     dataIdx = 0
     start = now - timedelta(seconds=1.0*(samplesAvail-1)/sps)
+    dataAsInt = struct.unpack('>'+'h'*3*samplesAvail, data)
     for chan in chanList:
         chanData = []
         for i in range(samplesAvail):
-            chanData.append( data[3*i+dataIdx] )
-        filename = "{}.{}_{}.mseed".format(sta, chan, start.strftime("%Y.%j.%H"))
-        msh = simpleMiniseed.MiniseedHeader(net, sta, loc, chan, start, samplesAvail, sps)
-        msr = simpleMiniseed.MiniseedRecord(msh, chanData)
-        msFile = open(filename, "ab")
-        msFile.write(msr.pack())
-        msFile.close()
+            # MMA8451 saves 14 bit data as 16 bit int but
+            # bit shifted 2 bits to left, ie always mod 4 == 0
+            # shift back to right so 1 count is 00000001
+            # instead of 4, 00000100
+            chanData.append( dataAsInt[3*i+dataIdx] >> 2 )
+
+        miniseedBuffers[chan].push(start, chanData)
         dataIdx+=1
-        msrList.append(msr)
-    return msrList
-
-def xbee_status_callback(status):
-    print("Modem status: %s" % status.description)
-
-def xbee_received_callback(xbee_message):
-    global startACQ
-    global dataQueue
-    address = xbee_message.remote_device.get_64bit_addr()
-    data = xbee_message.data.decode("utf8")
-    if data == "stop":
-        startACQ = False
-        sendInfoPacket("stopped")
-    elif data == "start":
-        startACQ = True
-        sendInfoPacket("started")
-
-    elif data == "status":
-        if startACQ:
-            sendInfoPacket("started")
-        else:
-            sendInfoPacket("stopped")
-    elif data == "gain":
-        sendInfoPacket("gain={0:d}".format(gain))
-    elif data == "sps":
-        sendInfoPacket("sps={0:d}".format(sps))
-    elif data == "queue":
-        sendInfoPacket("queue={0:d}".format(dataQueue.qsize()))
-    elif data == "flush":
-        dataQueue.clear()
-        sendInfoPacket("flushed")
-    print("Received data from %s: '%s'" % (address, data))
-
-def sendInfoPacket(info):
-    infoQueue.put(info)
-
-def doSendInfoPacket(info):
-    global daliMutex
-    with daliMutex:
-        device, remote = getXBee()
-        if remote is not None:
-            msg = "I{0} {1}".format(device.get_node_id(), info)
-            bInfo = msg.encode('utf-8')
-            device.send_data(remote, bInfo)
-        else:
-            print("can't send, remote is None")
 
 def initDali(host, port):
     print("Init Dali at {0}:{1:d}".format(host, port))
@@ -302,12 +250,15 @@ def getLocalHostname():
 sta = getLocalHostname()[0:5].upper()
 print("set station code to {}".format(sta))
 
+miniseedBuffers = dict()
+for chan in chanList:
+    miniseedBuffers[chan] = DataBuffer(net, sta, loc, chan,
+             sps, encoding=simpleMiniseed.ENC_SHORT, dali=getDali())
+
 dataQueue = queue.Queue()
 infoQueue = queue.Queue()
 sendThread = threading.Thread(target=worker)
 sendThread.start()
-
-dali = None
 
 try:
     before = time.perf_counter()
@@ -344,6 +295,9 @@ if sensor is not None:
     print("remove gpio interrupt pin")
     GPIO.remove_event_detect(pin)
 
+
+for buf in miniseedBuffers:
+    buf.flush()
 
 time.sleep(0.1)
 print("join queue to wait for xbee worker to finish")
