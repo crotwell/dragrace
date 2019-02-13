@@ -1,5 +1,9 @@
 import struct
+from array import array
+from collections import namedtuple
 from datetime import datetime, timedelta
+import sys
+
 
 MICRO = 1000000
 
@@ -15,9 +19,18 @@ B1000_SIZE = 8
 MAX_INT_PER_512 = (512-HEADER_SIZE-B1000_SIZE)//4
 MAX_SHORT_PER_512 = (512-HEADER_SIZE-B1000_SIZE)//2
 
+BTime = namedtuple("BTime", "year yday hour minute second tenthMilli")
+Blockette1000 = namedtuple('Blockette1000', 'blocketteNum, nextOffset, encoding, byteorder, recLength')
+BlocketteUnknown = namedtuple('BlocketteUnknown', 'blocketteNum, nextOffset, rawBytes')
 
 class MiniseedHeader:
-    def __init__(self, network, station, location, channel, starttime, numsamples, samprate, encoding=ENC_INT, byteorder=BIG_ENDIAN):
+    def __init__(self, network, station, location, channel, starttime, numsamples, samprate,
+        encoding=ENC_INT, byteorder=BIG_ENDIAN, sampRateFactor=0, sampRateMult=0,actFlag=0, ioFlag=0, qualFlag=0,
+        numBlockettes=0, timeCorr=0, dataOffset=0, blocketteOffset=0):
+        """
+        starttime can be datetime or BTime
+        if samprate is zero, will be calculated from sampRateFactor and sampRateMult
+        """
         self.sequence_number=0; # SEED record sequence number */
         self.network = network     # Network designation, NULL terminated */
         self.station=station    # Station designation, NULL terminated */
@@ -25,6 +38,15 @@ class MiniseedHeader:
         self.channel=channel      # Channel designation, NULL terminated */
         self.dataquality='D'    # Data quality indicator */
         self.starttime=starttime    # Record start time, corrected (first sample) */
+        if type(starttime).__name__ == 'datetime':
+            tt = starttime.timetuple()
+            self.btime = BTime(tt.tm_year, tt.tm_yday, tt.tm_hour, tt.tm_min, tt.tm_sec, int(time.microsecond/100))
+        elif type(starttime).__name__ == 'BTime':
+            self.btime = starttime
+            self.starttime = datetime(self.btime.year, 1, 1, hour=self.btime.hour, minute=self.btime.minute, second=self.btime.second, microsecond=100*self.btime.tenthMilli) \
+                + timedelta(days=self.btime.yday-1)
+        else:
+            raise Exception("unknown type of starttime {}".format(type(starttime)))
         self.samprate=samprate          # Nominal sample rate (Hz) */
         self.numsamples=numsamples        # Number of samples in record */
         self.encoding=encoding    # Data encoding format */
@@ -34,7 +56,33 @@ class MiniseedHeader:
         else:
             self.endianChar = '<'
 
-        self.sampPeriod = timedelta(microseconds = MICRO/samprate)  # Nominal sample period (Sec) */
+        self.sampRateFactor=sampRateFactor
+        self.sampRateMult=sampRateMult
+        if samprate==0 and not (sampRateFactor==0 and sampRateMult==0):
+            # calc samprate from sampRateFactor and sampRateMult
+            if sampRateFactor>0:
+                if sampRateMult>0:
+                    self.samprate=1.0*sampRateFactor*sampRateMult
+                else:
+                    self.samprate= -1.0 * sampRateFactor/sampRateMult
+            else:
+                if sampRateMult>0:
+                    self.samprate=-1.0 * sampRateMult/sampRateFactor
+                else:
+                    self.samprate= 1.0/( sampRateFactor*sampRateMult)
+        if (self.samprate ==0):
+            raise Exception("Sample rate cannot be 0: {:f}".format(self.samprate, self.sampRateFactor, self.sampRateMult))
+        self.sampPeriod = timedelta(microseconds = MICRO/self.samprate)  # Nominal sample period (Sec) */
+
+        self.actFlag=actFlag
+        self.ioFlag=ioFlag
+        self.qualFlag=qualFlag
+        self.numBlockettes=numBlockettes
+        self.timeCorr=timeCorr
+        self.dataOffset=dataOffset
+        self.blocketteOffset=blocketteOffset
+        self.recordLengthExp = 9 # default to 512
+        self.recordLength = 2**self.recordLengthExp
 
     def codes(self):
         return "{}.{}.{}.{}".format(self.network, self.station, self.location, self.channel)
@@ -48,8 +96,17 @@ class MiniseedHeader:
         struct.pack_into(self.endianChar+'6scc5s2s3s2s', header, 0,
           EMPTY_SEQ, b'D', b' ', sta, loc, chan, net)
         self.packBTime(header, self.starttime)
-        sps=int(self.samprate)
-        struct.pack_into(self.endianChar+'HHH', header, 30, self.numsamples, sps, 1);
+        tempsampRateFactor = self.sampRateFactor
+        tempsampRateMult = self.sampRateMult
+        if self.sampRateFactor == 0 and self.sampRateMult == 0:
+            # this is wrong if rate not integer Hz or integer sec
+            if self.samprate > 1:
+                tempsampRateFactor=int(self.samprate)
+                tempsampRateMult=1
+            else:
+                tempsampRateFactor=int(-1.0/self.samprate)
+                tempsampRateMult=1
+        struct.pack_into(self.endianChar+'HHH', header, 30, self.numsamples, tempsampRateFactor, tempsampRateMult);
         return header
 
     def packBTime(self, header, time):
@@ -57,8 +114,9 @@ class MiniseedHeader:
         struct.pack_into(self.endianChar+'HHBBBxH', header, 20, tt.tm_year, tt.tm_yday, tt.tm_hour, tt.tm_min, tt.tm_sec, int(time.microsecond/100))
 
 class MiniseedRecord:
-    def __init__(self, header, data):
+    def __init__(self, header, data, blockettes=[]):
         self.header = header
+        self.blockettes = blockettes
         self.data = data
 
     def codes(self):
@@ -71,18 +129,43 @@ class MiniseedRecord:
         return self.starttime() + self.header.sampPeriod * (self.header.numsamples-1)
 
     def pack(self):
-        record = bytearray(512)
-        record[0:48] = self.header.pack()
-        record[39] = 1 #  one blockette, b1000
+        recordBytes = bytearray(self.header.recordLength)
+        recordBytes[0:48] = self.header.pack()
 
-        record[45] = 64 # offset to first data
-        record[47] = 48 # offset to first blockette
-        self.packB1000(record, 48)
-        self.packData(record, 64, self.data)
-        return record
+        offset = 48
+        struct.pack_into(self.header.endianChar+'H', recordBytes, 46, offset)
+        if len(self.blockettes) == 0:
+            recordBytes[39] = 1 #  one blockette, b1000
+            offset = self.packB1000(recordBytes, offset, self.createB1000())
+        else:
+            recordBytes[39] = len(self.blockettes)
+            for b in self.blockettes:
+                offset = self.packBlockette(recordBytes, offset, b)
+        # set offset to data in header
+        if offset < 64:
+            offset = 64
+        struct.pack_into(self.header.endianChar+'H', recordBytes, 44, offset)
+        self.packData(recordBytes, offset, self.data)
+        return recordBytes
 
-    def packB1000(self, recordBytes, offset):
-        struct.pack_into(self.header.endianChar+'HHBBBx', recordBytes, offset, 1000, 0, self.header.encoding, self.header.byteorder, 9)
+
+    def packBlockette(self, recordBytes, offset, b):
+        if type(b).__name__ == 'Blockette1000':
+            return self.packB1000(recordBytes, offset, b)
+        elif type(b).__name__ == 'BlocketteUnknown':
+            return self.packBlocketteUnknown(recordBytes, offset, bUnk)
+
+    def packBlocketteUnknown(self, recordBytes, offset, bUnk):
+        struct.pack_into(self.header.endianChar+'HH', recordBytes, offset, bUnk.blocketteNum, offset+len(bUnk.rawData))
+        recordBytes[offset+4:offset+len(bUnk.rawData)-4] = bUnk.rawData[4:]
+        return offset+len(bUnk.rawData)
+
+    def packB1000(self, recordBytes, offset, b):
+        struct.pack_into(self.header.endianChar+'HHBBBx', recordBytes, offset, b.blocketteNum, b.nextOffset, self.header.encoding, self.header.byteorder, self.header.recordLengthExp)
+        return offset+8
+
+    def createB1000(self):
+        return Blockette1000(1000, 0, self.header.encoding, self.header.byteorder, self.header.recordLengthExp)
 
     def packData(self, recordBytes, offset, data):
         if self.header.encoding == ENC_SHORT:
@@ -92,8 +175,87 @@ class MiniseedRecord:
                 offset+=2
         elif self.header.encoding == ENC_INT:
             for d in data:
+                print("pack data {:d} {:d}".format(offset, len(data)))
                 struct.pack_into(self.header.endianChar+'i', recordBytes, offset, d)
                 #record[offset:offset+4] = d.to_bytes(4, byteorder='big')
                 offset+=4
         else:
-            raise Error("Encoding type {} not supported.".format(self.header.encoding))
+            raise Exception("Encoding type {} not supported.".format(self.header.encoding))
+
+def unpackMiniseedHeader(recordBytes, endianChar='>'):
+    if len(recordBytes) < 48:
+        raise Exception("Not enough bytes for header: {:d}".format(len(recordBytes)))
+    seq, qaulityChar, reserved, sta, loc, chan, net, \
+    year, yday, hour, min, sec, tenthMilli,          \
+    numsamples, sampRateFactor, sampRateMult,                  \
+    actFlag, ioFlag, qualFlag,                       \
+    numBlockettes, timeCorr, dataOffset, blocketteOffset =  \
+    struct.unpack(endianChar+'6scc5s2s3s2sHHBBBxHHHHBBBBiHH', recordBytes[0:48])
+    if endianChar == '>':
+        byteorder = BIG_ENDIAN
+    else:
+        byteorder = LITTLE_ENDIAN
+    net = net.decode("utf-8")
+    sta = sta.decode("utf-8")
+    loc = loc.decode("utf-8")
+    chan = chan.decode("utf-8")
+    starttime = BTime(year, yday, hour, min, sec, tenthMilli)
+    samprate=0 # recalc in constructor
+    encoding = -1 # reset on read b1000
+    print("unpackMiniseedHeader numBlockettes={:d}".format(numBlockettes))
+    return MiniseedHeader(net, sta, loc, chan, starttime, numsamples, samprate,
+        encoding=encoding, byteorder=byteorder,
+        sampRateFactor=sampRateFactor, sampRateMult=sampRateMult,
+        actFlag=actFlag, ioFlag=ioFlag, qualFlag=qualFlag,
+        numBlockettes=numBlockettes, timeCorr=timeCorr, dataOffset=dataOffset, blocketteOffset=blocketteOffset)
+
+def unpackBlockette(recordBytes, offset, endianChar):
+    blocketteNum, nextOffset = struct.unpack(endianChar+'HH', recordBytes[offset:offset+4])
+    if blocketteNum == 1000:
+        return unpackBlockette1000(recordBytes, offset, endianChar)
+    else:
+        return BlocketteUnknown(blocketteNum, offset, recordBytes[offset:nextOffset-1])
+
+def unpackBlockette1000(recordBytes, offset, endianChar):
+    """named Tuple of blocketteNum, nextOffset, encoding, byteorder, recLength"""
+    blocketteNum, nextOffset, encoding, byteorder, recLength = \
+        struct.unpack(endianChar+'HHBBBx', recordBytes[offset:offset+8])
+    return Blockette1000(blocketteNum, nextOffset, encoding, byteorder, recLength)
+
+def unpackMiniseedRecord(recordBytes):
+    header = unpackMiniseedHeader(recordBytes, '>')
+    byteOrder = BIG_ENDIAN
+    if header.btime.year < 1900 or header.btime.year > 2100:
+        # try little endian
+        bigEndianYear = header.year
+        header = unpackMiniseedHeader(recordBytes, '<')
+        if header.year < 1900 or header.year > 2100:
+            raise Exception("year out of range 1900-2100 for both byte order! {:d} {:d}".format(bigEndianYear, header.year))
+        byteOrder = LITTLE_ENDIAN
+    if byteOrder == BIG_ENDIAN:
+        endianChar = '>'
+    else:
+        endianChar = '<'
+    blockettes = []
+    if header.numBlockettes > 0:
+        nextBOffset = header.blocketteOffset
+        while(nextBOffset > 0):
+            b = unpackBlockette(recordBytes, nextBOffset, endianChar)
+            blockettes.append(b)
+            if type(b).__name__ == 'Blockette1000':
+                header.encoding = b.encoding
+                print("set encoding to {:d}".format(header.encoding))
+            else:
+                print("Found non-1000 blockette: {}".format(type(b).__name__))
+            nextBOffset = b.nextOffset
+    data = []
+    if header.encoding == ENC_SHORT:
+        data = array('h', recordBytes[header.dataOffset:header.dataOffset+2*header.numsamples])
+    elif  header.encoding == ENC_INT:
+        data = array('i', recordBytes[header.dataOffset:header.dataOffset+4*header.numsamples])
+    else:
+        raise Exception("Encoding {:d} not supported yet.".format(header.encoding))
+    if ((byteOrder == BIG_ENDIAN and sys.byteorder == "little")
+        or (byteOrder == LITTLE_ENDIAN and sys.byteorder == "big")):
+        data.byteswap()
+    return MiniseedRecord(header, data, blockettes=blockettes)
