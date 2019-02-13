@@ -40,7 +40,7 @@ class MiniseedHeader:
         self.starttime=starttime    # Record start time, corrected (first sample) */
         if type(starttime).__name__ == 'datetime':
             tt = starttime.timetuple()
-            self.btime = BTime(tt.tm_year, tt.tm_yday, tt.tm_hour, tt.tm_min, tt.tm_sec, int(time.microsecond/100))
+            self.btime = BTime(tt.tm_year, tt.tm_yday, tt.tm_hour, tt.tm_min, tt.tm_sec, int(starttime.microsecond/100))
         elif type(starttime).__name__ == 'BTime':
             self.btime = starttime
             self.starttime = datetime(self.btime.year, 1, 1, hour=self.btime.hour, minute=self.btime.minute, second=self.btime.second, microsecond=100*self.btime.tenthMilli) \
@@ -85,7 +85,7 @@ class MiniseedHeader:
         self.recordLength = 2**self.recordLengthExp
 
     def codes(self):
-        return "{}.{}.{}.{}".format(self.network, self.station, self.location, self.channel)
+        return "{}.{}.{}.{}".format(self.network.strip(), self.station.strip(), self.location.strip(), self.channel.strip())
 
     def pack(self):
         header = bytearray(48)
@@ -175,9 +175,7 @@ class MiniseedRecord:
                 offset+=2
         elif self.header.encoding == ENC_INT:
             for d in data:
-                print("pack data {:d} {:d}".format(offset, len(data)))
                 struct.pack_into(self.header.endianChar+'i', recordBytes, offset, d)
-                #record[offset:offset+4] = d.to_bytes(4, byteorder='big')
                 offset+=4
         else:
             raise Exception("Encoding type {} not supported.".format(self.header.encoding))
@@ -195,14 +193,13 @@ def unpackMiniseedHeader(recordBytes, endianChar='>'):
         byteorder = BIG_ENDIAN
     else:
         byteorder = LITTLE_ENDIAN
-    net = net.decode("utf-8")
-    sta = sta.decode("utf-8")
-    loc = loc.decode("utf-8")
-    chan = chan.decode("utf-8")
+    net = net.decode("utf-8").strip()
+    sta = sta.decode("utf-8").strip()
+    loc = loc.decode("utf-8").strip()
+    chan = chan.decode("utf-8").strip()
     starttime = BTime(year, yday, hour, min, sec, tenthMilli)
     samprate=0 # recalc in constructor
     encoding = -1 # reset on read b1000
-    print("unpackMiniseedHeader numBlockettes={:d}".format(numBlockettes))
     return MiniseedHeader(net, sta, loc, chan, starttime, numsamples, samprate,
         encoding=encoding, byteorder=byteorder,
         sampRateFactor=sampRateFactor, sampRateMult=sampRateMult,
@@ -223,19 +220,22 @@ def unpackBlockette1000(recordBytes, offset, endianChar):
     return Blockette1000(blocketteNum, nextOffset, encoding, byteorder, recLength)
 
 def unpackMiniseedRecord(recordBytes):
-    header = unpackMiniseedHeader(recordBytes, '>')
     byteOrder = BIG_ENDIAN
-    if header.btime.year < 1900 or header.btime.year > 2100:
-        # try little endian
-        bigEndianYear = header.year
-        header = unpackMiniseedHeader(recordBytes, '<')
-        if header.year < 1900 or header.year > 2100:
-            raise Exception("year out of range 1900-2100 for both byte order! {:d} {:d}".format(bigEndianYear, header.year))
-        byteOrder = LITTLE_ENDIAN
-    if byteOrder == BIG_ENDIAN:
+    endianChar = '>'
+    # 0x0708 = 1800 and 0x0807 = 2055
+    if (recordBytes[20] == 7 or recordBytes[20] == 8
+            and not (recordBytes[21] == 7 or recordBytes[21] == 8)):
+        #print("big endian {:d} {:d}".format(recordBytes[20], recordBytes[21]))
+        byteOrder = BIG_ENDIAN
         endianChar = '>'
-    else:
+    elif ((recordBytes[21] == 7 or recordBytes[21] == 8)
+            and not (recordBytes[20] == 7 or recordBytes[20] == 8)):
+        #print("little endian {:d} {:d}".format(recordBytes[20], recordBytes[21]))
+        byteOrder = LITTLE_ENDIAN
         endianChar = '<'
+    else:
+        raise Exception("unable to determine byte order from year bytes: {:d} {:d}".format(recordBytes[21], recordBytes[22]))
+    header = unpackMiniseedHeader(recordBytes, endianChar)
     blockettes = []
     if header.numBlockettes > 0:
         nextBOffset = header.blocketteOffset
@@ -244,7 +244,6 @@ def unpackMiniseedRecord(recordBytes):
             blockettes.append(b)
             if type(b).__name__ == 'Blockette1000':
                 header.encoding = b.encoding
-                print("set encoding to {:d}".format(header.encoding))
             else:
                 print("Found non-1000 blockette: {}".format(type(b).__name__))
             nextBOffset = b.nextOffset

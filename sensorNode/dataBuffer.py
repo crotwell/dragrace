@@ -1,4 +1,5 @@
 from datetime import timedelta, datetime
+import os
 import simpleMiniseed
 MICRO = 1000000
 
@@ -7,6 +8,7 @@ class DataBuffer:
                  encoding=simpleMiniseed.ENC_INT,
                  byteorder=simpleMiniseed.BIG_ENDIAN,
                  dali=None,
+                 archive=False,
                  continuityFactor=5):
         self.network = network
         self.station = station
@@ -18,6 +20,7 @@ class DataBuffer:
         self.byteorder = byteorder
         self.continuityFactor = continuityFactor
         self.dali = dali
+        self.archive = archive
         self.dataArray = None
         self.starttime = None
         self.numpts = 0
@@ -43,18 +46,37 @@ class DataBuffer:
         msr = self._bufferToMiniseed()
         if self.dali:
             self.miniseedToDali(msr)
+        elif self.archive:
+            self.miniseedToRingserverFile(msr)
         else:
-            self.miniseedToFile(msr)
+            self.miniseedToPlainFile(msr)
         self.numpts = 0
         self.starttime = None
         self.dataArray = None
 
-    def miniseedToFile(self, msr):
-        filename = "{}.{}.{}.{}.{}".format(self.network,
-                                            self.station,
-                                            self.location,
-                                            self.channel,
-                                            self.starttime.strftime("%Y.%j.%H"))
+    def miniseedToRingserverFile(self, msr):
+        filename = "{net}/{sta}/{year}/{yday}/{net}.{sta}.{loc}.{chan}.{year}.{yday}.{hour}".format(net=self.network,
+                                            sta=self.station,
+                                            loc=self.location,
+                                            chan=self.channel,
+                                            year=self.starttime.strftime("%Y"),
+                                            yday=self.starttime.strftime("%j"),
+                                            hour=self.starttime.strftime("%H"))
+        if not os.path.exists(os.path.dirname(filename)):
+            os.makedirs(os.path.dirname(filename))
+        self.miniseedToFile(msr, filename)
+
+    def miniseedToPlainFile(self, msr):
+        filename = "{net}.{sta}.{loc}.{chan}.{year}.{yday}.{hour}".format(net=self.network,
+                                            sta=self.station,
+                                            loc=self.location,
+                                            chan=self.channel,
+                                            year=self.starttime.strftime("%Y"),
+                                            yday=self.starttime.strftime("%j"),
+                                            hour=self.starttime.strftime("%H"))
+        self.miniseedToFile(msr, filename)
+
+    def miniseedToFile(self, msr, filename):
         msFile = open(filename, "ab")
         msFile.write(msr.pack())
         msFile.close()
