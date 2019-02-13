@@ -45,4 +45,4 @@ bitShift = False
 recompressDir(filename, bitShift)
 
 for key in miniseedBuffers:
-    miniseedBuffers[key].flush()
+    miniseedBuffers[key].close()

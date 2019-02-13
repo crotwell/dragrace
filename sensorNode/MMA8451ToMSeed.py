@@ -273,7 +273,7 @@ print("set station code to {}".format(sta))
 miniseedBuffers = dict()
 for chan in chanList:
     miniseedBuffers[chan] = dataBuffer.DataBuffer(net, sta, loc, chan,
-             getSps(), encoding=simpleMiniseed.ENC_SHORT)
+             getSps(), archive=True, encoding=simpleMiniseed.ENC_SHORT)
 
 dataQueue = queue.Queue()
 infoQueue = queue.Queue()
@@ -319,7 +319,7 @@ if sensor is not None:
 
 
 for key in miniseedBuffers:
-    miniseedBuffers[key].flush()
+    miniseedBuffers[key].close()
 
 time.sleep(0.1)
 print("join queue to wait for xbee worker to finish")

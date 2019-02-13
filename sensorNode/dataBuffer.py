@@ -24,6 +24,8 @@ class DataBuffer:
         self.dataArray = None
         self.starttime = None
         self.numpts = 0
+        self.msFile = None
+        self.msFilename = None
 
 
     def push(self, starttime, dataArray):
@@ -54,6 +56,13 @@ class DataBuffer:
         self.starttime = None
         self.dataArray = None
 
+    def close(self):
+        self.flush()
+        if self.msFile:
+            self.msFile.close()
+            self.msFile = None
+            self.msFilename = None
+
     def miniseedToRingserverFile(self, msr):
         filename = "{net}/{sta}/{year}/{yday}/{net}.{sta}.{loc}.{chan}.{year}.{yday}.{hour}".format(net=self.network,
                                             sta=self.station,
@@ -77,9 +86,13 @@ class DataBuffer:
         self.miniseedToFile(msr, filename)
 
     def miniseedToFile(self, msr, filename):
-        msFile = open(filename, "ab")
-        msFile.write(msr.pack())
-        msFile.close()
+        if self.msFile == None or self.msFilename is not filename:
+            if self.msFile:
+                self.msFile.close()
+            self.msFile = open(filename, "ab")
+            self.msFilename = filename
+        self.msFile.write(msr.pack())
+        self.msFile.flush()
 
     def miniseedToDali(self, msr):
         self.dali.writeMSeed(msr)
