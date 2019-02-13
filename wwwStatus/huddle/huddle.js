@@ -29,6 +29,7 @@ function loadData() {
   hash.svgParent.selectAll('div').remove();
   seisplotjs.d3.select("div.fftplot").selectAll("svg").remove();
   seisplotjs.d3.select("#minmax").selectAll("li").remove();
+  seisplotjs.d3.select("div.message").append("p").text("Loading Data...");
   hash.stations = document.getElementsByName('sta')[0].value.split(',');
   // dayOfY and hour need 0 if not 3/2 digits
   hash.doNow = document.getElementsByName('doNow')[0].checked;
@@ -128,13 +129,11 @@ function loadData() {
     return hash;
   }).then(hash => {
       if (hash.traceMap.size == 0) {
-        hash.svgParent.append("p").text("No Data Found").style("color", "red");
+        seisplotjs.d3.select("div.message").append("p").text("No Data Found").style("color", "red");
         console.log("data from miniseedArchive found none");
-
+        return hash;
       }
-
-
-
+      seisplotjs.d3.select("div.message").selectAll("p").remove();
 
       console.log(`HASH doOverlay: ${hash.doOverlay}`)
       if (hash.doOverlay) {
