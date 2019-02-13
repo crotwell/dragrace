@@ -203,7 +203,11 @@ def sendToMseed(now, status, samplesAvail, data):
     for chan in chanList:
         chanData = []
         for i in range(samplesAvail):
-            chanData.append( dataAsInt[3*i+dataIdx] )
+            # MMA8451 saves 14 bit data as 16 bit int but
+            # bit shifted 2 bits to left, ie always mod 4 == 0
+            # shift back to right so 1 count is 00000001
+            # instead of 4, 00000100
+            chanData.append( dataAsInt[3*i+dataIdx] >> 2 )
 
         miniseedBuffers[chan].push(start, chanData)
         dataIdx+=1
