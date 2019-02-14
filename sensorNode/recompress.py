@@ -35,9 +35,7 @@ def recompressDir(topDirName, bitShift=False):
         for dirname, dirnames, filenames in os.walk(topDirName):
             for filename in filenames:
                 recompress(os.path.join(dirname, filename), bitShift=bitShift)
-            for subdirname in dirnames:
-                recompressDir(os.path.join(dirname, subdirname), bitShift=bitShift)
-
+            
 filename = sys.argv[1]
 miniseedBuffers = dict()
 bitShift = False
