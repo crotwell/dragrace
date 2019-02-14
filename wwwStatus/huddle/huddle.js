@@ -20,8 +20,13 @@ fdsnstation.RSVP.on('error', function(reason) {
   console.assert(false, reason);
 });
 
-const EPISENSOR_Q330_SENSITIVITY = new seisplotjs.model.InstrumentSensitivity(427692.8, 0, "m/s/s", "count")
-const MMA8451_SENSITIVITY = new seisplotjs.model.InstrumentSensitivity(4096.0, 0, "m/s/s", "count")
+
+const SENSORS_GRAVITY_EARTH     = 9.80665;
+const EPISENSOR_4G_Q330_SENSITIVITY = new seisplotjs.model.InstrumentSensitivity(213909.0, 0, "m/s/s", "count")
+const EPISENSOR_2G_Q330_SENSITIVITY = new seisplotjs.model.InstrumentSensitivity(427692.8, 0, "m/s/s", "count")
+const MMA8451_2G_SENSITIVITY = new seisplotjs.model.InstrumentSensitivity(4096.0/SENSORS_GRAVITY_EARTH, 0, "m/s/s", "count")
+
+
 
 function loadData() {
   let hash = {}
@@ -29,7 +34,8 @@ function loadData() {
   hash.svgParent.selectAll('div').remove();
   seisplotjs.d3.select("div.fftplot").selectAll("svg").remove();
   seisplotjs.d3.select("#minmax").selectAll("li").remove();
-  seisplotjs.d3.select("div.message").append("p").text("Loading Data...");
+  seisplotjs.d3.select("div.message").selectAll("p").remove();
+  seisplotjs.d3.select("div.message").append("p").classed("loading", true).text("Loading Data...");
   hash.stations = document.getElementsByName('sta')[0].value.split(',');
   // dayOfY and hour need 0 if not 3/2 digits
   hash.doNow = document.getElementsByName('doNow')[0].checked;
@@ -105,18 +111,20 @@ function loadData() {
     if (hash.doGain) {
       let outMap = new Map()
       hash.traceMap.forEach((value, key) => {
-        // 2G for MMA8451 (14 bit) => gain = 4096 counts per m/s/s
-        let instSensitivity = MMA8451_SENSITIVITY;
+        // 2G for MMA8451 (14 bit) => gain = 4096 counts per 9.8 m/s/s
+        let instSensitivity = MMA8451_2G_SENSITIVITY;
         if (key.startsWith("CO")) {
           // assume episensor, 2G => gain = 427692.8 counts per m/s/s
-          instSensitivity = EPISENSOR_Q330_SENSITIVITY;
+          // assume episensor, 4G => gain = 213909.0 counts per m/s/s
+          instSensitivity = EPISENSOR_4G_Q330_SENSITIVITY;
         }
         let trace = seisplotjs.filter.gainCorrect(instSensitivity, value)
         outMap.set(key, trace);
+
       });
       hash.traceMap = outMap;
     }
-    return hash;
+    return seisplotjs.RSVP.hash(hash);
   }).then(hash => {
     if (hash.doRmean) {
       let outMap = new Map()
@@ -133,7 +141,7 @@ function loadData() {
         console.log("data from miniseedArchive found none");
         return hash;
       }
-      seisplotjs.d3.select("div.message").selectAll("p").remove();
+      seisplotjs.d3.select("div.message").selectAll("p.loading").remove();
 
       console.log(`HASH doOverlay: ${hash.doOverlay}`)
       if (hash.doOverlay) {
@@ -142,9 +150,13 @@ function loadData() {
               plotDiv.style("width", "100%");
               plotDiv.style("height", "450px");
         let seisPlotConfig = new wp.SeismographConfig();
+
         let traceList = []
         hash.traceMap.forEach((value, key) => {
-          traceList.push(value)
+          traceList.push(value);
+          seisPlotConfig.ySublabelIsUnits = true;
+          seisPlotConfig.ySublabel = "";
+          //seisPlotConfig.ySublabel += ` ${value.yUnit}`;
         });
         let seisPlot = new wp.CanvasSeismograph(plotDiv,
             seisPlotConfig,
@@ -204,8 +216,11 @@ function loadData() {
             let seisPlotConfig = new wp.SeismographConfig();
             seisPlotConfig.disableWheelZoom = false;
             seisPlotConfig.doRMean = hash.doRMean;
-            seisPlotConfig.doGain = hash.doGain;
+            seisPlotConfig.ySublabelIsUnits = true;
+            seisPlotConfig.ySublabel = "";
+            //seisPlotConfig.doGain = hash.doGain;
             seisPlotConfig.xLabel = key;
+            //seisPlotConfig.ySublabel = `${trace.yUnit}`;
             let seisPlot = new wp.CanvasSeismograph(plotDiv,
                 seisPlotConfig,
                 trace, hash.timeWindow.start, hash.timeWindow.end);
