@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 import sys, os
 from pathlib import Path
 import asyncio
+import traceback
 
 #import logging
 #logging.basicConfig(filename='xbee.log',level=logging.DEBUG)
@@ -19,15 +20,13 @@ import busio
 
 import adafruit_mma8451
 import RPi.GPIO as GPIO
-from digi.xbee.devices import XBeeDevice
-#from digi.xbee.devices import ZigBeeDevice
-from digi.xbee.models.address import XBee16BitAddress
-from digi.xbee.exception import TimeoutException
 
 import simpleMiniseed
 import simpleDali
 import dataBuffer
+import decimate
 
+dali = None
 daliMutex = threading.Lock()
 
 daliHost="129.252.35.36"
@@ -39,6 +38,8 @@ MAX_SAMPLES = -1
 #MAX_SAMPLES = 1
 
 doDali = False
+doArchive = True
+doFIR = True
 
 # Initialize I2C bus.
 i2c = busio.I2C(board.SCL, board.SDA)
@@ -48,6 +49,12 @@ sensor = adafruit_mma8451.MMA8451(i2c)
 # Optionally change the address if it's not the default:
 #sensor = adafruit_mma8451.MMA8451(i2c, address=0x1C)
 
+print("reset sensor")
+sensor.reset()
+print("remove gpio interrupt pin")
+GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.remove_event_detect(pin)
+
 # Optionally change the range from its default of +/-4G:
 sensor.range = adafruit_mma8451.RANGE_2G  # +/- 2G
 #sensor.range = adafruit_mma8451.RANGE_4G  # +/- 4G (default)
@@ -56,7 +63,7 @@ sensor.range = adafruit_mma8451.RANGE_2G  # +/- 2G
 # Optionally change the data rate from its default of 800hz:
 #sensor.data_rate = adafruit_mma8451.DATARATE_800HZ  #  800Hz (default)
 #sensor.data_rate = adafruit_mma8451.DATARATE_400HZ  #  400Hz
-sensor.data_rate = adafruit_mma8451.DATARATE_200HZ  #  200Hz
+#sensor.data_rate = adafruit_mma8451.DATARATE_200HZ  #  200Hz
 #sensor.data_rate = adafruit_mma8451.DATARATE_100HZ  #  100Hz
 #sensor.data_rate = adafruit_mma8451.DATARATE_50HZ   #   50Hz
 #sensor.data_rate = adafruit_mma8451.DATARATE_12_5HZ # 12.5Hz
@@ -66,7 +73,14 @@ sensor.data_rate = adafruit_mma8451.DATARATE_200HZ  #  200Hz
 sta="UNKNW"
 net = "XX"
 loc = "00"
-chanList = [ "HNX", "HNY", "HNZ" ]
+chanMap = { "X":"HNX", "Y":"HNY", "Z":"HNZ"}
+decimateMap = {}
+if doFIR:
+    decimateMap = {
+        "X":decimate.FIR(),
+        "Y":decimate.FIR(),
+        "Z":decimate.FIR(),
+    }
 
 def getSps():
     sps = 1
@@ -106,31 +120,15 @@ sps = 0
 gain = 0
 
 def dataCallback(now, status, samplesAvail, data):
-    global totalSamples
-    global keepGoing
-    global before
-    global pin
     item = now, status, samplesAvail, data
     dataQueue.put(item)
-    totalSamples += samplesAvail
-    if (MAX_SAMPLES != -1 and totalSamples > MAX_SAMPLES):
-        after = time.perf_counter()
-        delta = after-before
-        print("time take for {0:d} loops is {1:3.2f}, {2:d} samples at {3:3.2f} sps, nomSps={4:d}".format(loops, delta, totalSamples, (totalSamples-1)/delta, getSps()))
-        sensor.reset()
-        GPIO.remove_event_detect(pin)
-        keepGoing = False
 
 def worker():
     global keepGoing
     global startACQ
     global dataQueue
-    global infoQueue
     while keepGoing:
         try:
-            if not infoQueue.empty():
-                doSendInfoPacket(infoQueue.get(timeout=2))
-                infoQueue.task_done()
             item = dataQueue.get(timeout=2)
             if item is None or not keepGoing:
                 print("Worker exiting")
@@ -139,11 +137,12 @@ def worker():
             now, status, samplesAvail, data = item
             try:
                 do_work(now, status, samplesAvail, data)
-                dataQueue.task_done
-            except TimeoutException as err:
+                dataQueue.task_done()
+            except Exception as err:
                 # try once more?
                 #do_work(now, status, samplesAvail, data)
-                print("TimeoutException sending packet")
+                print("Exception sending packet: {}".format(err))
+                traceback.print_exc()
                 dataQueue.task_done()
         except queue.Empty:
             print("no data in queue??? startACQ={0:b}".format(startACQ))
@@ -162,16 +161,21 @@ def do_work(now, status, samplesAvail, data):
     global after
     global sps
     loops += 1
-
-    if status >= 128:
+    #print("status: {0:d} {0:08b} samps: {1:d} len(data): {2:d} queue: {3:d}".format(status, samplesAvail, len(data), dataQueue.qsize()))
+    if status >>7 != 0:
         print("overflow at loops={0:d}".format(loops))
-    #preMsg = ""
-    #if status >= 128:
-    #    preMsg = "Overflow "
-    #if status & 0x40 > 0:
-    #    preMsg += "Watermark "
-    #print("{0} load {1:d} samples: {2:b} {3:b}".format(preMsg, samplesAvail, (status & 128)>0, (status & 64)>0))
-    sendToMseed(now, status, samplesAvail, data)
+    if len(data) < samplesAvail:
+        raise Exception("Not enough samples avail: len={:d}, sampsAvail={:d}".format(len(data), samplesAvail))
+    if samplesAvail != 0:
+        sendToMseed(now, status, samplesAvail, data)
+        totalSamples += samplesAvail
+        if (MAX_SAMPLES != -1 and totalSamples > MAX_SAMPLES):
+            after = time.perf_counter()
+            delta = after-before
+            print("time take for {0:d} loops is {1:3.2f}, {2:d} samples at {3:3.2f} sps, nomSps={4:d}".format(loops, delta, totalSamples, (totalSamples-1)/delta, getSps()))
+            sensor.reset()
+            GPIO.remove_event_detect(pin)
+            keepGoing = False
 
 def getDali():
     global daliPort
@@ -196,66 +200,26 @@ def sendToMseed(now, status, samplesAvail, data):
     global sta
     global net
     global loc
-    global chanList
+    global chanMap
     dataIdx = 0
     start = now - timedelta(seconds=1.0*(samplesAvail-1)/sps)
-    dataAsInt = struct.unpack('>'+'h'*3*samplesAvail, data)
-    for chan in chanList:
-        chanData = []
-        for i in range(samplesAvail):
-            # MMA8451 saves 14 bit data as 16 bit int but
-            # bit shifted 2 bits to left, ie always mod 4 == 0
-            # shift back to right so 1 count is 00000001
-            # instead of 4, 00000100
-            chanData.append( dataAsInt[3*i+dataIdx] >> 2 )
+    xData, yData, zData = sensor.demux(data)
+    if doFIR:
+        start = start - decimateMap["X"].calcDelay(sps)
+        xData = decimate(decimateMap["X"], xData)
+        if (len(xData) != len(yData)):
+            raise Exception("len after decimate not same: {} {}".format(len(xData),len(yData)))
+        yData = decimate(decimateMap["Y"], yData)
+        zData = decimate(decimateMap["Z"], zData)
+    miniseedBuffers[chanMap["X"]].push(start, xData)
+    miniseedBuffers[chanMap["Y"]].push(start, yData)
+    miniseedBuffers[chanMap["Z"]].push(start, zData)
 
-        miniseedBuffers[chan].push(start, chanData)
-        dataIdx+=1
-
-def xbee_status_callback(status):
-    print("Modem status: %s" % status.description)
-
-def xbee_received_callback(xbee_message):
-    global startACQ
-    global dataQueue
-    address = xbee_message.remote_device.get_64bit_addr()
-    data = xbee_message.data.decode("utf8")
-    if data == "stop":
-        startACQ = False
-        sendInfoPacket("stopped")
-    elif data == "start":
-        startACQ = True
-        sendInfoPacket("started")
-
-    elif data == "status":
-        if startACQ:
-            sendInfoPacket("started")
-        else:
-            sendInfoPacket("stopped")
-    elif data == "gain":
-        sendInfoPacket("gain={0:d}".format(gain))
-    elif data == "sps":
-        sendInfoPacket("sps={0:d}".format(sps))
-    elif data == "queue":
-        sendInfoPacket("queue={0:d}".format(dataQueue.qsize()))
-    elif data == "flush":
-        dataQueue.clear()
-        sendInfoPacket("flushed")
-    print("Received data from %s: '%s'" % (address, data))
-
-def sendInfoPacket(info):
-    infoQueue.put(info)
-
-def doSendInfoPacket(info):
-    global daliMutex
-    with daliMutex:
-        device, remote = getXBee()
-        if remote is not None:
-            msg = "I{0} {1}".format(device.get_node_id(), info)
-            bInfo = msg.encode('utf-8')
-            device.send_data(remote, bInfo)
-        else:
-            print("can't send, remote is None")
+def decimate(decimator, data):
+    out = []
+    for v in data:
+        out.append(decimator.pushPop(v))
+    return out
 
 def initDali(host, port):
     print("Init Dali at {0}:{1:d}".format(host, port))
@@ -267,33 +231,40 @@ def getLocalHostname():
         hostname = hF.read()
     return hostname.strip()
 
+
+
 sta = getLocalHostname()[0:5].upper()
 print("set station code to {}".format(sta))
 
+
+
+dali = None
+if doDali and dali == None:
+    try:
+        with daliMutex:
+            dali = getDali()
+    except ValueError as err:
+        print("Unable to init DataLink at {0} {1:d}: {2}".format(daliHost, daliPort, err))
+
+
 miniseedBuffers = dict()
-for chan in chanList:
+for key, chan in chanMap.items():
     miniseedBuffers[chan] = dataBuffer.DataBuffer(net, sta, loc, chan,
-             getSps(), archive=True, encoding=simpleMiniseed.ENC_SHORT)
+             getSps(), archive=doArchive,
+             encoding=simpleMiniseed.ENC_SHORT, dali=dali,
+             continuityFactor=10)
+
 
 dataQueue = queue.Queue()
-infoQueue = queue.Queue()
 sendThread = threading.Thread(target=worker)
 sendThread.start()
 
-dali = None
 
 try:
     before = time.perf_counter()
-    sensor.enableFifoBuffer(30, pin, dataCallback)
+    sensor.enableFifoBuffer(28, pin, dataCallback)
     sps = getSps()
     gain = getGain()
-
-    if doDali and dali == None:
-        try:
-            with daliMutex:
-                dali = getDali()
-        except ValueError as err:
-            print("Unable to init DataLink at {0} {1:d}: {2}".format(daliHost, daliPort, err))
 
     # Main loop to print the acceleration and orientation every second.
     while keepGoing:

@@ -142,8 +142,8 @@ class MiniseedRecord:
             for b in self.blockettes:
                 offset = self.packBlockette(recordBytes, offset, b)
         # set offset to data in header
-        if offset < 64:
-            offset = 64
+        #if offset < 64:
+        #    offset = 64
         struct.pack_into(self.header.endianChar+'H', recordBytes, 44, offset)
         self.packData(recordBytes, offset, self.data)
         return recordBytes
@@ -169,11 +169,15 @@ class MiniseedRecord:
 
     def packData(self, recordBytes, offset, data):
         if self.header.encoding == ENC_SHORT:
+            if (len(recordBytes) < offset+2*len(data)):
+                raise Exception("not enough bytes in record to fit data: byte:{:d} offset: {:d} len(data): {:d}  enc:{:d}".format(len(recordBytes), offset, len(data), self.header.encoding))
             for d in data:
                 struct.pack_into(self.header.endianChar+'h', recordBytes, offset, d)
                 #record[offset:offset+4] = d.to_bytes(4, byteorder='big')
                 offset+=2
         elif self.header.encoding == ENC_INT:
+            if (len(recordBytes) < offset+4*len(data)):
+                raise Exception("not enough bytes in record to fit data: byte:{:d} offset: {:d} len(data): {:d}  enc:{:d}".format(len(recordBytes), offset, len(data), self.header.encoding))
             for d in data:
                 struct.pack_into(self.header.endianChar+'i', recordBytes, offset, d)
                 offset+=4

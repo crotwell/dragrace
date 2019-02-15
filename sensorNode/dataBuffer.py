@@ -118,7 +118,7 @@ class DataBuffer:
         predictedNextStart = self.starttime + self.numpts*self.sampPeriod
         if abs(predictedNextStart - nextstarttime) < self.continuityFactor*self.sampPeriod:
             return True
-        print("Not Cont: {} {} < {}".format(predictedNextStart, nextstarttime, self.continuityFactor*self.sampPeriod ))
+        #print("Not Cont: {} {} {} = {} < {}".format(self.numpts, predictedNextStart, nextstarttime, abs(predictedNextStart - nextstarttime), self.continuityFactor*self.sampPeriod ))
         return False
 
     def canFit(self, nextdataArray):
