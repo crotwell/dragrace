@@ -47,7 +47,7 @@ function loadData() {
   hash.sec = parseFloat(document.getElementsByName('sec')[0].value, 0);
   hash.durMin = parseFloat(document.getElementsByName('dur')[0].value, 10);
   hash.channels = document.getElementsByName('channels')[0].value.split(',');
-  hash.doRmean = document.getElementsByName('doRmean')[0].checked;
+  hash.doRMean = document.getElementsByName('doRMean')[0].checked;
   hash.doGain = document.getElementsByName('doGain')[0].checked;
   hash.doTaper = document.getElementsByName('doTaper')[0].checked;
   hash.doFFT = document.getElementsByName('doFFT')[0].checked;
@@ -126,7 +126,7 @@ function loadData() {
     }
     return seisplotjs.RSVP.hash(hash);
   }).then(hash => {
-    if (hash.doRmean) {
+    if (hash.doRMean) {
       let outMap = new Map()
       hash.traceMap.forEach((value, key) => {
         let trace = seisplotjs.filter.rMean(value)
@@ -150,6 +150,9 @@ function loadData() {
               plotDiv.style("width", "100%");
               plotDiv.style("height", "450px");
         let seisPlotConfig = new wp.SeismographConfig();
+        if (hash.doRMean) {
+          seisPlotConfig.doRMean = hash.doRMean;
+        }
 
         let traceList = []
         hash.traceMap.forEach((value, key) => {
