@@ -284,7 +284,10 @@ def handleSignal(sigNum, stackFrame):
 
 def doQuit():
     global keepGoing
-    keepGoing = False
+    if keepGoing:
+        keepGoing = False
+    else:
+        sys.exit(0)
 
 def cleanUp():
     if sensor is not None:
