@@ -43,8 +43,8 @@ let EEYORE_HOST = "dragrace.seis.sc.edu";
 let EEYORE_PORT = 6383;
 let host = IRIS_HOST;
 let port = 80;
-host="192.168.1.80";
-port=6383;
+host="127.0.0.1";
+port=6382;
 
 let seedlinkUrl = wsProtocol+"//"+host+(port==80?'':':'+port)+'/seedlink';
 console.log("URL: "+seedlinkUrl);
@@ -82,15 +82,21 @@ doplot = function(sta) {
 
   d3.selectAll('.textStaCode').text(sta);
   d3.selectAll('.textNetCode').text(net);
-
+  if (sta !== '3605') {
+    net = "XX";
+  } else {
+    net = "CO";
+  }
   let config = [
     'STATION '+sta+' '+net,
     'SELECT 00HH?.D',
     'STATION '+sta+' '+net,
     'SELECT 00HN?.D' ];
+  config = [
+      'STATION '+sta+' '+net,
+      'SELECT 00HNZ.D' ];
 
-
-  console.log("before select");
+  console.log(`before select ${net}.${sta}`);
   svgParent.selectAll("*").remove();
   if (wsProtocol == 'wss:' && host == IRIS_HOST) {
     svgParent.append("h3").attr('class', 'waitingondata').text("IRIS currently does not support connections from https pages, try from a http page instead.");
@@ -124,7 +130,7 @@ doplot = function(sta) {
       svgParent.select("p.waitingondata").remove();
       let seisDiv = svgParent.append('div').attr('class', codes);
   //    seisDiv.append('p').text(codes);
-      let plotDiv = seisDiv.append('div').attr('class', 'realtimePlot');
+      let plotDiv = seisDiv.append('div').attr('class', 'realtime');
       plotDiv.style("position", "relative");
       plotDiv.style("width", "100%");
       plotDiv.style("height", "150px");
@@ -132,9 +138,11 @@ doplot = function(sta) {
       let seisPlotConfig = new wp.SeismographConfig();
       seisPlotConfig.xSublabel = codes;
       seisPlotConfig.margin = margin ;
+      seisPlotConfig.maxHeight = 200 ;
       let seisPlot = new wp.CanvasSeismograph(plotDiv, seisPlotConfig, [trace], timeWindow.start, timeWindow.end);
       seisPlot.svg.classed('realtimePlot', true).classed('overlayPlot', false)
       seisPlot.disableWheelZoom();
+      seisPlot.setHeight(150);
       seisPlot.draw();
       allSeisPlots.set(slPacket.miniseed.codes(), seisPlot);
       allTraces.set(codes, trace)
@@ -154,6 +162,11 @@ doplot = function(sta) {
     // turn all into string
     let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
     d3.select("div.triggers").append("p").text(`Trigger: ${s}`);
+    let trig = JSON.parse(s)
+    marker = { markertype: 'predicted', name: "trigger", time: moment.utc(trig.triggers[0].time) };
+    for (let sp of allSeisPlots.values()) {
+      sp.appendMarkers( [ marker]);
+    }
   };
   dlConn = new seedlink.DataLinkConnection(datalinkUrl, dlPacketCallback, errorFn);
   dlConn.connect().then(serverId => {

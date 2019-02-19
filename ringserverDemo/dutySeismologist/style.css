@@ -1,0 +1,34 @@
+div.realtime {
+  height: 250px;
+}
+
+svg.seismograph {
+  height: 150px;
+  width: 90%;
+}
+canvas.seismograph {
+  height: 150px;
+  width: 90%;
+}
+
+path.seispath {
+  stroke: skyblue;
+  fill: none;
+  stroke-width: 1px;
+}
+
+path.seisplot .orientZ {
+  stroke: seagreen;
+}
+
+path.seisplot .orientN {
+  stroke: red;
+}
+
+path.seisplot .orientE {
+  stroke: orange;
+}
+
+text.sublabel {
+  font-size: x-small;
+}
