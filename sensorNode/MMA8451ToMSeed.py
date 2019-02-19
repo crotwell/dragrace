@@ -159,9 +159,18 @@ def sending_worker():
                 #do_work(now, status, samplesAvail, data)
                 print("Exception sending packet: {}".format(err))
                 traceback.print_exc()
-                dataQueue.task_done()
-                if quitOnError:
-                    keepGoing = False
+                if dali:
+                    # if at first you don't suceed, try try again
+                    dali.reconnect()
+                    try:
+                        do_work( now, status, samplesAvail, data)
+                        dataQueue.task_done()
+                    except Exception as err:
+                        dataQueue.task_done()
+                        print("2nd Exception sending packet: {}".format(err))
+                        traceback.print_exc()
+                        if quitOnError:
+                            keepGoing = False
         except queue.Empty:
             print("no data in queue??? startACQ={0:b}".format(startACQ))
     print("Worker exited")
