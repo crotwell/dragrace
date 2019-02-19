@@ -49,7 +49,18 @@ class DataLink:
         type=None
         value=None
         message=None
-        if header.startswith("ID "):
+        if header.startswith("PACKET "):
+            s = header.split(" ")
+            type = s[0]
+            streamId = s[1]
+            packetId = s[2]
+            packetTime = s[3]
+            dataStartTime = s[4]
+            dataEndTime = s[5]
+            dSize = int(s[6])
+            data = yield from self.reader.readexactly(dSize)
+            return DaliPacket(type, streamId, packetId, packetTime, dataStartTime, dataEndTime, dSize, data)
+        elif header.startswith("ID "):
             s = header.split(" ")
             type = s[0]
             value = ""
@@ -89,6 +100,18 @@ class DataLink:
         return r
 
     @asyncio.coroutine
+    def writeCommand(self, command, dataString=None):
+        dataBytes = None
+        if (dataString):
+            dataBytes = dataString.encode('UTF-8')
+            header = "{} {}".format(command, len(dataBytes))
+        else:
+            header = command
+        yield from self.send(header, dataBytes)
+        r = yield from  self.parseResponse()
+        return r
+
+    @asyncio.coroutine
     def id(self, programname, username, processid, architecture):
         header = "ID {}:{}:{}:{}".format(programname, username, processid, architecture)
         yield from self.send(header, None)
@@ -102,6 +125,26 @@ class DataLink:
         r = yield from  self.parseResponse()
         return r
 
+    @asyncio.coroutine
+    def match(self, pattern):
+        r = yield from self.writeCommand("MATCH", pattern)
+        return r
+
+    @asyncio.coroutine
+    def reject(self, pattern):
+        r = yield from self.writeCommand("REJECT", pattern)
+        return r
+
+    @asyncio.coroutine
+    def stream(self):
+        header = "STREAM"
+        yield from self.send(header, None)
+
+    @asyncio.coroutine
+    def endStream(self):
+        header = "ENDSTREAM"
+        yield from self.send(header, None)
+
     def close(self):
         if self.writer is not None:
             self.writer.close()
@@ -111,7 +154,7 @@ class DataLink:
     @asyncio.coroutine
     def reconnect(self):
         self.close()
-        return self.createDaliConnection(host, port)
+        self.createDaliConnection(host, port)
 
 class DaliResponse:
 
@@ -122,3 +165,25 @@ class DaliResponse:
 
     def __str__(self):
         return "type={} value={} message={}".format(self.type, self.value, self.message)
+
+class DaliPacket:
+    def __init__(self,
+                 type,
+                 streamId,
+                 packetId,
+                 packetTime,
+                 dataStartTime,
+                 dataEndTime,
+                 dSize,
+                 data):
+        self.type = type
+        self.streamId = streamId
+        self.packetId = packetId
+        self.packetTime = packetTime
+        self.dataStartTime = dataStartTime
+        self.dataEndTime = dataEndTime
+        self.dSize = dSize
+        self.data = data
+
+    def __str__(self):
+        return "{} {} {} {} {} {} {}".format(self.type, self.streamId, self.packetId, self.packetTime, self.dataStartTime, self.dataEndTime, self.dSize)
