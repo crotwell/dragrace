@@ -26,10 +26,10 @@ def doTest(loop):
     dali = simpleDali.DataLink(host, port)
     serverId = yield from dali.id(programname, username, processid, architecture)
     print("Resp: {}".format(serverId.toString()))
-    #serverInfo = yield from dali.info("STATUS")
-    #print("Info: {} ".format(serverInfo.message))
-    #serverInfo = yield from dali.info("STREAMS")
-    #print("Info: {} ".format(serverInfo.message))
+    serverInfo = yield from dali.info("STATUS")
+    print("Info: {} ".format(serverInfo.message))
+    serverInfo = yield from dali.info("STREAMS")
+    print("Info: {} ".format(serverInfo.message))
     network = "YY"
     station = "TEST"
     location = "00"

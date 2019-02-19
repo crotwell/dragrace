@@ -1,4 +1,5 @@
 from datetime import timedelta, datetime
+import asyncio
 import os
 import simpleMiniseed
 MICRO = 1000000
@@ -26,42 +27,51 @@ class DataBuffer:
         self.numpts = 0
         self.msFile = None
         self.msFilename = None
+        print("DataBuffer init: archie: {} dali: {}".format(self.archive, self.dali))
 
 
     def push(self, starttime, dataArray):
+        """push samples, return None if continuous and can fit in buffers.
+        Otherwise return the result of flushing the buffer (Task for dali, String filename for file)
+        """
+        result = None
         if starttime is None:
             raise Error("Starttime cannot be None")
         if dataArray is None:
             raise Error("dataArray cannot be None")
         if not (self.continuous(starttime) and self.canFit(dataArray)):
-            self.flush()
+            result = self.flush()
             self.starttime = starttime
             self.dataArray = dataArray
             self.numpts = len(dataArray)
         else:
+            result = "Buffered"
             self.dataArray.extend(dataArray)
             self.numpts += len(dataArray)
+        return result
 
     def flush(self):
+        result = None
         if self.dataArray is None:
-            return
+            return "empty"
         msr = self._bufferToMiniseed()
+        result = ""
+        if self.archive:
+            result = self.miniseedToRingserverFile(msr)
         if self.dali:
-            self.miniseedToDali(msr)
-        elif self.archive:
-            self.miniseedToRingserverFile(msr)
-        else:
-            self.miniseedToPlainFile(msr)
+            result = self.miniseedToDali(msr)
         self.numpts = 0
         self.starttime = None
         self.dataArray = None
+        return result
 
     def close(self):
-        self.flush()
+        result = self.flush()
         if self.msFile:
             self.msFile.close()
             self.msFile = None
             self.msFilename = None
+        return result
 
     def miniseedToRingserverFile(self, msr):
         filename = "{net}/{sta}/{year}/{yday}/{net}.{sta}.{loc}.{chan}.{year}.{yday}.{hour}".format(net=self.network,
@@ -73,7 +83,7 @@ class DataBuffer:
                                             hour=self.starttime.strftime("%H"))
         if not os.path.exists(os.path.dirname(filename)):
             os.makedirs(os.path.dirname(filename))
-        self.miniseedToFile(msr, filename)
+        return self.miniseedToFile(msr, filename)
 
     def miniseedToPlainFile(self, msr):
         filename = "{net}.{sta}.{loc}.{chan}.{year}.{yday}.{hour}".format(net=self.network,
@@ -83,7 +93,7 @@ class DataBuffer:
                                             year=self.starttime.strftime("%Y"),
                                             yday=self.starttime.strftime("%j"),
                                             hour=self.starttime.strftime("%H"))
-        self.miniseedToFile(msr, filename)
+        return self.miniseedToFile(msr, filename)
 
     def miniseedToFile(self, msr, filename):
         if self.msFile == None or self.msFilename is not filename:
@@ -93,9 +103,12 @@ class DataBuffer:
             self.msFilename = filename
         self.msFile.write(msr.pack())
         self.msFile.flush()
+        return filename
 
+    @asyncio.coroutine
     def miniseedToDali(self, msr):
-        self.dali.writeMSeed(msr)
+        r = yield from self.dali.writeMSeed(msr)
+        return r
 
 
     def _bufferToMiniseed(self):

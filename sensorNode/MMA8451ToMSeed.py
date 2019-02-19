@@ -5,9 +5,9 @@
 import time
 import struct
 import queue
-import threading
+from threading import Thread
 from datetime import datetime, timedelta
-import sys, os
+import sys, os, signal
 from pathlib import Path
 import asyncio
 import traceback
@@ -26,20 +26,20 @@ import simpleDali
 import dataBuffer
 import decimate
 
-dali = None
-daliMutex = threading.Lock()
-
 daliHost="129.252.35.36"
 daliPort=15003
+dali=None
 
 pin = 18  # GPIO interrupt
 #MAX_SAMPLES = 2000
 MAX_SAMPLES = -1
 #MAX_SAMPLES = 1
 
-doDali = False
+doDali = True
 doArchive = True
-doFIR = True
+doFIR = False
+
+quitOnError = True
 
 # Initialize I2C bus.
 i2c = busio.I2C(board.SCL, board.SDA)
@@ -63,7 +63,7 @@ sensor.range = adafruit_mma8451.RANGE_2G  # +/- 2G
 # Optionally change the data rate from its default of 800hz:
 #sensor.data_rate = adafruit_mma8451.DATARATE_800HZ  #  800Hz (default)
 #sensor.data_rate = adafruit_mma8451.DATARATE_400HZ  #  400Hz
-#sensor.data_rate = adafruit_mma8451.DATARATE_200HZ  #  200Hz
+sensor.data_rate = adafruit_mma8451.DATARATE_200HZ  #  200Hz
 #sensor.data_rate = adafruit_mma8451.DATARATE_100HZ  #  100Hz
 #sensor.data_rate = adafruit_mma8451.DATARATE_50HZ   #   50Hz
 #sensor.data_rate = adafruit_mma8451.DATARATE_12_5HZ # 12.5Hz
@@ -123,10 +123,26 @@ def dataCallback(now, status, samplesAvail, data):
     item = now, status, samplesAvail, data
     dataQueue.put(item)
 
-def worker():
+def sending_worker():
+    print("starting worker")
+
+    time.sleep(5)
     global keepGoing
     global startACQ
     global dataQueue
+    my_loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(my_loop)
+    my_loop.set_debug(True)
+
+    if dali:
+        programname="MMA8451ToMseed"
+        username="me"
+        processid="0"
+        architecture="python"
+        task = my_loop.create_task(dali.id( programname, username, processid, architecture))
+        my_loop.run_until_complete(task)
+        r = task.result()
+        print("id respones {}".format(r))
     while keepGoing:
         try:
             item = dataQueue.get(timeout=2)
@@ -136,7 +152,7 @@ def worker():
                 break
             now, status, samplesAvail, data = item
             try:
-                do_work(now, status, samplesAvail, data)
+                do_work( now, status, samplesAvail, data)
                 dataQueue.task_done()
             except Exception as err:
                 # try once more?
@@ -144,13 +160,16 @@ def worker():
                 print("Exception sending packet: {}".format(err))
                 traceback.print_exc()
                 dataQueue.task_done()
+                if quitOnError:
+                    keepGoing = False
         except queue.Empty:
             print("no data in queue??? startACQ={0:b}".format(startACQ))
     print("Worker exited")
+    cleanUp()
+    asyncio.get_event_loop().close()
 
 
 def do_work(now, status, samplesAvail, data):
-    global daliMutex
     global startACQ
     global totalSamples
     global sentSamples
@@ -166,8 +185,9 @@ def do_work(now, status, samplesAvail, data):
         print("overflow at loops={0:d}".format(loops))
     if len(data) < samplesAvail:
         raise Exception("Not enough samples avail: len={:d}, sampsAvail={:d}".format(len(data), samplesAvail))
+    sendResult = None
     if samplesAvail != 0:
-        sendToMseed(now, status, samplesAvail, data)
+        sendResult =  sendToMseed(now, status, samplesAvail, data)
         totalSamples += samplesAvail
         if (MAX_SAMPLES != -1 and totalSamples > MAX_SAMPLES):
             after = time.perf_counter()
@@ -176,11 +196,12 @@ def do_work(now, status, samplesAvail, data):
             sensor.reset()
             GPIO.remove_event_detect(pin)
             keepGoing = False
+    return sendResult
 
 def getDali():
     global daliPort
     global daliHost
-    global dali, remote
+    global dali, doDali
     if (doDali and dali is None):
         dali = initDali(daliHost, daliPort)
     return dali
@@ -194,6 +215,7 @@ def sendToFile(now, dataPacket):
             curFile.close()
         curFile = open(filename, "ab")
     curFile.write(dataPacket)
+    return "write to {}".format(filename)
 
 def sendToMseed(now, status, samplesAvail, data):
     global staString
@@ -211,9 +233,25 @@ def sendToMseed(now, status, samplesAvail, data):
             raise Exception("len after decimate not same: {} {}".format(len(xData),len(yData)))
         yData = decimate(decimateMap["Y"], yData)
         zData = decimate(decimateMap["Z"], zData)
-    miniseedBuffers[chanMap["X"]].push(start, xData)
-    miniseedBuffers[chanMap["Y"]].push(start, yData)
-    miniseedBuffers[chanMap["Z"]].push(start, zData)
+
+    loop = asyncio.get_event_loop()
+    ztask = loop.create_task(doMiniseedBuffer(miniseedBuffers[chanMap["Z"]], start, zData))
+    loop.run_until_complete(ztask)
+    ytask = loop.create_task(doMiniseedBuffer(miniseedBuffers[chanMap["Y"]], start, yData))
+    loop.run_until_complete(ytask)
+    xtask = loop.create_task(doMiniseedBuffer(miniseedBuffers[chanMap["X"]], start, xData))
+    loop.run_until_complete(xtask)
+    return [xtask, ytask, ztask]
+    # return [
+    #     await miniseedBuffers[chanMap["X"]].push(start, xData),
+    #     await miniseedBuffers[chanMap["Y"]].push(start, yData),
+    #     await miniseedBuffers[chanMap["Z"]].push(start, zData)
+    # ]
+
+@asyncio.coroutine
+def doMiniseedBuffer(miniseedBuf, start, data):
+    r = miniseedBuf.push(start, data)
+    return r
 
 def decimate(decimator, data):
     out = []
@@ -231,20 +269,43 @@ def getLocalHostname():
         hostname = hF.read()
     return hostname.strip()
 
+def handleSignal(sigNum, stackFrame):
+    print("############ handleSignal {} ############".format(sigNum))
+    doQuit()
+
+def doQuit():
+    global keepGoing
+    keepGoing = False
+
+def cleanUp():
+    if sensor is not None:
+        print("remove gpio interrupt pin")
+        GPIO.remove_event_detect(pin)
+        print("reset sensor")
+        sensor.reset()
+    for key in miniseedBuffers:
+        try:
+            miniseedBuffers[key].close()
+        except Exception as err:
+            print(err)
+    if (dali != None):
+        dali.close()
 
 
+
+
+signal.signal(signal.SIGTERM, handleSignal)
+signal.signal(signal.SIGINT, handleSignal)
 sta = getLocalHostname()[0:5].upper()
 print("set station code to {}".format(sta))
 
-
-
-dali = None
-if doDali and dali == None:
+if doDali:
     try:
-        with daliMutex:
-            dali = getDali()
+        print("try to init dali")
+        dali = getDali()
+        print("init DataLink at {0} {1:d}".format(daliHost, daliPort))
     except ValueError as err:
-        print("Unable to init DataLink at {0} {1:d}: {2}".format(daliHost, daliPort, err))
+        raise Exception("Unable to init DataLink at {0} {1:d}: {2}".format(daliHost, daliPort, err))
 
 
 miniseedBuffers = dict()
@@ -256,45 +317,34 @@ for key, chan in chanMap.items():
 
 
 dataQueue = queue.Queue()
-sendThread = threading.Thread(target=worker)
+print("before create thead")
+sendThread = Thread(target = sending_worker)
+sendThread.daemon=True
+print("thread start")
 sendThread.start()
-
+time.sleep(1)
+print("after thread start sleep")
 
 try:
+    print('task creation started')
     before = time.perf_counter()
     sensor.enableFifoBuffer(28, pin, dataCallback)
     sps = getSps()
     gain = getGain()
 
-    # Main loop to print the acceleration and orientation every second.
     while keepGoing:
         line = sys.stdin.readline()
         if (line.startswith("q")):
             keepGoing = False
             break
         time.sleep(0.1)
-except ValueError as err:
-    print("   error: {0}".format(err))
-except RuntimeError as err:
-    print("Other Error: {0}".format(err))
-    if (dali != None):
-        dali.close()
-    os._exit(1)  # harsh but must use os._exit as other threads keep alive
+    print("before sendThread.join()")
 
-print("Quiting")
-if sensor is not None:
-    print("reset sensor")
-    sensor.reset()
-    print("remove gpio interrupt pin")
-    GPIO.remove_event_detect(pin)
+    sendThread.join()
+    print("after sendThread.join()")
 
-
-for key in miniseedBuffers:
-    miniseedBuffers[key].close()
-
-time.sleep(0.1)
-print("join queue to wait for xbee worker to finish")
-#dataQueue.join() # wait until any remaining data is sent
-if dali is not None:
-    print("close dali")
-    dali.close()
+finally:
+    doQuit()
+    print("main finally")
+    #cleanUp()
+print("Main thread done")
