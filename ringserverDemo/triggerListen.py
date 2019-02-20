@@ -12,10 +12,11 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 host = "129.252.35.36"
-host = "127.0.0.1"
 port = 15003
 #host = "129.252.35.20"
-#port = 6383
+#host = "127.0.0.1"
+#port = 6382
+
 programname="triggerListen"
 username="dragrace"
 processid=0
@@ -38,16 +39,23 @@ signal.signal(signal.SIGTERM, handleSignal)
 @asyncio.coroutine
 def doTest(loop):
     dali = simpleDali.DataLink(host, port)
+    dali.verbose = True
     serverId = yield from dali.id(programname, username, processid, architecture)
     print("Resp: {}".format(serverId))
     serverInfo = yield from dali.info("STATUS")
     print("Info: {} ".format(serverInfo.message))
-    serverInfo = yield from dali.info("STREAMS")
-    print("Info: {} ".format(serverInfo.message))
-    yield from dali.match(".*/MTRIG")
-    yield from dali.stream()
+    #serverInfo = yield from dali.info("STREAMS")
+    #print("Info: {} ".format(serverInfo.message))
+    r = yield from dali.match(".*/MTRIG")
+    print("match() Resonse {}".format(r))
+
+    begintime = datetime.utcnow() - timedelta(minutes=5)
+    r = yield from dali.positionAfter(begintime)
+    print("positionAfter() Resonse {}".format(r))
+    r = yield from dali.stream()
     while(keepGoing):
         trig = yield from dali.parseResponse()
+        print("parseResponse {} ".format(trig.type))
         print("Trigger: {}  {}".format(trig, json.dumps(json.loads(trig.data), indent=4)))
 
     dali.close()

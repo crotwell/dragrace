@@ -9,6 +9,7 @@ class DataLink:
         self.port = port
         self.reader = None
         self.writer = None
+        self.verbose = False
 
     @asyncio.coroutine
     def createDaliConnection(self):
@@ -24,14 +25,14 @@ class DataLink:
         self.writer.write(pre.encode('UTF-8'))
         lenByte = len(h).to_bytes(1, byteorder='big', signed=False)
         self.writer.write(lenByte)
-        #print("send pre {} as {}{:d}".format(pre, pre.encode('UTF-8'),lenByte[0]))
+        if self.verbose: print("send pre {} as {}{:d}".format(pre, pre.encode('UTF-8'),lenByte[0]))
         self.writer.write(h)
-        #print("send head {}".format(header))
+        if self.verbose: print("send head {}".format(header))
         if(data):
             self.writer.write(data)
-            #print("send data of size {:d}".format(len(data)))
+            if self.verbose: print("send data of size {:d}".format(len(data)))
         out = yield from self.writer.drain()
-        #print("drained")
+        if self.verbose: print("drained")
         return out
 
     @asyncio.coroutine
@@ -41,7 +42,7 @@ class DataLink:
         if pre[0] == 68 and pre[1] == 76:
             hSize = pre[2]
         else:
-            print("did not receive DL from read pre {:d}{:d}{:d}".format(pre[0],pre[1],pre[2]))
+            if self.verbose: print("did not receive DL from read pre {:d}{:d}{:d}".format(pre[0],pre[1],pre[2]))
             self.close()
             raise Exception("did not receive DL from read pre")
         h = yield from self.reader.readexactly(hSize)
@@ -49,6 +50,7 @@ class DataLink:
         type=None
         value=None
         message=None
+        if self.verbose: print("parseRespone header: {}".format(h))
         if header.startswith("PACKET "):
             s = header.split(" ")
             type = s[0]
@@ -75,7 +77,7 @@ class DataLink:
             message = m.decode("utf-8")
             return DaliResponse(type, value, message)
         else:
-            print("Header does not start with OK or ERROR: {}".format(header))
+            raise Exception("Header does not start with INFO, ID, PACKET, OK or ERROR: {}".format(header))
         return DaliResponse(type, value, message)
 
     @asyncio.coroutine
@@ -101,6 +103,7 @@ class DataLink:
 
     @asyncio.coroutine
     def writeCommand(self, command, dataString=None):
+        if self.verbose: print("writeCommand: cmd: {} dataStr: {}".format(command, dataString))
         dataBytes = None
         if (dataString):
             dataBytes = dataString.encode('UTF-8')
@@ -114,15 +117,19 @@ class DataLink:
     @asyncio.coroutine
     def id(self, programname, username, processid, architecture):
         header = "ID {}:{}:{}:{}".format(programname, username, processid, architecture)
-        yield from self.send(header, None)
-        r = yield from  self.parseResponse()
+        r = yield from self.writeCommand(header, None)
         return r
 
     @asyncio.coroutine
     def info(self, type):
         header = "INFO {}".format(type)
-        yield from self.send(header, None)
-        r = yield from  self.parseResponse()
+        r = yield from self.writeCommand(header, None)
+        return r
+
+    @asyncio.coroutine
+    def positionAfter(self, time):
+        hpdatastart = int(time.timestamp() * MICROS)
+        r = yield from self.writeCommand("POSITION AFTER {:d}".format(hpdatastart), None)
         return r
 
     @asyncio.coroutine

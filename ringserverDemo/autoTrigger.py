@@ -33,16 +33,20 @@ def doTest(loop):
     station = "TEST"
     location = "00"
     channel = "HNZ"
-    dutyOfficer="Philip"
     trigtime = datetime.utcnow()
 
     streamid = "{}.{}.{}.{}/MTRIG".format(network, station, location, channel)
     hpdatastart = int(trigtime.timestamp() * simpleDali.MICROS)
     hpdataend = int(trigtime.timestamp() * simpleDali.MICROS)
     trigInfo= {
-        "type": "manual",
-        "dutyOfficer": dutyOfficer,
+        "type": "stalta",
         "time": trigtime.isoformat(),
+        "network": network,
+        "station": station,
+        "location": location,
+        "channel": channel,
+        "sta": 62,
+        "lta": 418,
         "creation": trigtime.isoformat(),
         "override": {
             "modtime": trigtime.isoformat(),

@@ -3,6 +3,7 @@
 //let seedlink = require('seisplotjs-seedlink');
 // this global comes from the seisplotjs_seedlink standalone js
 let seedlink = seisplotjs.seedlink
+let datalink = seisplotjs.datalink
 
 //let wp = require('seisplotjs-waveformplot');
 // this global comes from the seisplotjs_waveformplot standalone js
@@ -41,10 +42,12 @@ if (protocol == 'https:') {
 let IRIS_HOST = "rtserve.iris.washington.edu";
 let EEYORE_HOST = "dragrace.seis.sc.edu";
 let EEYORE_PORT = 6383;
-let host = IRIS_HOST;
-let port = 80;
-host="127.0.0.1";
-port=6382;
+let DRAGRACE_HOST = "dragrace.seis.sc.edu";
+let DRAGRACE_PORT = 6383;
+let host = DRAGRACE_HOST;
+let port = DRAGRACE_PORT;
+//host="127.0.0.1";
+//port=6382;
 
 let seedlinkUrl = wsProtocol+"//"+host+(port==80?'':':'+port)+'/seedlink';
 console.log("URL: "+seedlinkUrl);
@@ -58,6 +61,7 @@ d3.selectAll('.textHost').text(host);
 let slConn = null;
 let allSeisPlots = new Map();
 let allTraces = new Map();
+let markers = [];
 let svgParent = wp.d3.select('div.realtime');
 let margin = {top: 20, right: 20, bottom: 50, left: 60};
 
@@ -73,6 +77,19 @@ wp.d3.select("button#load").on("click", function(d) {
   console.log("Load..."+staCode);
   doplot(staCode);
 });
+
+let dlTriggerCallback = function(dlPacket) {
+  // turn all into string
+  let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
+  d3.select("div.triggers").append("p").text(`Trigger: ${s}`);
+  let trig = JSON.parse(s)
+  displayName = trig.dutyOfficer ? trig.dutyOfficer : "AutoTrigger";
+  let mark = { markertype: 'predicted', name: displayName, time: moment.utc(trig.time) };
+  markers.push(mark);
+  for (let sp of allSeisPlots.values()) {
+    sp.appendMarkers( [ mark ]);
+  }
+};
 
 doplot = function(sta) {
   if (slConn) {slConn.close(); slConn = null;}
@@ -143,6 +160,7 @@ doplot = function(sta) {
       seisPlot.svg.classed('realtimePlot', true).classed('overlayPlot', false)
       seisPlot.disableWheelZoom();
       seisPlot.setHeight(150);
+      seisPlot.appendMarkers(markers);
       seisPlot.draw();
       allSeisPlots.set(slPacket.miniseed.codes(), seisPlot);
       allTraces.set(codes, trace)
@@ -158,26 +176,49 @@ doplot = function(sta) {
   });
   slConn.connect();
 
-  let dlPacketCallback = function(dlPacket) {
-    // turn all into string
-    let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
-    d3.select("div.triggers").append("p").text(`Trigger: ${s}`);
-    let trig = JSON.parse(s)
-    marker = { markertype: 'predicted', name: "trigger", time: moment.utc(trig.triggers[0].time) };
-    for (let sp of allSeisPlots.values()) {
-      sp.appendMarkers( [ marker]);
-    }
-  };
-  dlConn = new seedlink.DataLinkConnection(datalinkUrl, dlPacketCallback, errorFn);
+
+  dlConn = new datalink.DataLinkConnection(datalinkUrl, dlTriggerCallback, errorFn);
   dlConn.connect().then(serverId => {
     d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
     return dlConn.awaitDLCommand("MATCH", ".*/MTRIG");
+  }).then(response => {
+    return dlConn.awaitDLCommand(`POSITION AFTER ${datalink.momentToHPTime(timeWindow.start)}`, null);
   }).then(response => {
     d3.select("div.triggers").append("p").text(`MATCH response: ${response}`);
     dlConn.stream();
   });
 };
 
+
+wp.d3.select("button#trigger").on("click", function(d) {
+  let trigtime = moment.utc()
+  let dutyOfficer = document.getElementsByName('dutyofficer')[0].value;
+  dutyOfficer = dutyOfficer.replace(/\W/, '');
+  dutyOfficer = dutyOfficer.replace(/_/, '');
+  dutyOfficer = dutyOfficer.toUpperCase();
+  let trigger = {
+        "type": "manual",
+        "dutyOfficer": dutyOfficer,
+        "time": trigtime.toISOString(),
+        "creation": trigtime.toISOString(),
+        "override": {
+            "modtime": trigtime.toISOString(),
+            "value": "enable"
+        }
+    };
+  let dlTriggerConn = new datalink.DataLinkConnection(datalinkUrl, dlTriggerCallback, errorFn);
+  dlTriggerConn.connect().then(serverId => {
+    d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
+    d3.select("div.triggers").append("p").text(`Send Trigger: ${JSON.stringify(trigger)}`);
+    return dlTriggerConn.writeAck(`XX_MANUAL_TRIG_${dutyOfficer}/MTRIG`,
+      trigtime,
+      trigtime,
+      datalink.stringToUnit8Array(JSON.stringify(trigger)));
+  }).then(ack => {
+    dlTriggerConn.close();
+    d3.select("div.triggers").append("p").text(`Send trigger ack: ${ack}`);
+  });
+});
 
 wp.d3.select("button#pause").on("click", function(d) {
   doPause( ! paused);
@@ -252,5 +293,5 @@ function makeString(dataView , offset , length )  {
 
 let errorFn = function(error) {
   console.log("error: "+error);
-  svgParent.select("p").text("Error: "+error);
+  d3.select("div.triggers").append("p").text(`Error: ${error}`);
 };
