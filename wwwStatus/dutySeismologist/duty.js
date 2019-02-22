@@ -21,8 +21,8 @@ d3.select('#stationChoice')
     .text(function(d) {return d;});
 
 let timerInProgress = false;
-let clockOffset = 0; // should get from server somehow
-let duration = 300;
+let clockOffset = -10; // should get from server somehow
+let duration = 60;
 let maxSteps = -1; // max num of ticks of the timer before stopping, for debugin
 let timeWindow = seisplotjs.fdsndataselect.calcStartEndDates(null, null, duration, clockOffset);
 let protocol = 'http:';
