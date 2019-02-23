@@ -2,6 +2,24 @@ from array import array
 from datetime import timedelta
 
 # modified from http://t-filter.engineerjs.com/
+/*
+
+FIR filter designed with
+ http://t-filter.appspot.com
+
+sampling frequency: 800 Hz
+
+* 0 Hz - 180 Hz
+  gain = 1
+  desired ripple = 5 dB
+  actual ripple = 4.073676780356335 dB
+
+* 200 Hz - 400 Hz
+  gain = 0
+  desired attenuation = -40 dB
+  actual attenuation = -40.20750266764615 dB
+
+*/
 
 class FIR:
     def __init__(self):
