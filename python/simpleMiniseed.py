@@ -213,8 +213,7 @@ def unpackMiniseedHeader(recordBytes, endianChar='>'):
 def unpackBlockette(recordBytes, offset, endianChar):
     blocketteNum, nextOffset = struct.unpack(endianChar+'HH', recordBytes[offset:offset+4])
     print ("Blocket Number in unpackBlockette:", blocketteNum)
-    testBlock=int(blocketteNum)
-    if testBlock = 1000:
+    if blocketteNum == "1000":
         return unpackBlockette1000(recordBytes, offset, endianChar)
     else:
         return BlocketteUnknown(blocketteNum, offset, recordBytes[offset:nextOffset-1])
