@@ -159,7 +159,7 @@ doplot = function(sta) {
       let seisPlot = new wp.CanvasSeismograph(plotDiv, seisPlotConfig, [trace], timeWindow.start, timeWindow.end);
       seisPlot.svg.classed('realtimePlot', true).classed('overlayPlot', false)
       seisPlot.disableWheelZoom();
-      seisPlot.setHeight(150);
+      seisPlot.setHeight(750);
       seisPlot.appendMarkers(markers);
       seisPlot.draw();
       allSeisPlots.set(slPacket.miniseed.codes(), seisPlot);
