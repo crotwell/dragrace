@@ -216,6 +216,7 @@ def unpackBlockette(recordBytes, offset, endianChar):
     bnum=int(blocketteNum)
 # print ("Blockette Number in unpackBlockette:", blocketteNum," ",bnum)
     if bnum == 1000:
+        print ("Blockette Number in unpackBlockette:", blocketteNum," ",bnum)
         return unpackBlockette1000(recordBytes, offset, endianChar)
     else:
         return BlocketteUnknown(blocketteNum, offset, recordBytes[offset:nextOffset-1])
