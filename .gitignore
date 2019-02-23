@@ -1,5 +1,1 @@
-oldStuff/**
-centralArchive/RawData/**
-centralArchive/bin/**
-
-centralArchive/data_*
+python/__pycache__/

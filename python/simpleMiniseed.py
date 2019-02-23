@@ -247,7 +247,8 @@ def unpackMiniseedRecord(recordBytes):
         while(nextBOffset > 0):
             b = unpackBlockette(recordBytes, nextBOffset, endianChar)
             blockettes.append(b)
-#            print('blockette name',type(b).__name__)
+            print('blockette name',type(b).__name__)
+            return
             if type(b).__name__ == 'Blockette1000':
                 header.encoding = b.encoding
 #            else:
