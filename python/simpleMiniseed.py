@@ -187,7 +187,7 @@ class MiniseedRecord:
 def unpackMiniseedHeader(recordBytes, endianChar='>'):
     if len(recordBytes) < 48:
         raise Exception("Not enough bytes for header: {:d}".format(len(recordBytes)))
-    seq, qaulityChar, reserved, sta, loc, chan, net, \
+    seq, qualityChar, reserved, sta, loc, chan, net, \
     year, yday, hour, min, sec, tenthMilli,          \
     numsamples, sampRateFactor, sampRateMult,                  \
     actFlag, ioFlag, qualFlag,                       \
@@ -248,6 +248,7 @@ def unpackMiniseedRecord(recordBytes):
             b = unpackBlockette(recordBytes, nextBOffset, endianChar)
             blockettes.append(b)
             print('blockette name',type(b).__name__)
+            # return added just to get past this ... no help
             return
             if type(b).__name__ == 'Blockette1000':
                 header.encoding = b.encoding
