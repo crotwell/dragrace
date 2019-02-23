@@ -252,7 +252,7 @@ def unpackMiniseedRecord(recordBytes):
             blockettes.append(b)
             print('blockette name',type(b).__name__)
             # return added just to get past this ... no help
-            return
+        #    return
             if type(b).__name__ == 'Blockette1000':
                 header.encoding = b.encoding
 #            else:
