@@ -53,7 +53,7 @@ def getDataBuffer(net, sta, loc, chan, outputSampleRate, outputDali):
         dataBuffers[key] = DataBuffer(net, sta, loc, chan,
                      outputSampleRate, encoding=simpleMiniseed.ENC_SHORT,
                      dali=outputDali)
-        dataBuffers[key].
+        # dataBuffers[key].
     return dataBuffers[key]
 
 @asyncio.coroutine
@@ -74,18 +74,22 @@ def doTest(loop):
     print("match() Response {}".format(r))
 
     # create a separate upload datalink
-    daliUpload = simpleDali.DataLink(host, port)
-    daliUpload.verbose = True
-    serverId = yield from daliUpload.id(programname, username, processid, architecture)
-    print("Connect Upload: {}".format(serverId))
+#    daliUpload = simpleDali.DataLink(host, port)
+#    daliUpload.verbose = True
+#    serverId = yield from daliUpload.id(programname, username, processid, architecture)
+#    print("Connect Upload: {}".format(serverId))
 
     # Start data flowing
     r = yield from daliDownload.stream()
+    print("data is flowing")
     while(keepGoing):
+        print("inside keepGoing loop")
         dlPacket = yield from daliDownload.parseResponse()
         if dlPacket.streamId.endswith("MSEED"):
+            print("got a miniseed packet")
             # check in case we mess up and get non-miniseed packets
             mseedRecord = simpleMiniseed.unpackMiniseedRecord(dlPacket.data)
+            print("got past the unpacking")
             # in data array as integers
             inData = mseedRecord.data
             starttime = mseedRecord.header.starttime
@@ -100,16 +104,17 @@ def doTest(loop):
             # modify outputData if needed
             outputData = array('h', inData)
             for i in range(len(intDataArray)):
+                print("i= , data= {}".format(i,outputData[i]))
                 outputData[i] = inData[i]
             # if data is ready to ship out, maybe
-            dBuf = getDataBuffer(net, sta, loc, chan, outputSampleRate, daliUpload)
-            dBuf.push(starttime, outputDataArray)
+#            dBuf = getDataBuffer(net, sta, loc, chan, outputSampleRate, daliUpload)
+#            dBuf.push(starttime, outputDataArray)
         print("parseResponse {} ".format(trig.type))
         print("Trigger: {}  {}".format(trig, json.dumps(json.loads(trig.data), indent=4)))
-    for key, db in dataBuffers..items():
-        db.flush() # just in case some data has not been sent
+#    for key, db in dataBuffers.items():
+#        db.flush() # just in case some data has not been sent
     daliDownload.close()
-    daliUpload.close()
+#    daliUpload.close()
 
 
 loop = asyncio.get_event_loop()

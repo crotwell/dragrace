@@ -243,13 +243,15 @@ def unpackMiniseedRecord(recordBytes):
     blockettes = []
     if header.numBlockettes > 0:
         nextBOffset = header.blocketteOffset
+        print("Next Byte Offset",nextBOffset)
         while(nextBOffset > 0):
             b = unpackBlockette(recordBytes, nextBOffset, endianChar)
             blockettes.append(b)
+#            print('blockette name',type(b).__name__)
             if type(b).__name__ == 'Blockette1000':
                 header.encoding = b.encoding
-            else:
-                print("Found non-1000 blockette: {}".format(type(b).__name__))
+#            else:
+#                print("Found non-1000 blockette: {}".format(type(b).__name__))
             nextBOffset = b.nextOffset
     data = []
     if header.encoding == ENC_SHORT:
