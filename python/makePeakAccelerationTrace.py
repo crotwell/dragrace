@@ -48,7 +48,7 @@ outputSampleRate=200
 
 def getDataBuffer(net, sta, loc, chan, outputSampleRate, outputDali):
     # changed all . in key to _, per recollection of class conversation
-    key = "{}_{}_{}_{}".format(net, sta, loc, chan)
+    key = "{}.{}.{}.{}".format(net, sta, loc, chan)
     if not key in dataBuffers:
         dataBuffers[key] = DataBuffer(net, sta, loc, chan,
                      outputSampleRate, encoding=simpleMiniseed.ENC_SHORT,
