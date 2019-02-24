@@ -255,10 +255,10 @@ def unpackMiniseedRecord(recordBytes):
             # return added just to get past this ... no help
             if type(b).__name__ == 'Blockette1000':
                 header.encoding = b.encoding
-            else:
-                print("Found non-1000 blockette: {}".format(type(b).__name__))
+#            else:
+#                print("Found non-1000 blockette: {}".format(type(b).__name__))
                 #return added by tjo just to get out of the loop
-                return
+#                return
             nextBOffset = b.nextOffset
     data = []
     if header.encoding == ENC_SHORT:
