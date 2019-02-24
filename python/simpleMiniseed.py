@@ -216,7 +216,7 @@ def unpackBlockette(recordBytes, offset, endianChar):
     bnum=int(blocketteNum)
     print ("Blockette Number in unpackBlockette:", blocketteNum," ",bnum)
     if bnum == 1000:
-        print ("Blockette 1 in unpackBlockette:", blocketteNum," ",bnum)
+        print ("Blockette 1000 found unpackBlockette:", blocketteNum," ",bnum)
         return unpackBlockette1000(recordBytes, offset, endianChar)
     else:
         return BlocketteUnknown(blocketteNum, offset, recordBytes[offset:nextOffset-1])
@@ -257,6 +257,7 @@ def unpackMiniseedRecord(recordBytes):
                 header.encoding = b.encoding
             else:
                 print("Found non-1000 blockette: {}".format(type(b).__name__))
+                #return added by tjo just to get out of the loop
                 return
             nextBOffset = b.nextOffset
     data = []
