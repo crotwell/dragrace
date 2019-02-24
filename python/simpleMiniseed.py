@@ -214,7 +214,7 @@ def unpackBlockette(recordBytes, offset, endianChar):
     blocketteNum, nextOffset = struct.unpack(endianChar+'HH', recordBytes[offset:offset+4])
 #  I do not think I should have to convert to int, but it did not work if I did not convert -- tjo
     bnum=int(blocketteNum)
-    print ("Blockette Number in unpackBlockette:", blocketteNum," ",bnum)
+#    print ("Blockette Number in unpackBlockette:", blocketteNum," ",bnum)
     if bnum == 1000:
         print ("Blockette 1000 found unpackBlockette:", blocketteNum," ",bnum)
         return unpackBlockette1000(recordBytes, offset, endianChar)
@@ -251,7 +251,7 @@ def unpackMiniseedRecord(recordBytes):
         while(nextBOffset > 0):
             b = unpackBlockette(recordBytes, nextBOffset, endianChar)
             blockettes.append(b)
-            print('blockette name',type(b).__name__)
+    #        print('blockette name',type(b).__name__)
             # return added just to get past this ... no help
             if type(b).__name__ == 'Blockette1000':
                 header.encoding = b.encoding
