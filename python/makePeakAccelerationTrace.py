@@ -85,6 +85,7 @@ def doTest(loop):
     while(keepGoing):
         print("inside keepGoing loop")
         dlPacket = yield from daliDownload.parseResponse()
+        print(dlPacket.streamId)
         if dlPacket.streamId.endswith("MSEED"):
             print("got a miniseed packet")
             # check in case we mess up and get non-miniseed packets
