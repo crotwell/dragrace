@@ -48,7 +48,7 @@ outputSampleRate=200
 
 def getDataBuffer(net, sta, loc, chan, outputSampleRate, outputDali):
     # changed all . in key to _, per recollection of class conversation
-    key = "{}_{}_{}_{}".format(net, sta, loc, chan)
+    key = "{}.{}.{}.{}".format(net, sta, loc, chan)
     if not key in dataBuffers:
         dataBuffers[key] = DataBuffer(net, sta, loc, chan,
                      outputSampleRate, encoding=simpleMiniseed.ENC_SHORT,
@@ -85,32 +85,32 @@ def doTest(loop):
     while(keepGoing):
         print("inside keepGoing loop")
         dlPacket = yield from daliDownload.parseResponse()
+        print(dlPacket.streamId)
         if dlPacket.streamId.endswith("MSEED"):
             print("got a miniseed packet")
             # check in case we mess up and get non-miniseed packets
             mseedRecord = simpleMiniseed.unpackMiniseedRecord(dlPacket.data)
             print("got past the unpacking")
             # in data array as integers
-            inData = mseedRecord.data
-            starttime = mseedRecord.header.starttime
-            outputSampleRate = mseedRecord.header.samprate
-            net = mseedRecord.header.network
-            sta = mseedRecord.header.station
-            loc = mseedRecord.header.location
+#            starttime = mseedRecord.header.starttime
+#            outputSampleRate = mseedRecord.header.samprate
+#            net = mseedRecord.header.network
+#            sta = mseedRecord.header.station
+#            loc = mseedRecord.header.location
             # fake channel, but use orientation code
-            chan = "TJ"+mseedRecord.header.channel[2]
+#            chan = "TJ"+mseedRecord.header.channel[2]
             # do something with the integers
             # this just creates a new array with the same data
             # modify outputData if needed
-            outputData = array('h', inData)
-            for i in range(len(intDataArray)):
-                print("i= , data= {}".format(i,outputData[i]))
-                outputData[i] = inData[i]
+#            outputData = array('h', inData)
+#            for i in range(len(intDataArray)):
+#                print("i= , data= {}".format(i,outputData[i]))
+#                outputData[i] = inData[i]
             # if data is ready to ship out, maybe
 #            dBuf = getDataBuffer(net, sta, loc, chan, outputSampleRate, daliUpload)
 #            dBuf.push(starttime, outputDataArray)
-        print("parseResponse {} ".format(trig.type))
-        print("Trigger: {}  {}".format(trig, json.dumps(json.loads(trig.data), indent=4)))
+#        print("parseResponse {} ".format(trig.type))
+#        print("Trigger: {}  {}".format(trig, json.dumps(json.loads(trig.data), indent=4)))
 #    for key, db in dataBuffers.items():
 #        db.flush() # just in case some data has not been sent
     daliDownload.close()

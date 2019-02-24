@@ -187,7 +187,7 @@ class MiniseedRecord:
 def unpackMiniseedHeader(recordBytes, endianChar='>'):
     if len(recordBytes) < 48:
         raise Exception("Not enough bytes for header: {:d}".format(len(recordBytes)))
-    seq, qaulityChar, reserved, sta, loc, chan, net, \
+    seq, qualityChar, reserved, sta, loc, chan, net, \
     year, yday, hour, min, sec, tenthMilli,          \
     numsamples, sampRateFactor, sampRateMult,                  \
     actFlag, ioFlag, qualFlag,                       \
@@ -212,7 +212,11 @@ def unpackMiniseedHeader(recordBytes, endianChar='>'):
 
 def unpackBlockette(recordBytes, offset, endianChar):
     blocketteNum, nextOffset = struct.unpack(endianChar+'HH', recordBytes[offset:offset+4])
-    if blocketteNum == 1000:
+#  I do not think I should have to convert to int, but it did not work if I did not convert -- tjo
+    bnum=int(blocketteNum)
+#    print ("Blockette Number in unpackBlockette:", blocketteNum," ",bnum)
+    if bnum == 1000:
+        print ("Blockette 1000 found unpackBlockette:", blocketteNum," ",bnum)
         return unpackBlockette1000(recordBytes, offset, endianChar)
     else:
         return BlocketteUnknown(blocketteNum, offset, recordBytes[offset:nextOffset-1])
@@ -247,11 +251,14 @@ def unpackMiniseedRecord(recordBytes):
         while(nextBOffset > 0):
             b = unpackBlockette(recordBytes, nextBOffset, endianChar)
             blockettes.append(b)
-#            print('blockette name',type(b).__name__)
+    #        print('blockette name',type(b).__name__)
+            # return added just to get past this ... no help
             if type(b).__name__ == 'Blockette1000':
                 header.encoding = b.encoding
 #            else:
 #                print("Found non-1000 blockette: {}".format(type(b).__name__))
+                #return added by tjo just to get out of the loop
+#                return
             nextBOffset = b.nextOffset
     data = []
     if header.encoding == ENC_SHORT:
