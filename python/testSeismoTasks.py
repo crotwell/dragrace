@@ -28,7 +28,7 @@ print(Coordinate_Rotation_2D(1,0,45.))
 print(Rotate_2D_TimeSeries(x,y,45.))
 
 x = [1,1,1]
-y = [1,1,1]
+y = [1,3,1]
 o = [0,0,0,0,0]
 lo=len(o)
 
