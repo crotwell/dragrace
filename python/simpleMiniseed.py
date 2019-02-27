@@ -216,10 +216,9 @@ def unpackBlockette(recordBytes, offset, endianChar):
     bnum=int(blocketteNum)
 #    print ("Blockette Number in unpackBlockette:", blocketteNum," ",bnum)
     if bnum == 1000:
-        print ("Blockette 1000 found unpackBlockette:", blocketteNum," ",bnum)
         return unpackBlockette1000(recordBytes, offset, endianChar)
     else:
-        return BlocketteUnknown(blocketteNum, offset, recordBytes[offset:nextOffset-1])
+        return BlocketteUnknown(blocketteNum, nextOffset, recordBytes[offset:nextOffset])
 
 def unpackBlockette1000(recordBytes, offset, endianChar):
     """named Tuple of blocketteNum, nextOffset, encoding, byteorder, recLength"""
