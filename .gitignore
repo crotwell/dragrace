@@ -1,1 +1,8 @@
 python/__pycache__/
+centralArchive/RawData/*
+centralArchive/bin
+centralArchive/data_2018*
+oldStuff
+ringserverDemo/ring/*
+ringserverDemo/ringserver
+sensorNode/Adafruit_CircuitPython_MMA8451

@@ -58,7 +58,7 @@ let datalinkUrl = wsProtocol+"//"+host+(port==80?'':':'+port)+'/datalink';
 d3.selectAll('.textHost').text(host);
 
 
-let slConn = null;
+let dlConn = null;
 let allSeisPlots = new Map();
 let allTraces = new Map();
 let markers = [];
@@ -78,6 +78,55 @@ wp.d3.select("button#load").on("click", function(d) {
   doplot(staCode);
 });
 
+
+let handleMSeed = function(miniseed) {
+  let codes = miniseed.codes();
+  let seismogram = wp.miniseed.createSeismogram([miniseed]);
+  if (allSeisPlots.has(codes) && allTraces.has(codes)) {
+    const oldTrace = allTraces.get(codes);
+    oldTrace.append(seismogram);
+    const littleBitLarger = {'start': moment.utc(timeWindow.start).subtract(60, 'second'),
+                            'end': moment.utc(timeWindow.end).add(180, 'second')};
+    const newTrace = oldTrace.trim(littleBitLarger);
+    if (newTrace) {
+      allTraces.set(codes, newTrace);
+      allSeisPlots.get(codes).replace(oldTrace, newTrace);
+      allSeisPlots.get(codes).calcScaleDomain();
+    } else {
+      // trim removed all data, nothing left in window
+      allTraces.delete(codes);
+      allSeisPlots.get(codes).remove(oldTrace);
+      console.log(`All data removed from trace ${codes}`);
+    }
+//      allSeisPlots.get(codes).trim(timeWindow);
+  } else {
+    svgParent.select("p.waitingondata").remove();
+    let seisDiv = svgParent.append('div').attr('class', codes);
+//    seisDiv.append('p').text(codes);
+    let plotDiv = seisDiv.append('div').attr('class', 'realtime');
+    plotDiv.style("position", "relative");
+    plotDiv.style("width", "100%");
+    plotDiv.style("height", "150px");
+    let trace = new seisplotjs.model.Trace(seismogram);
+    let seisPlotConfig = new wp.SeismographConfig();
+    seisPlotConfig.xSublabel = codes;
+    seisPlotConfig.margin = margin ;
+    seisPlotConfig.maxHeight = 200 ;
+    let seisPlot = new wp.CanvasSeismograph(plotDiv, seisPlotConfig, [trace], timeWindow.start, timeWindow.end);
+    seisPlot.svg.classed('realtimePlot', true).classed('overlayPlot', false)
+    seisPlot.disableWheelZoom();
+    seisPlot.setHeight(150);
+    seisPlot.appendMarkers(markers);
+    seisPlot.draw();
+    allSeisPlots.set(codes, seisPlot);
+    allTraces.set(codes, trace)
+  }
+}
+
+let dlMSeedCallback = function(dlPacket) {
+  return handleMSeed(dlPacket.miniseed);
+};
+
 let dlTriggerCallback = function(dlPacket) {
   // turn all into string
   let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
@@ -91,8 +140,16 @@ let dlTriggerCallback = function(dlPacket) {
   }
 };
 
+let dlCallback = function(dlPacket) {
+  if (dlPacket.streamId.endsWith("MSEED")) {
+    dlMSeedCallback(dlPacket);
+  } else if (dlPacket.streamId.endsWith("TRIG")) {
+    dlTriggerCallback(dlPacket);
+  }
+};
+
 doplot = function(sta) {
-  if (slConn) {slConn.close(); slConn = null;}
+  if (dlConn) {dlConn.close(); dlConn = null;}
   doDisconnect(false);
   doPause(false);
   console.log("do plot, timeWindow: "+timeWindow.start+" "+timeWindow.end);
@@ -104,14 +161,6 @@ doplot = function(sta) {
   } else {
     net = "CO";
   }
-  let config = [
-    'STATION '+sta+' '+net,
-    'SELECT 00HH?.D',
-    'STATION '+sta+' '+net,
-    'SELECT 00HN?.D' ];
-  config = [
-      'STATION '+sta+' '+net,
-      'SELECT 00HNZ.D' ];
 
   console.log(`before select ${net}.${sta}`);
   svgParent.selectAll("*").remove();
@@ -121,66 +170,10 @@ doplot = function(sta) {
     svgParent.append("p").attr('class', 'waitingondata').text("waiting on first data");
   }
 
-
-  let callbackFn = function(slPacket) {
-    let codes = slPacket.miniseed.codes();
-    //console.log("seedlink: seq="+slPacket.sequence+" "+codes);
-    let seismogram = wp.miniseed.createSeismogram([slPacket.miniseed]);
-    if (allSeisPlots.has(codes) && allTraces.has(codes)) {
-      const oldTrace = allTraces.get(codes);
-      oldTrace.append(seismogram);
-      const littleBitLarger = {'start': moment.utc(timeWindow.start).subtract(60, 'second'),
-                              'end': moment.utc(timeWindow.end).add(180, 'second')};
-      const newTrace = oldTrace.trim(littleBitLarger);
-      if (newTrace) {
-        allTraces.set(codes, newTrace);
-        allSeisPlots.get(codes).replace(oldTrace, newTrace);
-        allSeisPlots.get(codes).calcScaleDomain();
-      } else {
-        // trim removed all data, nothing left in window
-        allTraces.delete(codes);
-        allSeisPlots.get(codes).remove(oldTrace);
-        console.log(`All data removed from trace ${codes}`);
-      }
-//      allSeisPlots.get(codes).trim(timeWindow);
-    } else {
-      svgParent.select("p.waitingondata").remove();
-      let seisDiv = svgParent.append('div').attr('class', codes);
-  //    seisDiv.append('p').text(codes);
-      let plotDiv = seisDiv.append('div').attr('class', 'realtime');
-      plotDiv.style("position", "relative");
-      plotDiv.style("width", "100%");
-      plotDiv.style("height", "150px");
-      let trace = new seisplotjs.model.Trace(seismogram);
-      let seisPlotConfig = new wp.SeismographConfig();
-      seisPlotConfig.xSublabel = codes;
-      seisPlotConfig.margin = margin ;
-      seisPlotConfig.maxHeight = 200 ;
-      let seisPlot = new wp.CanvasSeismograph(plotDiv, seisPlotConfig, [trace], timeWindow.start, timeWindow.end);
-      seisPlot.svg.classed('realtimePlot', true).classed('overlayPlot', false)
-      seisPlot.disableWheelZoom();
-      seisPlot.setHeight(150);
-      seisPlot.appendMarkers(markers);
-      seisPlot.draw();
-      allSeisPlots.set(slPacket.miniseed.codes(), seisPlot);
-      allTraces.set(codes, trace)
-    }
-  }
-
-  slConn = new seedlink.SeedlinkConnection(seedlinkUrl, config, callbackFn, errorFn);
-  slConn.setTimeCommand(timeWindow.start);
-  slConn.setOnClose( closeEvent => {
-    console.log(`doplot: Received webSocket close: ${closeEvent.code} ${closeEvent.reason}`);
-    stopped = true;
-    wp.d3.select("button#disconnect").text("Reconnect");
-  });
-  slConn.connect();
-
-
-  dlConn = new datalink.DataLinkConnection(datalinkUrl, dlTriggerCallback, errorFn);
+  dlConn = new datalink.DataLinkConnection(datalinkUrl, dlCallback, errorFn);
   dlConn.connect().then(serverId => {
     d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
-    return dlConn.awaitDLCommand("MATCH", ".*/MTRIG");
+    return dlConn.awaitDLCommand("MATCH", `(${sta}.*\.HNZ/MSEED)|(.*/MTRIG)`);
   }).then(response => {
     return dlConn.awaitDLCommand(`POSITION AFTER ${datalink.momentToHPTime(timeWindow.start)}`, null);
   }).then(response => {
@@ -242,10 +235,10 @@ let doDisconnect = function(value) {
   console.log("disconnect..."+stopped+" -> "+value);
   stopped = value;
   if (stopped) {
-    if (slConn) {slConn.close();}
+    if (dlConn) {dlConn.endStream(); dlConn.close();}
     wp.d3.select("button#disconnect").text("Reconnect");
   } else {
-    if (slConn) {slConn.connect();}
+    if (dlConn) {dlConn.reconnect();}
     wp.d3.select("button#disconnect").text("Disconnect");
   }
 }
@@ -264,7 +257,7 @@ let timer = wp.d3.interval(function(elapsed) {
     if (maxSteps > 0 && numSteps > maxSteps ) {
       console.log("quit after max steps: "+maxSteps);
       timer.stop();
-      slConn.close();
+      dlConn.close();
     }
   }
   timeWindow = wp.calcStartEndDates(null, null, duration, clockOffset);
