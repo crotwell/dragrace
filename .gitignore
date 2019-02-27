@@ -1,4 +1,4 @@
-python/__pycache__/
+*/__pycache__/
 centralArchive/RawData/*
 centralArchive/bin
 centralArchive/data_2018*
