@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime, timedelta
 
 MICROS = 1000000
 
@@ -129,7 +130,12 @@ class DataLink:
     @asyncio.coroutine
     def positionAfter(self, time):
         hpdatastart = int(time.timestamp() * MICROS)
-        r = yield from self.writeCommand("POSITION AFTER {:d}".format(hpdatastart), None)
+        r = positionAfterHPTime(hpdatastart)
+        return r
+
+    @asyncio.coroutine
+    def positionAfterHPTime(self, hpdatastart):
+        r = yield from self.writeCommand("POSITION AFTER {}".format(hpdatastart), None)
         return r
 
     @asyncio.coroutine
@@ -140,6 +146,11 @@ class DataLink:
     @asyncio.coroutine
     def reject(self, pattern):
         r = yield from self.writeCommand("REJECT", pattern)
+        return r
+
+    @asyncio.coroutine
+    def read(self, packetId):
+        r = yield from self.writeCommand("READ {}".format(packetId), None)
         return r
 
     @asyncio.coroutine
@@ -194,3 +205,11 @@ class DaliPacket:
 
     def __str__(self):
         return "{} {} {} {} {} {} {}".format(self.type, self.streamId, self.packetId, self.packetTime, self.dataStartTime, self.dataEndTime, self.dSize)
+
+def datetimeToHPTime(time):
+    hptime = int(time.timestamp() * MICROS)
+    return hptime
+
+def hptimeToDatetime(hptime):
+    dt = datetime.utcfromtimestamp( float(hptime) / MICROS)
+    return dt
