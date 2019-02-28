@@ -1,8 +1,5 @@
 
 
-//let seedlink = require('seisplotjs-seedlink');
-// this global comes from the seisplotjs_seedlink standalone js
-let seedlink = seisplotjs.seedlink
 let datalink = seisplotjs.datalink
 
 //let wp = require('seisplotjs-waveformplot');
@@ -39,24 +36,26 @@ if (protocol == 'https:') {
 // not work from https pages as you cannot use non-encrypted (ws)
 // loaded from a https web page
 //
-let IRIS_HOST = "rtserve.iris.washington.edu";
-let EEYORE_HOST = "dragrace.seis.sc.edu";
-let EEYORE_PORT = 6383;
-let DRAGRACE_HOST = "dragrace.seis.sc.edu";
-let DRAGRACE_PORT = 6383;
-let host = DRAGRACE_HOST;
-let port = DRAGRACE_PORT;
+const IRIS_HOST = "rtserve.iris.washington.edu";
+const INTERNAL_HOST = "dragrace.seis.sc.edu";
+const INTERNAL_PORT = 6383;
+const INTERNAL_PATH = '/datalink';
+const EXTERNAL_HOST = "www.seis.sc.edu";
+const EXTERNAL_PORT = 80;
+const EXTERNAL_PATH = '/dragracews/datalink';
+let host = EXTERNAL_HOST;
+let port = EXTERNAL_PORT;
+let path = EXTERNAL_PATH;
+
 //host="127.0.0.1";
 //port=6382;
 
-let seedlinkUrl = wsProtocol+"//"+host+(port==80?'':':'+port)+'/seedlink';
-console.log("URL: "+seedlinkUrl);
 
-let datalinkUrl = wsProtocol+"//"+host+(port==80?'':':'+port)+'/datalink';
-
+let datalinkUrl = wsProtocol+"//"+host+(port==80?'':':'+port)+path;
+console.log("URL: "+datalinkUrl);
+let writeDatalinkUrl = wsProtocol+"//"+INTERNAL_HOST+(INTERNAL_PORT==80?'':':'+INTERNAL_PORT)+INTERNAL_PATH;
 
 d3.selectAll('.textHost').text(host);
-
 
 let dlConn = null;
 let allSeisPlots = new Map();
@@ -72,31 +71,36 @@ let numSteps = 0;
 wp.d3.select("button#load").on("click", function(d) {
   let selectEl = document.getElementById("stationChoice");
   let selectedIndex = selectEl.selectedIndex;
-  let staCode = selectEl.options[selectedIndex].value;
+  staCode = selectEl.options[selectedIndex].value;
 
   console.log("Load..."+staCode);
   doplot(staCode);
 });
 
+let packetCount = 0;
 
 let handleMSeed = function(miniseed) {
   let codes = miniseed.codes();
   let seismogram = wp.miniseed.createSeismogram([miniseed]);
-  if (allSeisPlots.has(codes) && allTraces.has(codes)) {
-    const oldTrace = allTraces.get(codes);
-    oldTrace.append(seismogram);
-    const littleBitLarger = {'start': moment.utc(timeWindow.start).subtract(60, 'second'),
-                            'end': moment.utc(timeWindow.end).add(180, 'second')};
-    const newTrace = oldTrace.trim(littleBitLarger);
-    if (newTrace) {
-      allTraces.set(codes, newTrace);
-      allSeisPlots.get(codes).replace(oldTrace, newTrace);
-      allSeisPlots.get(codes).calcScaleDomain();
+  if (allSeisPlots.has(codes)) {
+    if (allTraces.has(codes)) {
+      const oldTrace = allTraces.get(codes);
+      oldTrace.append(seismogram);
+      const littleBitLarger = {'start': moment.utc(timeWindow.start).subtract(60, 'second'),
+                              'end': moment.utc(timeWindow.end).add(180, 'second')};
+      const newTrace = oldTrace.trim(littleBitLarger);
+      if (newTrace) {
+        allTraces.set(codes, newTrace);
+        allSeisPlots.get(codes).replace(oldTrace, newTrace);
+        allSeisPlots.get(codes).calcScaleDomain();
+      } else {
+        // trim removed all data, nothing left in window
+        allTraces.delete(codes);
+        allSeisPlots.get(codes).remove(oldTrace);
+      }
     } else {
-      // trim removed all data, nothing left in window
-      allTraces.delete(codes);
-      allSeisPlots.get(codes).remove(oldTrace);
-      console.log(`All data removed from trace ${codes}`);
+      let newTrace = new seisplotjs.model.Trace(seismogram);
+      allSeisPlots.get(codes).append(newTrace);
     }
 //      allSeisPlots.get(codes).trim(timeWindow);
   } else {
@@ -124,7 +128,7 @@ let handleMSeed = function(miniseed) {
 }
 
 let dlMSeedCallback = function(dlPacket) {
-  return handleMSeed(dlPacket.miniseed);
+  handleMSeed(dlPacket.miniseed);
 };
 
 let dlTriggerCallback = function(dlPacket) {
@@ -138,6 +142,7 @@ let dlTriggerCallback = function(dlPacket) {
   for (let sp of allSeisPlots.values()) {
     sp.appendMarkers( [ mark ]);
   }
+
 };
 
 let dlCallback = function(dlPacket) {
@@ -148,11 +153,41 @@ let dlCallback = function(dlPacket) {
   }
 };
 
+let doDatalinkConnect = function(dlConn) {
+  let dlPromise = null;
+  if ( ! dlConn) {
+  console.log(`doDatalinkConnect dlConn is null`);
+    dlConn = new datalink.DataLinkConnection(datalinkUrl, dlCallback, errorFn);
+    dlPromise = dlConn.connect();
+  } else {
+  console.log(`doDatalinkConnect dlConn exists, reuse`);
+    try {
+      dlConn.endStream();
+      dlPromise = Promise.resolve(`reuse connection...${dlConn.serverId}`);
+    } catch (err) {
+      dlConn = new datalink.DataLinkConnection(datalinkUrl, dlCallback, errorFn);
+      dlPromise = dlConn.connect();
+    }
+  }
+  dlPromise.catch(err => {
+    d3.select("div.triggers").append("p").text(`Unable to connect: ${err}`);
+    dlConn.close();
+    return null;
+  }).then(serverId => {
+    d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
+    return dlConn.awaitDLCommand("MATCH", `(${staCode}.*\.HNZ/MSEED)|(.*/MTRIG)`);
+  }).then(response => {
+    return dlConn.awaitDLCommand(`POSITION AFTER ${datalink.momentToHPTime(timeWindow.start)}`, null);
+  }).then(response => {
+    d3.select("div.triggers").append("p").text(`MATCH response: ${response}`);
+    dlConn.stream();
+  });
+  return dlConn;
+}
+
 doplot = function(sta) {
-  if (dlConn) {dlConn.close(); dlConn = null;}
-  doDisconnect(false);
-  doPause(false);
-  console.log("do plot, timeWindow: "+timeWindow.start+" "+timeWindow.end);
+  if (dlConn) {dlConn.endStream();}
+  console.log(`do plot, timeWindow: ${timeWindow.start} ${timeWindow.end}  ${timeWindow.start.valueOf()}`);
 
   d3.selectAll('.textStaCode').text(sta);
   d3.selectAll('.textNetCode').text(net);
@@ -162,7 +197,6 @@ doplot = function(sta) {
     net = "CO";
   }
 
-  console.log(`before select ${net}.${sta}`);
   svgParent.selectAll("*").remove();
   if (wsProtocol == 'wss:' && host == IRIS_HOST) {
     svgParent.append("h3").attr('class', 'waitingondata').text("IRIS currently does not support connections from https pages, try from a http page instead.");
@@ -170,16 +204,8 @@ doplot = function(sta) {
     svgParent.append("p").attr('class', 'waitingondata').text("waiting on first data");
   }
 
-  dlConn = new datalink.DataLinkConnection(datalinkUrl, dlCallback, errorFn);
-  dlConn.connect().then(serverId => {
-    d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
-    return dlConn.awaitDLCommand("MATCH", `(${sta}.*\.HNZ/MSEED)|(.*/MTRIG)`);
-  }).then(response => {
-    return dlConn.awaitDLCommand(`POSITION AFTER ${datalink.momentToHPTime(timeWindow.start)}`, null);
-  }).then(response => {
-    d3.select("div.triggers").append("p").text(`MATCH response: ${response}`);
-    dlConn.stream();
-  });
+  doDisconnect(false);
+  doPause(false);
 };
 
 
@@ -199,7 +225,7 @@ wp.d3.select("button#trigger").on("click", function(d) {
             "value": "enable"
         }
     };
-  let dlTriggerConn = new datalink.DataLinkConnection(datalinkUrl, dlTriggerCallback, errorFn);
+  let dlTriggerConn = new datalink.DataLinkConnection(writeDatalinkUrl, dlTriggerCallback, errorFn);
   dlTriggerConn.connect().then(serverId => {
     d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
     d3.select("div.triggers").append("p").text(`Send Trigger: ${JSON.stringify(trigger)}`);
@@ -235,17 +261,16 @@ let doDisconnect = function(value) {
   console.log("disconnect..."+stopped+" -> "+value);
   stopped = value;
   if (stopped) {
-    if (dlConn) {dlConn.endStream(); dlConn.close();}
+    if (dlConn) {dlConn.close();}
     wp.d3.select("button#disconnect").text("Reconnect");
   } else {
-    if (dlConn) {dlConn.reconnect();}
+    dlConn = doDatalinkConnect(dlConn);
     wp.d3.select("button#disconnect").text("Disconnect");
   }
 }
 
 let timerInterval = (timeWindow.end.valueOf()-timeWindow.start.valueOf())/
                     (parseInt(svgParent.style("width"))-margin.left-margin.right);
-                    console.log("start time with interval "+timerInterval);
 while (timerInterval < 100) { timerInterval *= 2;}
 let timer = wp.d3.interval(function(elapsed) {
   if ( paused || timerInProgress) {
@@ -261,11 +286,9 @@ let timer = wp.d3.interval(function(elapsed) {
     }
   }
   timeWindow = wp.calcStartEndDates(null, null, duration, clockOffset);
-  //console.log("reset time window for "+timeWindow.start+" "+timeWindow.end );
   window.requestAnimationFrame(timestamp => {
     allSeisPlots.forEach(function(value, key) {
         value.setPlotStartEnd(timeWindow.start, timeWindow.end);
-        //console.log(`${key} tw: ${value.xScale.domain()}  width: ${value.width}  xScale range: ${value.xScale.range()}`);
     });
     timerInProgress = false
   });
