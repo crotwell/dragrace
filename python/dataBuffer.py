@@ -59,10 +59,14 @@ class DataBuffer:
         if self.archive:
             result = self.miniseedToRingserverFile(msr)
         if self.dali:
-            result = self.miniseedToDali(msr)
+            loop = asyncio.get_event_loop()
+            sendTask = loop.create_task(self.miniseedToDali(msr))
+            loop.run_until_complete(sendTask)
+            result = sendTask.result()
         self.numpts = 0
         self.starttime = None
         self.dataArray = None
+        print("flush {}".format(result))
         return result
 
     def close(self):
@@ -105,21 +109,19 @@ class DataBuffer:
         self.msFile.flush()
         return filename
 
-    @asyncio.coroutine
-    def miniseedToDali(self, msr):
+    async def miniseedToDali(self, msr):
         r = None
         if self.dali.isClosed():
-            yield from self.dali.reconnect()
+            await self.dali.reconnect()
         try:
-            r = yield from self.dali.writeMSeed(msr)
+            r = await self.dali.writeMSeed(msr)
         except:
             # retry once
             try:
-                yield from self.dali.reconnect()
-                r = yield from self.dali.writeMSeed(msr)
+                await self.dali.reconnect()
+                r = await self.dali.writeMSeed(msr)
             except Exception as err:
                 print("Unable to send to dali, skipping. {}".format(err))
-
         return r
 
 

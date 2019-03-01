@@ -20,8 +20,7 @@ processid=0
 architecture="python"
 
 
-@asyncio.coroutine
-def doTest(loop):
+async def doTest(loop):
     dali = simpleDali.DataLink(host, port)
     serverId = yield from dali.id(programname, username, processid, architecture)
     print("Resp: {}".format(serverId))

@@ -17,16 +17,25 @@ processid=0
 architecture="python"
 
 
-@asyncio.coroutine
-def doTest(loop):
+async def doTest(loop):
     dali = simpleDali.DataLink(host, port)
     serverId = yield from dali.id(programname, username, processid, architecture)
-    print("Resp: {}".format(serverId.toString()))
-    serverInfo = yield from dali.info("STATUS")
-    print("Info: {} ".format(serverInfo.message))
-    serverInfo = yield from dali.info("STREAMS")
-    print("Info: {} ".format(serverInfo.message))
-    network = "YY"
+    print("Resp: {}".format(serverId))
+    #serverInfo = yield from dali.info("STATUS")
+    #print("Info: {} ".format(serverInfo.message))
+    #serverInfo = yield from dali.info("STREAMS")
+    #print("Info: {} ".format(serverInfo.message))
+    # hptime = "1551313181711158"
+    # print("Position after: {}  {:d}".format(hptime, int(hptime)))
+    # pafter = yield from dali.positionAfterHPTime(hptime)
+    # print("PacketId after: {} {}".format(pafter.type, pafter.value))
+    # nextPacket = yield from dali.read(pafter.value)
+    # print("next after: {} {} {}".format(nextPacket.type, nextPacket.dataStartTime, nextPacket.dataEndTime))
+    # print("hptime round trip: {} {}".format(hptime, simpleDali.datetimeToHPTime(simpleDali.hptimeToDatetime(int(hptime)))))
+    # nowTime = datetime.utcnow()
+    # print("hptime now: {} {}".format(hptime, simpleDali.datetimeToHPTime(simpleDali.hptimeToDatetime(int(hptime)))))
+
+    network = "XX"
     station = "TEST"
     location = "00"
     channel = "HNZ"
@@ -40,7 +49,7 @@ def doTest(loop):
     msr = simpleMiniseed.MiniseedRecord(msh, shortData)
     print("before writeMSeed")
     resp = yield from dali.writeMSeed(msr)
-    print("writemseed resp {}".format(resp));
+    print("writemseed resp {}".format(resp))
     dali.close()
 
 

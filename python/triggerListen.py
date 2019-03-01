@@ -36,8 +36,7 @@ def handleSignal(sigNum, stackFrame):
 signal.signal(signal.SIGINT, handleSignal)
 signal.signal(signal.SIGTERM, handleSignal)
 
-@asyncio.coroutine
-def doTest(loop):
+async def doTest(loop):
     dali = simpleDali.DataLink(host, port)
     dali.verbose = True
     serverId = yield from dali.id(programname, username, processid, architecture)
