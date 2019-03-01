@@ -9,7 +9,7 @@ let d3 = seisplotjs.d3;
 let moment = seisplotjs.moment;
 
 let net = 'CO';
-let staList = ['3605', 'PI01', 'PI04'];
+let staList = ['3605', 'PI01', 'PI03', 'PI04', 'PI06', 'PI07'];
 d3.select('#stationChoice')
   .selectAll("option")
   .data(staList)
@@ -153,17 +153,23 @@ let dlCallback = function(dlPacket) {
   }
 };
 
-let doDatalinkConnect = function(dlConn) {
+let doDatalinkConnect = function() {
   let dlPromise = null;
   if ( ! dlConn) {
-  console.log(`doDatalinkConnect dlConn is null`);
+    console.log(`doDatalinkConnect dlConn is null`);
     dlConn = new datalink.DataLinkConnection(datalinkUrl, dlCallback, errorFn);
     dlPromise = dlConn.connect();
   } else {
-  console.log(`doDatalinkConnect dlConn exists, reuse`);
+    console.log(`doDatalinkConnect dlConn exists, reuse`);
     try {
-      dlConn.endStream();
-      dlPromise = Promise.resolve(`reuse connection...${dlConn.serverId}`);
+      if (dlConn.isConnected()) {
+        dlConn.endStream();
+        dlPromise = new seisplotjs.RSVP.Promise(function(resolve, reject) {
+          resolve(`reuse connection...${dlConn.serverId}`);
+        });
+      } else {
+        dlPromise = dlConn.connect();
+      }
     } catch (err) {
       dlConn = new datalink.DataLinkConnection(datalinkUrl, dlCallback, errorFn);
       dlPromise = dlConn.connect();
@@ -177,16 +183,17 @@ let doDatalinkConnect = function(dlConn) {
     d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
     return dlConn.awaitDLCommand("MATCH", `(${staCode}.*\.HNZ/MSEED)|(.*/MTRIG)`);
   }).then(response => {
-    return dlConn.awaitDLCommand(`POSITION AFTER ${datalink.momentToHPTime(timeWindow.start)}`, null);
-  }).then(response => {
     d3.select("div.triggers").append("p").text(`MATCH response: ${response}`);
+    return dlConn.awaitDLCommand(`POSITION AFTER ${datalink.momentToHPTime(timeWindow.start)}`);
+  }).then(response => {
+    d3.select("div.triggers").append("p").text(`POSITION response: ${response}`);
     dlConn.stream();
   });
-  return dlConn;
+  return dlPromise;
 }
 
 doplot = function(sta) {
-  if (dlConn) {dlConn.endStream();}
+  if (dlConn && dlConn.isConnected()) {dlConn.endStream();}
   console.log(`do plot, timeWindow: ${timeWindow.start} ${timeWindow.end}  ${timeWindow.start.valueOf()}`);
 
   d3.selectAll('.textStaCode').text(sta);
@@ -264,8 +271,9 @@ let doDisconnect = function(value) {
     if (dlConn) {dlConn.close();}
     wp.d3.select("button#disconnect").text("Reconnect");
   } else {
-    dlConn = doDatalinkConnect(dlConn);
-    wp.d3.select("button#disconnect").text("Disconnect");
+    doDatalinkConnect().then( () => {
+      wp.d3.select("button#disconnect").text("Disconnect");
+    });
   }
 }
 
