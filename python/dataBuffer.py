@@ -10,7 +10,8 @@ class DataBuffer:
                  byteorder=simpleMiniseed.BIG_ENDIAN,
                  dali=None,
                  archive=False,
-                 continuityFactor=5):
+                 continuityFactor=5,
+                 verbose=False):
         self.network = network
         self.station = station
         self.location = location
@@ -20,6 +21,7 @@ class DataBuffer:
         self.encoding = encoding
         self.byteorder = byteorder
         self.continuityFactor = continuityFactor
+        self.verbose = verbose
         self.dali = dali
         self.archive = archive
         self.dataArray = None
@@ -27,7 +29,7 @@ class DataBuffer:
         self.numpts = 0
         self.msFile = None
         self.msFilename = None
-        print("DataBuffer init: archie: {} dali: {}".format(self.archive, self.dali))
+        if self.verbose: print("DataBuffer init: archie: {} dali: {}".format(self.archive, self.dali))
 
 
     def push(self, starttime, dataArray):
@@ -66,7 +68,7 @@ class DataBuffer:
         self.numpts = 0
         self.starttime = None
         self.dataArray = None
-        print("flush {}".format(result))
+        if self.verbose: print("flush {}".format(result))
         return result
 
     def close(self):

@@ -92,7 +92,7 @@ class DataLink:
         streamid = "{}/MSEED".format(msr.codes())
         hpdatastart = int(msr.starttime().timestamp() * MICROS)
         hpdataend = int(msr.endtime().timestamp() * MICROS)
-        print("simpleDali.writeMSeed {} {} {}".format(streamid, hpdatastart, hpdataend))
+        if self.verbose: print("simpleDali.writeMSeed {} {} {}".format(streamid, hpdatastart, hpdataend))
         r = await self.writeAck(streamid, hpdatastart, hpdataend, msr.pack())
         return r
 
