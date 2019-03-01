@@ -11,6 +11,9 @@ import sys, os, signal
 from pathlib import Path
 import asyncio
 import traceback
+import faulthandler
+
+faulthandler.enable()
 
 #import logging
 #logging.basicConfig(filename='xbee.log',level=logging.DEBUG)
@@ -37,7 +40,10 @@ MAX_SAMPLES = -1
 
 doDali = True
 doArchive = True
-doFIR = False
+doFIR = True
+decimationFactor = 1
+if doFIR:
+    decimationFactor = 2
 
 quitOnError = True
 
@@ -62,8 +68,8 @@ sensor.range = adafruit_mma8451.RANGE_2G  # +/- 2G
 
 # Optionally change the data rate from its default of 800hz:
 #sensor.data_rate = adafruit_mma8451.DATARATE_800HZ  #  800Hz (default)
-#sensor.data_rate = adafruit_mma8451.DATARATE_400HZ  #  400Hz
-sensor.data_rate = adafruit_mma8451.DATARATE_200HZ  #  200Hz
+sensor.data_rate = adafruit_mma8451.DATARATE_400HZ  #  400Hz
+#sensor.data_rate = adafruit_mma8451.DATARATE_200HZ  #  200Hz
 #sensor.data_rate = adafruit_mma8451.DATARATE_100HZ  #  100Hz
 #sensor.data_rate = adafruit_mma8451.DATARATE_50HZ   #   50Hz
 #sensor.data_rate = adafruit_mma8451.DATARATE_12_5HZ # 12.5Hz
@@ -77,9 +83,9 @@ chanMap = { "X":"HNX", "Y":"HNY", "Z":"HNZ"}
 decimateMap = {}
 if doFIR:
     decimateMap = {
-        "X":decimate.FIR(),
-        "Y":decimate.FIR(),
-        "Z":decimate.FIR(),
+        "X":decimate.DecimateTwo(),
+        "Y":decimate.DecimateTwo(),
+        "Z":decimate.DecimateTwo(),
     }
 
 def getSps():
@@ -236,12 +242,10 @@ def sendToMseed(now, status, samplesAvail, data):
     start = now - timedelta(seconds=1.0*(samplesAvail-1)/sps)
     xData, yData, zData = sensor.demux(data)
     if doFIR:
-        start = start - decimateMap["X"].calcDelay(sps)
-        xData = decimate(decimateMap["X"], xData)
-        if (len(xData) != len(yData)):
-            raise Exception("len after decimate not same: {} {}".format(len(xData),len(yData)))
-        yData = decimate(decimateMap["Y"], yData)
-        zData = decimate(decimateMap["Z"], zData)
+        start = start - decimateMap["X"].FIR.calcDelay(sps)
+        xData = decimateMap["X"].process(xData)
+        yData = decimateMap["Y"].process(yData)
+        zData = decimateMap["Z"].process(zData)
 
     loop = asyncio.get_event_loop()
     ztask = loop.create_task(doMiniseedBuffer(miniseedBuffers[chanMap["Z"]], start, zData))
@@ -323,9 +327,9 @@ if doDali:
 miniseedBuffers = dict()
 for key, chan in chanMap.items():
     miniseedBuffers[chan] = dataBuffer.DataBuffer(net, sta, loc, chan,
-             getSps(), archive=doArchive,
+             getSps()/decimationFactor, archive=doArchive,
              encoding=simpleMiniseed.ENC_SHORT, dali=dali,
-             continuityFactor=10)
+             continuityFactor=5)
 
 
 dataQueue = queue.Queue()
@@ -334,7 +338,7 @@ sendThread = Thread(target = sending_worker)
 sendThread.daemon=True
 print("thread start")
 sendThread.start()
-time.sleep(1)
+time.sleep(3)
 print("after thread start sleep")
 
 try:
