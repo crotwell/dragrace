@@ -107,7 +107,19 @@ class DataBuffer:
 
     @asyncio.coroutine
     def miniseedToDali(self, msr):
-        r = yield from self.dali.writeMSeed(msr)
+        r = None
+        if self.dali.isClosed():
+            yield from self.dali.reconnect()
+        try:
+            r = yield from self.dali.writeMSeed(msr)
+        except:
+            # retry once
+            try:
+                yield from self.dali.reconnect()
+                r = yield from self.dali.writeMSeed(msr)
+            except Exception as err:
+                print("Unable to send to dali, skipping. {}".format(err))
+
         return r
 
 
