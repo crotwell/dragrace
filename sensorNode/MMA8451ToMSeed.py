@@ -247,24 +247,10 @@ def sendToMseed(now, status, samplesAvail, data):
         yData = decimateMap["Y"].process(yData)
         zData = decimateMap["Z"].process(zData)
 
-    loop = asyncio.get_event_loop()
-    ztask = loop.create_task(doMiniseedBuffer(miniseedBuffers[chanMap["Z"]], start, zData))
-    loop.run_until_complete(ztask)
-    ytask = loop.create_task(doMiniseedBuffer(miniseedBuffers[chanMap["Y"]], start, yData))
-    loop.run_until_complete(ytask)
-    xtask = loop.create_task(doMiniseedBuffer(miniseedBuffers[chanMap["X"]], start, xData))
-    loop.run_until_complete(xtask)
-    return [xtask, ytask, ztask]
-    # return [
-    #     await miniseedBuffers[chanMap["X"]].push(start, xData),
-    #     await miniseedBuffers[chanMap["Y"]].push(start, yData),
-    #     await miniseedBuffers[chanMap["Z"]].push(start, zData)
-    # ]
+    miniseedBuffers[chanMap["Z"]].push(start, zData)
+    miniseedBuffers[chanMap["Y"]].push(start, yData)
+    miniseedBuffers[chanMap["X"]].push(start, xData)
 
-@asyncio.coroutine
-def doMiniseedBuffer(miniseedBuf, start, data):
-    r = miniseedBuf.push(start, data)
-    return r
 
 def decimate(decimator, data):
     out = []
