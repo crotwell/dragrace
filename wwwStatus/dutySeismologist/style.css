@@ -16,6 +16,29 @@ path.seispath {
   fill: none;
   stroke-width: 1px;
 }
+div.equalizer span div{
+  display: inline-block;
+    width:20px;
+
+    background-color:#FF0099;
+}
+
+div.piStatus span div{
+  display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-color:#00CC33;
+}
+div.piStatus span.Struggling div{
+    background-color:#FFFF00;
+}
+div.piStatus span.Dead div{
+    background-color:#990000;
+}
+div.piStatus span{
+  margin-right: 20px;
+  margin-left: 20px;
+}
 
 path.seisplot .orientZ {
   stroke: seagreen;
