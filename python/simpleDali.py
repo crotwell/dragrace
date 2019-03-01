@@ -163,6 +163,9 @@ class DataLink:
         header = "ENDSTREAM"
         yield from self.send(header, None)
 
+    def isClosed(self):
+        return self.writer is None
+        
     def close(self):
         if self.writer is not None:
             self.writer.close()
