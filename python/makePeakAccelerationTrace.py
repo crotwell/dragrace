@@ -89,7 +89,18 @@ def getNextPacket():
     dlPacket = packetTask.result()
     return dlPacket
 
+<<<<<<< HEAD
 def CompareHeaders(dlPacket1,dlPacket2):
+=======
+def writeJsonToDatalink(streamid, hpdatastart, hpdataend, jsonMessage):
+    jsonAsByteArray = json.dumps(jsonMessage).encode('UTF-8')
+    loop = asyncio.get_event_loop()
+    jsonSendTask = loop.create_task(daliUpload.writeAck(streamid, hpdatastart, hpdataend, jsonAsByteArray))
+    loop.run_until_complete(jsonSendTask)
+    return jsonSendTask.result()
+
+def processDLPacket(dlPacket):
+>>>>>>> 270db2a0eaf0dfb6b3dcda54e199d17888a2cd98
     global daliUpload
 #    print(dlPacket1.streamId)
 #    print(dlPacket2.streamId)
@@ -115,6 +126,7 @@ def CompareHeaders(dlPacket1,dlPacket2):
         #loc = mseedRecord.header.location
         #chan = mseedRecord.header.channel
         # fake channel, but use orientation code
+<<<<<<< HEAD
         #chan = "TJ"+mseedRecord.header.channel[2]
         #outputData = array('h', inData)
 #        for i in range(len(inData)):
@@ -123,6 +135,38 @@ def CompareHeaders(dlPacket1,dlPacket2):
         # if data is ready to ship out, maybe
 #        dBuf = getDataBuffer(net, sta, loc, chan, outputSampleRate, daliUpload)
 #        dBuf.push(starttime, outputData)
+=======
+        chan = "TJ"+mseedRecord.header.channel[2]
+        # do something with the integers
+        # this just creates a new array with the same data
+        # modify outputData if needed
+        outputData = array('h', inData)
+        maxValue = 0
+        for i in range(len(inData)):
+#                print("i= , data= {}".format(i,outputData[i]))
+            outputData[i] = inData[i]
+            if inData[i] > maxValue:
+                maxValue = inData[i]
+        # if data is ready to ship out, maybe
+        dBuf = getDataBuffer(net, sta, loc, chan, outputSampleRate, daliUpload)
+        dBuf.push(starttime, outputData)
+        #
+        # ...or, to send a non-miniseed datalink packet
+        # although you probably want this to be max within a timewindow
+        # like one second instead of max within the miniseed record
+        #
+        streamid = "{}.{}.{}.{}/MAX".format(net, sta, loc, chan)
+        hpdatastart = int(starttime.timestamp() * simpleDali.MICROS)
+        hpdataend = int(starttime.timestamp() * simpleDali.MICROS)
+        jsonMessage= {
+            "type": "minmax",
+            "time": starttime.isoformat(),
+            "creation": starttime.isoformat(),
+            "maxValue": maxValue
+        }
+        ack = writeJsonToDatalink(streamid, hpdatastart, hpdataend, jsonMessage)
+        print("send max = {:d} as json, {}".format(maxValue, ack))
+>>>>>>> 270db2a0eaf0dfb6b3dcda54e199d17888a2cd98
 
 def doTest():
     global keepGoing
