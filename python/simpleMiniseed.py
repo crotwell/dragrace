@@ -246,7 +246,7 @@ def unpackMiniseedRecord(recordBytes):
     blockettes = []
     if header.numBlockettes > 0:
         nextBOffset = header.blocketteOffset
-        print("Next Byte Offset",nextBOffset)
+        #print("Next Byte Offset",nextBOffset)
         while(nextBOffset > 0):
             b = unpackBlockette(recordBytes, nextBOffset, endianChar)
             blockettes.append(b)
