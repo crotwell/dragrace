@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+     <meta charset="utf-8" />
+     <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <h3><a href="https://github.com/crotwell/OregonDSP-kotlin">OregsonDSP</a> Equiripple Lowpass FIR filter design</h3>
+    <div class="control">
+      <button id="load">Create</button>
+      <label>N (half)</label><input name="N" type="text" value="20">
+      <label>OmegaP</label><input name="OmegaP" type="text" value=".45">
+      <label>Wp</label><input name="Wp" type="text" value="1">
+      <label>OmegaS</label><input name="OmegaS" type="text" value=".5">
+      <label>Ws</label><input name="Ws" type="text" value="1">
+
+    </div>
+
+    <h3>Random timeseries plot</h3>
+    <h5>Blue: original, Red: filtered, Green: filtered twice</h5>
+    <div class="plot">
+      <svg class="timeseries"></svg>
+    </div>
+    <h3>FFT plot</h3>
+    <h5>Blue: original, Green: filtered</h5>
+    <div class="fft">
+    </div>
+
+    <h3 class="coefficients"></h3>
+    <div class="coefficients">
+      <ul></ul>
+    </div>
+
+        <div class="impulse">
+          <ul></ul>
+        </div>
+    <script src="seisplotjs_2.0.0-alpha.1_standalone.js"></script>
+    <script src="firDesign.js"></script>
+  </body>
+</html>
