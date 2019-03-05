@@ -1,80 +1,73 @@
 from array import array
 from datetime import timedelta
+import math
 
-# modified from http://t-filter.engineerjs.com/
-# /*
+# Calculate using QregonDSP with:
 #
-# FIR filter designed with
-#  http://t-filter.appspot.com
+#       EquirippleLowpass
 #
-# sampling frequency: 800 Hz
-#
-# * 0 Hz - 180 Hz
-#   gain = 1
-#   desired ripple = 5 dB
-#   actual ripple = 4.073676780356335 dB
-#
-# * 200 Hz - 400 Hz
-#   gain = 0
-#   desired attenuation = -40 dB
-#   actual attenuation = -40.20750266764615 dB
-#
-# */
+#      N: 20 => 41 OmegaP: 0.45 Wp: 1 OmegsS: 0.5 Ws: 0.5
+# http://www.seis.sc.edu/dragrace/www/firDesign/firDesign.html
 
 class FIR:
     def __init__(self):
         self.filterTaps=array('d', [
-          0.018417300875864944,
-          0.02436769267167705,
-          -0.0014977285615569997,
-          -0.04575041840008282,
-          -0.05821920587884289,
-          -0.022347048206624358,
-          0.011722092825865237,
-          -0.0020910915383823407,
-          -0.03181736475168622,
-          -0.017767345679765484,
-          0.023204676384514258,
-          0.018891324688008106,
-          -0.03004571907712454,
-          -0.03492579962638612,
-          0.029329838295632498,
-          0.05431529870189004,
-          -0.03197270376243652,
-          -0.10097573477697484,
-          0.0322339057932065,
-          0.31626869164196386,
-          0.46702488937212033,
-          0.31626869164196386,
-          0.0322339057932065,
-          -0.10097573477697484,
-          -0.03197270376243652,
-          0.05431529870189004,
-          0.029329838295632498,
-          -0.03492579962638612,
-          -0.03004571907712454,
-          0.018891324688008106,
-          0.023204676384514258,
-          -0.017767345679765484,
-          -0.03181736475168622,
-          -0.0020910915383823407,
-          0.011722092825865237,
-          -0.022347048206624358,
-          -0.05821920587884289,
-          -0.04575041840008282,
-          -0.0014977285615569997,
-          0.02436769267167705,
-          0.018417300875864944
-        ])
+-0.014214813709259033,
+-0.02459816262125969,
+0.029103312641382217,
+-0.0030523138120770454,
+-0.012606322765350342,
+-0.008064772933721542,
+0.016531193628907204,
+0.011698857881128788,
+-0.0176380705088377,
+-0.017764931544661522,
+0.019202090799808502,
+0.025816356763243675,
+-0.02051856741309166,
+-0.03777090460062027,
+0.02160944975912571,
+0.05801019072532654,
+-0.022438863292336464,
+-0.10264670103788376,
+0.02294692024588585,
+0.3171583116054535,
+0.4768567681312561,
+0.3171583116054535,
+0.02294692024588585,
+-0.10264670103788376,
+-0.022438863292336464,
+0.058010198175907135,
+0.02160945162177086,
+-0.03777090460062027,
+-0.020518574863672256,
+0.025816360488533974,
+0.01920209266245365,
+-0.01776493340730667,
+-0.01763806864619255,
+0.01169885229319334,
+0.016531191766262054,
+-0.008064783178269863,
+-0.012606322765350342,
+-0.0030523203313350677,
+0.02910330705344677,
+-0.024598155170679092,
+-0.014214811846613884])
 
         self.tapLen = len(self.filterTaps)
         self.history=array('d', [0]*self.tapLen)
         self.currIdx=0
 
-    def calcDelay(self, sps):
-        return timedelta(seconds=self.tapLen/2/sps)
+    def calcUnitySum(self):
+        acc = 0
+        for i in range(self.tapLen):
+            acc += self.filterTaps[i]
+        return acc
 
-    def pushPop(self, val):
+    def calcDelay(self, sps):
+        return timedelta(seconds=(self.tapLen-1)/2/sps)
+
+    def pushPop(self, val, gain=1.0):
         """pushes a value onto the history stack and pops
         the next value processed by the FIR filter.
         """
@@ -87,31 +80,8 @@ class FIR:
         for i in range(self.tapLen):
             idx = self.tapLen-1 if idx == 0 else idx-1
             acc += self.history[idx] * self.filterTaps[i]
-        return int(round(acc))
+        return int(round(acc*gain))
 
-#
-# void SampleFilter_init(SampleFilter* f) {
-#   int i;
-#   for(i = 0; i < SAMPLEFILTER_TAP_NUM; ++i)
-#     f->history[i] = 0;
-#   f->last_index = 0;
-# }
-#
-# void SampleFilter_put(SampleFilter* f, double input) {
-#   f->history[f->last_index++] = input;
-#   if(f->last_index == SAMPLEFILTER_TAP_NUM)
-#     f->last_index = 0;
-# }
-#
-# double SampleFilter_get(SampleFilter* f) {
-#   double acc = 0;
-#   int index = f->last_index, i;
-#   for(i = 0; i < SAMPLEFILTER_TAP_NUM; ++i) {
-#     index = index != 0 ? index-1 : SAMPLEFILTER_TAP_NUM-1;
-#     acc += f->history[index] * filter_taps[i];
-#   };
-#   return acc;
-# }
 
 class DecimateTwo:
     def __init__(self):
@@ -126,3 +96,20 @@ class DecimateTwo:
                 out.append(p)
             self.tickTock = not self.tickTock
         return out
+
+fir = FIR()
+d2 = DecimateTwo()
+outData = []
+inData = []
+gain = 1.0+(1.0-fir.calcUnitySum())
+gain=1.0
+for i in range(400):
+    val = int(round(10000*math.sin(2*math.pi*i/20)))
+    inData.append(val)
+    outData.append(fir.pushPop(val, gain))
+delay = int((fir.tapLen-1)/2)
+for i in range(len(outData)-delay):
+    print(" {:d}  push: {:d}   pop: {:d}".format(i, inData[i], outData[i+delay]))
+
+print("delay: {}".format(delay))
+print("unity sum: {}".format(fir.calcUnitySum()))

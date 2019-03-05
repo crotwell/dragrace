@@ -25,10 +25,18 @@ let createFIR = function() {
   d3.select("h3.coefficients").selectAll("*").remove();
   d3.select("h3.coefficients").text(`FIR Coefficients: N: ${N} => ${2*N+1}  OmegaP: ${OmegaP} Wp: ${Wp}  OmegsS: ${OmegaS} Ws: ${Ws}`)
 
+  let coeffDispFun = function(d, i, a) {
+    let pre = "    ";
+    if (i === 0) {pre = 'coeff = [';}
+    let post = ", ";
+    if (i === a.length-1) {post = "];"}
+    console.log(`${pre}${d}${post}`);
+    return `${pre}${d}${post}`;
+  };
   let coeffDisplay = d3.select("div.coefficients").select("ul").selectAll("li")
     .data(firLp.getCoefficients())
-    .text(function(d) { return d; });
-  coeffDisplay.enter().append("li").text(d=> d);
+    .text(coeffDispFun);
+  coeffDisplay.enter().append("li").text(coeffDispFun);
   coeffDisplay.exit().remove();
 
   const NumPoints = 256;
