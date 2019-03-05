@@ -116,19 +116,22 @@ def CompareHeaders(dlPacket1,dlPacket2):
                         print("Time difference: ", diff)
                         return False
 
-def buildPacketKey(dlPacket,RootChan,Orient,StartTime):
-    mSeed = simpleMiniseed.unpackMiniseedRecord(dlPacket1.data)
-    StartTime = mseedRecord.header.starttime
-    sampleRate = mseedRecord.header.samprate
-    net = mseedRecord.header.network
-    sta = mseedRecord.header.station
-    loc = mseedRecord.header.location
-    chan = mseedRecord.header.channel[0,1]
-    Orient = mseedRecord.header.channel[2]
+def buildPacketKey(ThePacket,RootChan,Orient,starttime):
+    mSeed = simpleMiniseed.unpackMiniseedRecord(ThePacket.data)
+    starttime = mSeed.header.starttime
+    sampleRate = mSeed.header.samprate
+    net = mSeed.header.network
+    sta = mSeed.header.station
+    loc = mSeed.header.location
+    chan = mSeed.header.channel[0:2]
+    Orient = mSeed.header.channel[2]
+    print("Orientation",Orient)
+    print("RootChannel",chan)
     if chan != RootChan:
         return "NotRootChan"
-    key=net"."sta"."loc"."chan
+    key=net + "." + sta + "." + loc + "." + chan
     print("KEY: ", key)
+    print("Start Time: ", starttime)
     return key
 
 def doTest():
@@ -143,32 +146,43 @@ def doTest():
     initTask = loop.create_task(initConnections(".*PI.*/MSEED"))
     loop.run_until_complete(initTask)
 
+    packetDictionary={}
+    orientation="0"
+    starttime=0
     packetCount=0
     while(keepGoing):
         print("inside keepGoing loop")
         dlPacket = getNextPacket()
         key=buildPacketKey(dlPacket,"HN",orientation,starttime)
-        print(orientation," ",key)
+        if not key in packetDictionary:
+            print("New Key: ", key)
+            packetDictionary[key]=[]
+            packetDictionary[key].append(dlPacket)
+        else:
+            for value in packetDictionary(key).values():
+                   print("got a packet out of the dictionary!")
+
+        print(orientation," ",key," ",starttime)
     #
     # OK, get the data
     #
         print("Got 3 components at the same time and station ... WooHoo")
-        Packet1 = simpleMiniseed.unpackMiniseedRecord(dlPacket1.data)
-        Packet2 = simpleMiniseed.unpackMiniseedRecord(dlPacket2.data)
-        Packet3 = simpleMiniseed.unpackMiniseedRecord(dlPacket3.data)
-        P1data=Packet1.data
+    #    Packet1 = simpleMiniseed.unpackMiniseedRecord(dlPacket1.data)
+    #    Packet2 = simpleMiniseed.unpackMiniseedRecord(dlPacket2.data)
+    #    Packet3 = simpleMiniseed.unpackMiniseedRecord(dlPacket3.data)
+    #    P1data=Packet1.data
     #    print(P1data[0])
-        P2data=Packet2.data
-        P3data=Packet3.data
-        npts=len(P1data)
+    #    P2data=Packet2.data
+    #    P3data=Packet3.data
+    #    npts=len(P1data)
     #    print("NPTS ...",npts)
-        i=0
+    #    i=0
         maxMag=0
-        while i < npts:
-            PacketMag=math.sqrt(P1data[i]*P1data[i]+P2data[i]*P2data[i]+P3data[i]*P3data[i])
-            if PacketMag > maxMag:
-                maxMag = PacketMag
-            i=i+1
+    #    while i < npts:
+    #        PacketMag=math.sqrt(P1data[i]*P1data[i]+P2data[i]*P2data[i]+P3data[i]*P3data[i])
+    #        if PacketMag > maxMag:
+    #            maxMag = PacketMag
+    #        i=i+1
         #PacketMag=SeismogramTasks.Magnitude_ThreeC_TimeSeries(P1data,P2data,P3data)
         #PacketMaximum=max(PacketMag)
         print("Maximum Magnitude for this packet: ",maxMag)
