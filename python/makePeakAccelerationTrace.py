@@ -95,11 +95,11 @@ def writeJsonToDatalink(streamid, hpdatastart, hpdataend, jsonMessage):
     jsonSendTask = loop.create_task(daliUpload.writeAck(streamid, hpdatastart, hpdataend, jsonAsByteArray))
     loop.run_until_complete(jsonSendTask)
     return jsonSendTask.result()
-    
+
 def CompareHeaders(dlPacket1,dlPacket2):
     global daliUpload
 #    print(dlPacket1.streamId)
-#    print(dlPacket2.streamId)
+    print(dlPacket2.streamId)
     if dlPacket1.streamId.endswith("MSEED"):
         if dlPacket2.streamId.endswith("MSEED"):
             mseedRecord1 = simpleMiniseed.unpackMiniseedRecord(dlPacket1.data)
@@ -115,21 +115,21 @@ def CompareHeaders(dlPacket1,dlPacket2):
                         diff=mseedRecord2.header.starttime - mseedRecord1.header.starttime
                         print("Time difference: ", diff)
                         return False
-        #starttime = mseedRecord.header.starttime
-        #outputSampleRate = mseedRecord.header.samprate
-        #net = mseedRecord.header.network
-        #sta = mseedRecord.header.station
-        #loc = mseedRecord.header.location
-        #chan = mseedRecord.header.channel
-        # fake channel, but use orientation code
-        #chan = "TJ"+mseedRecord.header.channel[2]
-        #outputData = array('h', inData)
-#        for i in range(len(inData)):
-#                print("i= , data= {}".format(i,outputData[i]))
-#            outputData[i] = inData[i]
-        # if data is ready to ship out, maybe
-#        dBuf = getDataBuffer(net, sta, loc, chan, outputSampleRate, daliUpload)
-#        dBuf.push(starttime, outputData)
+
+def buildPacketKey(dlPacket,RootChan,Orient,StartTime):
+    mSeed = simpleMiniseed.unpackMiniseedRecord(dlPacket1.data)
+    StartTime = mseedRecord.header.starttime
+    sampleRate = mseedRecord.header.samprate
+    net = mseedRecord.header.network
+    sta = mseedRecord.header.station
+    loc = mseedRecord.header.location
+    chan = mseedRecord.header.channel[0,1]
+    Orient = mseedRecord.header.channel[2]
+    if chan != RootChan:
+        return "NotRootChan"
+    key=net"."sta"."loc"."chan
+    print("KEY: ", key)
+    return key
 
 def doTest():
     global keepGoing
@@ -146,13 +146,9 @@ def doTest():
     packetCount=0
     while(keepGoing):
         print("inside keepGoing loop")
-        dlPacket1 = getNextPacket()
-        dlPacket2 = getNextPacket()
-        while(not CompareHeaders(dlPacket1,dlPacket2)):
-            dlPacket2 = getNextPacket()
-        dlPacket3 = getNextPacket()
-        while( not CompareHeaders(dlPacket1,dlPacket3)):
-            dlPacket3 = getNextPacket()
+        dlPacket = getNextPacket()
+        key=buildPacketKey(dlPacket,"HN",orientation,starttime)
+        print(orientation," ",key)
     #
     # OK, get the data
     #
