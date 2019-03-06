@@ -156,7 +156,7 @@ def calculatePacketPeakMagnitude(Components):
             print("NPTS mismatch, returning negative max")
             return -1, npts
         i=0
-        print(data[12])
+        #print(data[12])
         while i < len(data):
             if firstPass:
                 datasqrd.append(data[i]*data[i])
@@ -213,7 +213,10 @@ def doTest():
 #                    print("Component Length",len(Components))
                     #print(Components)
                     maxMag, npts_packet=calculatePacketPeakMagnitude(Components)
-                    maxMag=maxMag/4
+    #
+    # TEMPORARY FIR FIlter # FIXME:
+    #
+                    maxMag=maxMag/3113
                     print("Peak Magnitude:",maxMag,npts_packet,key)
                     #streamid = "{}/MAXACC".format(key)
                     streamid = "{}.{}/MAXACC".format("XX", station)
