@@ -55,9 +55,9 @@ print('vmag3: {}'.format(vmag3))
 
 # overall : take in raw packets (arrays Z,N,E), do rotation and rest state
 # correction, calculate peak counts over the entire time series, divide
-#  time series by factor to convert into g's, returns the g's magnitude over a
-# small amount of time (depends on len of arrays given), and sends this mag to
-# ring server
+#  time series by factor to convert into g's (4069 = 1g?), returns the g's
+# magnitude over a small amount of time (depends on len of arrays given),
+# and sends this mag to ring server
 
 # need: what is rest state? (calculate mean of before and after filter) (have a
 # 'z-corrected factor', and rn it is 1)
