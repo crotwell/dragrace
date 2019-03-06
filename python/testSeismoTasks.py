@@ -32,5 +32,8 @@ y = [1,3,1]
 o = [0,0,0,0,0]
 lo=len(o)
 
-Convolve_TimeSeries(x,3,y,3,o,lo)
-print("output",o)
+z=Zero_List(1,4)
+print(z)
+
+#Convolve_TimeSeries(x,3,y,3,o,lo)
+#print("output",o)

@@ -116,23 +116,58 @@ def CompareHeaders(dlPacket1,dlPacket2):
                         print("Time difference: ", diff)
                         return False
 
-def buildPacketKey(ThePacket,RootChan,Orient,starttime):
+def buildPacketKey(ThePacket,RootChan):
     mSeed = simpleMiniseed.unpackMiniseedRecord(ThePacket.data)
-    starttime = mSeed.header.starttime
+    StartTime = mSeed.header.starttime
     sampleRate = mSeed.header.samprate
     net = mSeed.header.network
     sta = mSeed.header.station
     loc = mSeed.header.location
     chan = mSeed.header.channel[0:2]
     Orient = mSeed.header.channel[2]
-    print("Orientation",Orient)
-    print("RootChannel",chan)
+#    print("Orientation",Orient)
+#    print("RootChannel",chan)
     if chan != RootChan:
-        return "NotRootChan"
+        return "NotRootChan", Orient, StartTime
     key=net + "." + sta + "." + loc + "." + chan
-    print("KEY: ", key)
-    print("Start Time: ", starttime)
-    return key
+#    print("KEY: ", key)
+#    print("Start Time: ", StartTime)
+    return key, Orient, StartTime
+
+def matchingPackets(ThePacket,orientation,starttime):
+    mSeed = simpleMiniseed.unpackMiniseedRecord(ThePacket.data)
+    if starttime == mSeed.header.starttime:
+        if orientation != mSeed.header.channel[2]:
+            return True
+        else:
+            return False
+    else:
+        return False
+
+def calculatePacketPeakMagnitude(Components):
+    firstPass=True
+    for ThePacket in Components:
+        simpleMiniseed.unpackMiniseedRecord(ThePacket.data)
+        data=ThePacket.data
+        if firstPass:
+            datasqrd=[]
+            npts=len(data)
+        if len(data) != npts:
+            print("NPTS mismatch, returning negative max")
+            return -1, npts
+        i=0
+        while i < len(data):
+            if firstPass:
+                datasqrd.append(data[i]*data[i])
+            else:
+                datasqrd[i]=datasqrd[i]+data[i]*data[i]
+            i=i+1
+        firstPass=False
+    i=0
+    while i < len(data):
+        datasqrd[i]=math.sqrt(datasqrd[i])
+        i=i+1
+    return max(datasqrd), npts
 
 def doTest():
     global keepGoing
@@ -147,48 +182,44 @@ def doTest():
     loop.run_until_complete(initTask)
 
     packetDictionary={}
-    orientation="0"
-    starttime=0
     packetCount=0
+    Components=[]
+    match_count=1
+#    print("Entering test ... Initializing Components", match_count)
+
     while(keepGoing):
-        print("inside keepGoing loop")
+#        print("inside keepGoing loop")
         dlPacket = getNextPacket()
-        key=buildPacketKey(dlPacket,"HN",orientation,starttime)
+        key,orientation,starttime=buildPacketKey(dlPacket,"HN")
+#        print("Got another packet: ", key,orientation,starttime)
         if not key in packetDictionary:
-            print("New Key: ", key)
+#            print("     New Key: ", key,orientation,starttime)
             packetDictionary[key]=[]
             packetDictionary[key].append(dlPacket)
         else:
-            for value in packetDictionary(key).values():
-                   print("got a packet out of the dictionary!")
+           Components.append(dlPacket)
+#           print(packetDictionary)
+#           print("A ... putting DlPacket in Components",match_count,key)
+           for value in packetDictionary[key]:
+                if matchingPackets(value,orientation,starttime):
+    #                print("     A match: ",value,orientation,starttime)
 
-        print(orientation," ",key," ",starttime)
-    #
-    # OK, get the data
-    #
-        print("Got 3 components at the same time and station ... WooHoo")
-    #    Packet1 = simpleMiniseed.unpackMiniseedRecord(dlPacket1.data)
-    #    Packet2 = simpleMiniseed.unpackMiniseedRecord(dlPacket2.data)
-    #    Packet3 = simpleMiniseed.unpackMiniseedRecord(dlPacket3.data)
-    #    P1data=Packet1.data
-    #    print(P1data[0])
-    #    P2data=Packet2.data
-    #    P3data=Packet3.data
-    #    npts=len(P1data)
-    #    print("NPTS ...",npts)
-    #    i=0
-        maxMag=0
-    #    while i < npts:
-    #        PacketMag=math.sqrt(P1data[i]*P1data[i]+P2data[i]*P2data[i]+P3data[i]*P3data[i])
-    #        if PacketMag > maxMag:
-    #            maxMag = PacketMag
-    #        i=i+1
-        #PacketMag=SeismogramTasks.Magnitude_ThreeC_TimeSeries(P1data,P2data,P3data)
-        #PacketMaximum=max(PacketMag)
-        print("Maximum Magnitude for this packet: ",maxMag)
+                    Components.append(value)
+                    match_count=match_count + 1
+#                    print("B ... putting value in Components",match_count,key)
+                if match_count == 3:
+    #                print("Got 3 components at the same time and station ... WooHoo")
+#                    print("Component Length",len(Components))
+                    #print(Components)
+                    maxMag, npts_packet=calculatePacketPeakMagnitude(Components)
+                    print("Peak Magnitude:",maxMag,npts_packet,key)
+           match_count=1
+           packetDictionary[key].append(dlPacket)
+#           print("Initializing Components",match_count)
+           Components=[]
 
         packetCount+=1
-        if packetCount>15:
+        if packetCount>100000000:
             keepGoing=False
     for key, db in dataBuffers.items():
 #            for key, db in dataBuffers.items():

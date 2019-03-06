@@ -100,16 +100,17 @@ def Rotate_2D_TimeSeries(x,y,theta):
         i=i+1
     return [xprime, yprime]
 
-def Zero_List(x,m,n):
+def Zero_List(m,n):
 #
 # Back in the olden days, routines like this were needed
 # No idea how python initializes things
 #
     i=0
+    y=[]
     while m < i < n:
-        x[i]=0
+        y.append(0)
         i=i+1
-    return
+    return y
 
 def Convolve_TimeSeries(d,ld,f,lf,o,lo):
 #
