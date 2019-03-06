@@ -147,8 +147,8 @@ def matchingPackets(ThePacket,orientation,starttime):
 def calculatePacketPeakMagnitude(Components):
     firstPass=True
     for ThePacket in Components:
-        simpleMiniseed.unpackMiniseedRecord(ThePacket.data)
-        data=ThePacket.data
+        mseed=simpleMiniseed.unpackMiniseedRecord(ThePacket.data)
+        data=mseed.data
         if firstPass:
             datasqrd=[]
             npts=len(data)
@@ -156,7 +156,7 @@ def calculatePacketPeakMagnitude(Components):
             print("NPTS mismatch, returning negative max")
             return -1, npts
         i=0
-        #print(data[12])
+        print(data[12])
         while i < len(data):
             if firstPass:
                 datasqrd.append(data[i]*data[i])

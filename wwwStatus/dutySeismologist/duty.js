@@ -239,6 +239,35 @@ doplot = function(sta) {
   doPause(false);
 };
 
+wp.d3.select("button#peak").on("click", function(d) {
+  let trigtime = moment.utc()
+  let dutyOfficer = document.getElementsByName('dutyofficer')[0].value;
+  dutyOfficer = dutyOfficer.replace(/\W/, '');
+  dutyOfficer = dutyOfficer.replace(/_/, '');
+  dutyOfficer = dutyOfficer.toUpperCase();
+  let trigger = {
+        "type": "manual",
+        "dutyOfficer": dutyOfficer,
+        "time": trigtime.toISOString(),
+        "creation": trigtime.toISOString(),
+        "override": {
+            "modtime": trigtime.toISOString(),
+            "value": "enable"
+        }
+    };
+  let dlTriggerConn = new datalink.DataLinkConnection(writeDatalinkUrl, dlTriggerCallback, errorFn);
+  dlTriggerConn.connect().then(serverId => {
+    d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
+    d3.select("div.triggers").append("p").text(`Send Trigger: ${JSON.stringify(trigger)}`);
+    return dlTriggerConn.writeAck(`XX_MANUAL_TRIG_${dutyOfficer}/MTRIG`,
+      trigtime,
+      trigtime,
+      datalink.stringToUnit8Array(JSON.stringify(trigger)));
+  }).then(ack => {
+    dlTriggerConn.close();
+    d3.select("div.triggers").append("p").text(`Send trigger ack: ${ack}`);
+  });
+});
 
 wp.d3.select("button#trigger").on("click", function(d) {
   let trigtime = moment.utc()
