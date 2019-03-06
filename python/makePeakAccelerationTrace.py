@@ -156,11 +156,12 @@ def calculatePacketPeakMagnitude(Components):
             print("NPTS mismatch, returning negative max")
             return -1, npts
         i=0
+        #print(data[12])
         while i < len(data):
             if firstPass:
                 datasqrd.append(data[i]*data[i])
             else:
-                datasqrd[i]=datasqrd[i]+data[i]*data[i]
+                datasqrd[i]=datasqrd[i]+(data[i]*data[i])
             i=i+1
         firstPass=False
     i=0
