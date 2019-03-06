@@ -39,23 +39,29 @@ signal.signal(signal.SIGTERM, handleSignal)
 async def doTest(loop):
     dali = simpleDali.DataLink(host, port)
     dali.verbose = True
-    serverId = yield from dali.id(programname, username, processid, architecture)
+    serverId = await dali.id(programname, username, processid, architecture)
     print("Resp: {}".format(serverId))
-    serverInfo = yield from dali.info("STATUS")
+    serverInfo = await dali.info("STATUS")
     print("Info: {} ".format(serverInfo.message))
     #serverInfo = yield from dali.info("STREAMS")
     #print("Info: {} ".format(serverInfo.message))
-    r = yield from dali.match(".*/PEAK")
+    r = await dali.match(".*/MTRIG")
     print("match() Resonse {}".format(r))
 
     begintime = datetime.utcnow() - timedelta(minutes=5)
-    r = yield from dali.positionAfter(begintime)
-    print("positionAfter() Resonse {}".format(r))
-    r = yield from dali.stream()
+    r = await dali.positionAfter(begintime)
+    if r.type.startswith("ERROR"):
+        print("positionAfter() Resonse {}, ringserver might not know about these packets?".format(r))
+    else:
+        print("positionAfter() Resonse m={}".format(r.message))
+    r = await dali.stream()
     while(keepGoing):
-        trig = yield from dali.parseResponse()
-        print("parseResponse {} ".format(trig.type))
-        print("Trigger: {}  {}".format(trig, json.dumps(json.loads(trig.data), indent=4)))
+        trig = await dali.parseResponse()
+        if not trig.type == "PACKET":
+            # might get an OK very first after stream
+            print("parseResponse not a PACKET {} ".format(trig))
+        else:
+            print("Trigger: {}  {}".format(trig, json.dumps(json.loads(trig.data), indent=4)))
 
     dali.close()
 
