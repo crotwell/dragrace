@@ -45,7 +45,7 @@ async def doTest(loop):
     print("Info: {} ".format(serverInfo.message))
     #serverInfo = yield from dali.info("STREAMS")
     #print("Info: {} ".format(serverInfo.message))
-    r = yield from dali.match(".*/MTRIG")
+    r = yield from dali.match(".*/PEAK")
     print("match() Resonse {}".format(r))
 
     begintime = datetime.utcnow() - timedelta(minutes=5)
