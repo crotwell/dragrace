@@ -24,19 +24,35 @@ array_z = [9,10,11,12]
 # and sends this mag to ring server
 
 
-# First, do coordiate rotation about the y-axis (downtrack)
+# First, do coordiate rotation about the y-axis (downtrack). Note the...
+#  Rotate_2D_TimeSeries function has rotation about z, but can put...
+#  z in for y in code
+# input: array_x, array_z, theta
+# output: rotate_array_x, rotate_array_z
+theta = 20.0
+rotate_array_x = Rotate_2D_TimeSeries(array_x,array_z,theta)[0]
+rotate_array_z = Rotate_2D_TimeSeries(array_x,array_z,theta)[1]
+# print(rotate_array_x)
+# print(rotate_array_z)
 
 
 # function to convert input array_z into a array_z minus a rest state factor
+# input : rotate_array_z
+# output : new_array_z
 rest_factor_z = -1
-def rest_state_correction(array_z):
+def rest_state_correction(rotate_array_z):
     correct = []
-    for i in array_z:
+    for i in rotate_array_z:
         correct.append(i+rest_factor_z)
     return correct
-new_array_z = rest_state_correction(array_z)
-# print(new_array_z)
+new_array_z = rest_state_correction(rotate_array_z)
+print(rotate_array_z)
+print(new_array_z)
 
+# now use: rotate_array_x, array_y, new_array_z
+
+# next: Magnitude_ThreeC_TimeSeries --> vmag in counts, then divide this
+#  vmag from counts into g's (by some factor)
 
 # need: what is rest state? (calculate mean of before and after filter) (have a
 # 'z-corrected factor', and rn it is 1)
