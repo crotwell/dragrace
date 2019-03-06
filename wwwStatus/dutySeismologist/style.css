@@ -16,10 +16,14 @@ path.seispath {
   fill: none;
   stroke-width: 1px;
 }
+div.equalizer {
+    height:120px;
+}
+
 div.equalizer span div{
   display: inline-block;
     width:20px;
-
+    height:2px;
     background-color:#FF0099;
 }
 

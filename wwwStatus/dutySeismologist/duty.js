@@ -145,11 +145,23 @@ let dlTriggerCallback = function(dlPacket) {
 
 };
 
+let dlMaxAccelerationCallback = function(dlPacket) {
+    // turn all into string
+    let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
+    let maxacc = JSON.parse(s);
+    let scaleAcc = Math.round(100*maxacc.accel/2); // 2g = 100px
+    let staSpan = d3.selectAll("div.equalizer").selectAll(`span.${maxacc.station}`);
+    staSpan.selectAll("div").transition().style("height", `${scaleAcc}px`);
+    //console.log(`maxacc: ${maxacc.station}  ${maxacc.accel}  ${scaleAcc}`)
+}
+
 let dlCallback = function(dlPacket) {
   if (dlPacket.streamId.endsWith("MSEED")) {
     dlMSeedCallback(dlPacket);
   } else if (dlPacket.streamId.endsWith("TRIG")) {
     dlTriggerCallback(dlPacket);
+  } else if (dlPacket.streamId.endsWith("MAXACC")) {
+    dlMaxAccelerationCallback(dlPacket);
   }
 };
 
@@ -181,7 +193,7 @@ let doDatalinkConnect = function() {
     return null;
   }).then(serverId => {
     d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
-    return dlConn.awaitDLCommand("MATCH", `(${staCode}.*\.HNZ/MSEED)|(.*/MTRIG)`);
+    return dlConn.awaitDLCommand("MATCH", `(${staCode}.*\.HNZ/MSEED)|(.*/MTRIG)|(.*/MAXACC)`);
   }).then(response => {
     d3.select("div.triggers").append("p").text(`MATCH response: ${response}`);
     return dlConn.awaitDLCommand(`POSITION AFTER ${datalink.momentToHPTime(timeWindow.start)}`);
