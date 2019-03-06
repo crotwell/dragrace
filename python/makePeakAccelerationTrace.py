@@ -213,6 +213,14 @@ def doTest():
                     #print(Components)
                     maxMag, npts_packet=calculatePacketPeakMagnitude(Components)
                     print("Peak Magnitude:",maxMag,npts_packet,key)
+                    streamid = "{}/PEAK".format(key)
+                    hpdatastart = int(starttime.timestamp() * simpleDali.MICROS)
+                    hpdataend = int(starttime.timestamp() * simpleDali.MICROS)
+                    PeakInfo= {
+                        "type": "packet peak acceleration",
+                        "value": maxMag
+                        }
+                    writeJsonToDatalink(streamid, hpdatastart, hpdataend, PeakInfo)
            match_count=1
            packetDictionary[key].append(dlPacket)
 #           print("Initializing Components",match_count)
