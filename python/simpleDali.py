@@ -120,7 +120,7 @@ class DataLink:
 
     async def positionAfter(self, time):
         hpdatastart = int(time.timestamp() * MICROS)
-        r = positionAfterHPTime(hpdatastart)
+        r = await self.positionAfterHPTime(hpdatastart)
         return r
 
     async def positionAfterHPTime(self, hpdatastart):
