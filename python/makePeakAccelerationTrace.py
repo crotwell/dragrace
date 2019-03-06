@@ -132,7 +132,7 @@ def buildPacketKey(ThePacket,RootChan):
     key=net + "." + sta + "." + loc + "." + chan
 #    print("KEY: ", key)
 #    print("Start Time: ", StartTime)
-    return key, Orient, StartTime
+    return key, Orient, StartTime, sta
 
 def matchingPackets(ThePacket,orientation,starttime):
     mSeed = simpleMiniseed.unpackMiniseedRecord(ThePacket.data)
@@ -190,7 +190,7 @@ def doTest():
     while(keepGoing):
 #        print("inside keepGoing loop")
         dlPacket = getNextPacket()
-        key,orientation,starttime=buildPacketKey(dlPacket,"HN")
+        key,orientation,starttime,station=buildPacketKey(dlPacket,"HN")
 #        print("Got another packet: ", key,orientation,starttime)
         if not key in packetDictionary:
 #            print("     New Key: ", key,orientation,starttime)
@@ -218,6 +218,8 @@ def doTest():
                     hpdataend = int(starttime.timestamp() * simpleDali.MICROS)
                     PeakInfo= {
                         "type": "packet peak acceleration",
+                        "station": station,
+                        "Start": starttime.isoformat(),
                         "value": maxMag
                         }
                     writeJsonToDatalink(streamid, hpdatastart, hpdataend, PeakInfo)

@@ -48,7 +48,7 @@ class DataLink:
         type=None
         value=None
         message=None
-        if self.verbose: print("parseRespone header: {}".format(h))
+        #if self.verbose: print("parseRespone header: {}".format(h))
         if header.startswith("PACKET "):
             s = header.split(" ")
             type = s[0]
