@@ -57,6 +57,8 @@ let writeDatalinkUrl = wsProtocol+"//"+INTERNAL_HOST+(INTERNAL_PORT==80?'':':'+I
 
 d3.selectAll('.textHost').text(host);
 
+let accelMaxValues = new Map();
+let prevAccelValue = new Map();
 let dlConn = null;
 let allSeisPlots = new Map();
 let allTraces = new Map();
@@ -145,30 +147,31 @@ let dlTriggerCallback = function(dlPacket) {
 
 };
 
+
 // update equilizer, but only as fast as the browser can handle redraws
 let drawEquilizer = function() {
-  accelMaxValues.forEach((value, key, map) => {
+  accelMaxValues.forEach((dlPacket, streamId, map) => {
     // turn all into string
     let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
     let maxacc = JSON.parse(s);
     let scaleAcc = Math.round(100*maxacc.accel/2); // 2g = 100px
-    if (prevAccelValue[key] && prevAccelValue[key] !== scaleAcc) {
+
+
+    if ( ! prevAccelValue[streamId] || prevAccelValue[streamId] !== scaleAcc) {
       // only update if the value changed
-      prevAccelValue[key] = scaleAcc;
+      prevAccelValue[streamId] = scaleAcc;
       let staSpan = d3.select("div.equalizer").select(`span.${maxacc.station}`);
       staSpan.select("div").transition().style("height", `${scaleAcc}px`);
-      //console.log(`maxacc: ${maxacc.station}  ${maxacc.accel}  ${scaleAcc}`)
     }
   });
+  // lather, rinse, repeat...
   window.requestAnimationFrame(drawEquilizer);
-}
-let accelMaxValues = new Map();
-let prevAccelValue = new Map();
+};
 // start drawing:
 window.requestAnimationFrame(drawEquilizer);
 
 let dlMaxAccelerationCallback = function(dlPacket) {
-    accelMaxValues[dlPacket.key] = dlPacket;
+    accelMaxValues.set(dlPacket.streamId, dlPacket);
 }
 
 let dlPacketPeakCallback = function(dlPacket) {
