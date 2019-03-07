@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 import simpleDali
 
 net = "XX"
-stations = [ 'PI01', 'PI03', 'PI04', 'PI06', 'PI07']
+stations = [ 'PI10', 'PI11']
 interval = 1
 
 host = "129.252.35.36"
@@ -79,7 +79,7 @@ while keepGoing:
         hpdatastart = int(starttime.timestamp() * simpleDali.MICROS)
         hpdataend = int(starttime.timestamp() * simpleDali.MICROS)
         ack = writeJsonToDatalink(streamid, hpdatastart, hpdataend, jsonMessage)
-        print("send max = {:f} as json, {}".format(val, ack))
+        #print("send {} max = {:f} as json, {}".format(s, val, ack))
 
 daliUpload.close()
 loop.close()
