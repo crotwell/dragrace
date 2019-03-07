@@ -171,6 +171,16 @@ let dlMaxAccelerationCallback = function(dlPacket) {
     accelMaxValues[dlPacket.key] = dlPacket;
 }
 
+let dlPacketPeakCallback = function(dlPacket) {
+    // turn all into string
+    let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
+    let maxacc = JSON.parse(s);
+    let scaleAcc = Math.round(100*maxacc.accel/2); // 2g = 100px
+    let staSpan = d3.selectAll("div.equalizer").selectAll(`span.${maxacc.station}`);
+    staSpan.selectAll("div").transition().style("height", `${scaleAcc}px`);
+    //console.log(`maxacc: ${maxacc.station}  ${maxacc.accel}  ${scaleAcc}`)
+}
+
 let dlCallback = function(dlPacket) {
   if (dlPacket.streamId.endsWith("MSEED")) {
     dlMSeedCallback(dlPacket);
@@ -178,6 +188,8 @@ let dlCallback = function(dlPacket) {
     dlTriggerCallback(dlPacket);
   } else if (dlPacket.streamId.endsWith("MAXACC")) {
     dlMaxAccelerationCallback(dlPacket);
+  } else if (dlPacket.streamId.endsWith("PEAK")) {
+    dlPacketPeakCallback(dlPacket);
   }
 };
 
@@ -243,6 +255,35 @@ doplot = function(sta) {
   doPause(false);
 };
 
+wp.d3.select("button#peak").on("click", function(d) {
+  let trigtime = moment.utc()
+  let dutyOfficer = document.getElementsByName('dutyofficer')[0].value;
+  dutyOfficer = dutyOfficer.replace(/\W/, '');
+  dutyOfficer = dutyOfficer.replace(/_/, '');
+  dutyOfficer = dutyOfficer.toUpperCase();
+  let trigger = {
+        "type": "manual",
+        "dutyOfficer": dutyOfficer,
+        "time": trigtime.toISOString(),
+        "creation": trigtime.toISOString(),
+        "override": {
+            "modtime": trigtime.toISOString(),
+            "value": "enable"
+        }
+    };
+  let dlTriggerConn = new datalink.DataLinkConnection(writeDatalinkUrl, dlTriggerCallback, errorFn);
+  dlTriggerConn.connect().then(serverId => {
+    d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
+    d3.select("div.triggers").append("p").text(`Send Trigger: ${JSON.stringify(trigger)}`);
+    return dlTriggerConn.writeAck(`XX_MANUAL_TRIG_${dutyOfficer}/MTRIG`,
+      trigtime,
+      trigtime,
+      datalink.stringToUnit8Array(JSON.stringify(trigger)));
+  }).then(ack => {
+    dlTriggerConn.close();
+    d3.select("div.triggers").append("p").text(`Send trigger ack: ${ack}`);
+  });
+});
 
 wp.d3.select("button#trigger").on("click", function(d) {
   let trigtime = moment.utc()
