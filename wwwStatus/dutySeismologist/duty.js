@@ -145,14 +145,30 @@ let dlTriggerCallback = function(dlPacket) {
 
 };
 
-let dlMaxAccelerationCallback = function(dlPacket) {
+// update equilizer, but only as fast as the browser can handle redraws
+let drawEquilizer = function() {
+  accelMaxValues.forEach((value, key, map) => {
     // turn all into string
     let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
     let maxacc = JSON.parse(s);
     let scaleAcc = Math.round(100*maxacc.accel/2); // 2g = 100px
-    let staSpan = d3.selectAll("div.equalizer").selectAll(`span.${maxacc.station}`);
-    staSpan.selectAll("div").transition().style("height", `${scaleAcc}px`);
-    //console.log(`maxacc: ${maxacc.station}  ${maxacc.accel}  ${scaleAcc}`)
+    if (prevAccelValue[key] && prevAccelValue[key] !== scaleAcc) {
+      // only update if the value changed
+      prevAccelValue[key] = scaleAcc;
+      let staSpan = d3.select("div.equalizer").select(`span.${maxacc.station}`);
+      staSpan.select("div").transition().style("height", `${scaleAcc}px`);
+      //console.log(`maxacc: ${maxacc.station}  ${maxacc.accel}  ${scaleAcc}`)
+    }
+  });
+  window.requestAnimationFrame(drawEquilizer);
+}
+let accelMaxValues = new Map();
+let prevAccelValue = new Map();
+// start drawing:
+window.requestAnimationFrame(drawEquilizer);
+
+let dlMaxAccelerationCallback = function(dlPacket) {
+    accelMaxValues[dlPacket.key] = dlPacket;
 }
 
 let dlPacketPeakCallback = function(dlPacket) {
