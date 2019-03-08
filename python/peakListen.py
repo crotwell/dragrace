@@ -48,7 +48,7 @@ async def doTest(loop):
     r = await dali.match(".*/MAXACC")
     #print("match() Resonse {}".format(r))
 
-    begintime = datetime.utcnow() - timedelta(minutes=5)
+    begintime = datetime.utcnow() - timedelta(seconds=2)
     r = await dali.positionAfter(begintime)
     if r.type.startswith("ERROR"):
         print("positionAfter() Resonse {}, ringserver might not know about these packets?".format(r))
