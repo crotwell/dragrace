@@ -97,19 +97,21 @@ class DecimateTwo:
             self.tickTock = not self.tickTock
         return out
 
-fir = FIR()
-d2 = DecimateTwo()
-outData = []
-inData = []
-gain = 1.0+(1.0-fir.calcUnitySum())
-gain=1.0
-for i in range(400):
-    val = int(round(10000*math.sin(2*math.pi*i/20)))
-    inData.append(val)
-    outData.append(fir.pushPop(val, gain))
-delay = int((fir.tapLen-1)/2)
-for i in range(len(outData)-delay):
-    print(" {:d}  push: {:d}   pop: {:d}".format(i, inData[i], outData[i+delay]))
+if __name__ == "__main__":
+    # execute only if run as a script
+    fir = FIR()
+    d2 = DecimateTwo()
+    outData = []
+    inData = []
+    gain = 1.0+(1.0-fir.calcUnitySum())
+    gain=1.0
+    for i in range(400):
+        val = int(round(10000*math.sin(2*math.pi*i/20)))
+        inData.append(val)
+        outData.append(fir.pushPop(val, gain))
+    delay = int((fir.tapLen-1)/2)
+    for i in range(len(outData)-delay):
+        print(" {:d}  push: {:d}   pop: {:d}".format(i, inData[i], outData[i+delay]))
 
-print("delay: {}".format(delay))
-print("unity sum: {}".format(fir.calcUnitySum()))
+    print("delay: {}".format(delay))
+    print("unity sum: {}".format(fir.calcUnitySum()))
