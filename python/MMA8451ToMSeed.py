@@ -8,6 +8,7 @@ import queue
 from threading import Thread
 from datetime import datetime, timedelta
 import sys, os, signal
+import socket
 from pathlib import Path
 import asyncio
 import traceback
@@ -18,16 +19,22 @@ faulthandler.enable()
 #import logging
 #logging.basicConfig(filename='xbee.log',level=logging.DEBUG)
 
-import board
-import busio
+# to generate fake data as PI99 set to True
+doFake = False
 
-import adafruit_mma8451
-import RPi.GPIO as GPIO
+if not doFake:
+    import board
+    import busio
+    import RPi.GPIO as GPIO
+    import adafruit_mma8451
+else:
+    import fakeSensor
 
 import simpleMiniseed
 import simpleDali
 import dataBuffer
 import decimate
+
 
 daliHost="129.252.35.36"
 daliPort=15003
@@ -47,19 +54,23 @@ if doFIR:
 
 quitOnError = True
 
-# Initialize I2C bus.
-i2c = busio.I2C(board.SCL, board.SDA)
+if not doFake:
+    # Initialize I2C bus.
+    i2c = busio.I2C(board.SCL, board.SDA)
 
-# Initialize MMA8451 module.
-sensor = adafruit_mma8451.MMA8451(i2c)
-# Optionally change the address if it's not the default:
-#sensor = adafruit_mma8451.MMA8451(i2c, address=0x1C)
+    # Initialize MMA8451 module.
+    sensor = adafruit_mma8451.MMA8451(i2c)
+    # Optionally change the address if it's not the default:
+    #sensor = adafruit_mma8451.MMA8451(i2c, address=0x1C)
 
-print("reset sensor")
-sensor.reset()
-print("remove gpio interrupt pin")
-GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.remove_event_detect(pin)
+    print("reset sensor")
+    sensor.reset()
+    print("remove gpio interrupt pin")
+    GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.remove_event_detect(pin)
+else:
+    sensor = fakeSensor.FakeSensor()
+    adafruit_mma8451 = fakeSensor.FakeAdafruit()
 
 # Optionally change the range from its default of +/-4G:
 sensor.range = adafruit_mma8451.RANGE_2G  # +/- 2G
@@ -264,8 +275,12 @@ def initDali(host, port):
     return dl
 
 def getLocalHostname():
-    with open("/etc/hostname") as hF:
-        hostname = hF.read()
+    if not doFake:
+        hostname = socket.gethostname().split('.')[0]
+    else:
+        hostname = 'PI99'
+    #with open("/etc/hostname") as hF:
+    #    hostname = hF.read()
     return hostname.strip()
 
 def handleSignal(sigNum, stackFrame):
@@ -281,8 +296,9 @@ def doQuit():
 
 def cleanUp():
     if sensor is not None:
-        print("remove gpio interrupt pin")
-        GPIO.remove_event_detect(pin)
+        if not doFake:
+            print("remove gpio interrupt pin")
+            GPIO.remove_event_detect(pin)
         print("reset sensor")
         sensor.reset()
     for key in miniseedBuffers:
