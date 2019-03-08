@@ -147,8 +147,8 @@ def matchingPackets(ThePacket,orientation,starttime):
 def calculatePacketPeakMagnitude(Components):
     firstPass=True
     for ThePacket in Components:
-        simpleMiniseed.unpackMiniseedRecord(ThePacket.data)
-        data=ThePacket.data
+        mseed=simpleMiniseed.unpackMiniseedRecord(ThePacket.data)
+        data=mseed.data
         if firstPass:
             datasqrd=[]
             npts=len(data)
@@ -156,11 +156,12 @@ def calculatePacketPeakMagnitude(Components):
             print("NPTS mismatch, returning negative max")
             return -1, npts
         i=0
+        #print(data[12])
         while i < len(data):
             if firstPass:
                 datasqrd.append(data[i]*data[i])
             else:
-                datasqrd[i]=datasqrd[i]+data[i]*data[i]
+                datasqrd[i]=datasqrd[i]+(data[i]*data[i])
             i=i+1
         firstPass=False
     i=0
@@ -212,17 +213,27 @@ def doTest():
 #                    print("Component Length",len(Components))
                     #print(Components)
                     maxMag, npts_packet=calculatePacketPeakMagnitude(Components)
+    #
+    # TEMPORARY FIR FIlter # FIXME:
+    #
+                    maxMag=maxMag/3113
                     print("Peak Magnitude:",maxMag,npts_packet,key)
-                    streamid = "{}/PEAK".format(key)
+                    #streamid = "{}/MAXACC".format(key)
+                    streamid = "{}.{}/MAXACC".format("XX", station)
                     hpdatastart = int(starttime.timestamp() * simpleDali.MICROS)
                     hpdataend = int(starttime.timestamp() * simpleDali.MICROS)
-                    PeakInfo= {
-                        "type": "packet peak acceleration",
+                    jsonMessage = {
                         "station": station,
-                        "Start": starttime.isoformat(),
-                        "value": maxMag
-                        }
-                    writeJsonToDatalink(streamid, hpdatastart, hpdataend, PeakInfo)
+                        "time": starttime.isoformat(),
+                        "accel": maxMag
+                    }
+                    #PeakInfo= {
+                    #    "type": "packet peak acceleration",
+                    #    "station": station,
+                    #    "Start": starttime.isoformat(),
+                    #    "value": maxMag
+                    #    }
+                    writeJsonToDatalink(streamid, hpdatastart, hpdataend, jsonMessage)
            match_count=1
            packetDictionary[key].append(dlPacket)
 #           print("Initializing Components",match_count)

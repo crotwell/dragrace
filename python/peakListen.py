@@ -45,10 +45,10 @@ async def doTest(loop):
     print("Info: {} ".format(serverInfo.message))
     #serverInfo = yield from dali.info("STREAMS")
     #print("Info: {} ".format(serverInfo.message))
-    r = await dali.match(".*/PEAK")
+    r = await dali.match(".*/MAXACC")
     #print("match() Resonse {}".format(r))
 
-    begintime = datetime.utcnow() - timedelta(minutes=5)
+    begintime = datetime.utcnow() - timedelta(seconds=2)
     r = await dali.positionAfter(begintime)
     if r.type.startswith("ERROR"):
         print("positionAfter() Resonse {}, ringserver might not know about these packets?".format(r))
@@ -63,7 +63,7 @@ async def doTest(loop):
         else:
             peakInfo={}
             peakInfo=json.loads(peakPacket.data)
-            print("{} for {} is {:7.2f} at {}".format(peakInfo["type"],peakInfo["station"],peakInfo["value"],peakInfo["Start"]))
+            print("{} acceleration is {:7.2f} at {}".format(peakInfo["station"],peakInfo["accel"],peakInfo["time"]))
 
     dali.close()
 

@@ -57,6 +57,8 @@ let writeDatalinkUrl = wsProtocol+"//"+INTERNAL_HOST+(INTERNAL_PORT==80?'':':'+I
 
 d3.selectAll('.textHost').text(host);
 
+let accelMaxValues = new Map();
+let prevAccelValue = new Map();
 let dlConn = null;
 let allSeisPlots = new Map();
 let allTraces = new Map();
@@ -145,7 +147,34 @@ let dlTriggerCallback = function(dlPacket) {
 
 };
 
+
+// update equilizer, but only as fast as the browser can handle redraws
+let drawEquilizer = function() {
+  accelMaxValues.forEach((dlPacket, streamId, map) => {
+    // turn all into string
+    let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
+    let maxacc = JSON.parse(s);
+    let scaleAcc = Math.round(100*maxacc.accel/2); // 2g = 100px
+
+
+    if ( ! prevAccelValue[streamId] || prevAccelValue[streamId] !== scaleAcc) {
+      // only update if the value changed
+      prevAccelValue[streamId] = scaleAcc;
+      let staSpan = d3.select("div.equalizer").select(`span.${maxacc.station}`);
+      staSpan.select("div").transition().style("height", `${scaleAcc}px`);
+    }
+  });
+  // lather, rinse, repeat...
+  window.requestAnimationFrame(drawEquilizer);
+};
+// start drawing:
+window.requestAnimationFrame(drawEquilizer);
+
 let dlMaxAccelerationCallback = function(dlPacket) {
+    accelMaxValues.set(dlPacket.streamId, dlPacket);
+}
+
+let dlPacketPeakCallback = function(dlPacket) {
     // turn all into string
     let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
     let maxacc = JSON.parse(s);
@@ -162,6 +191,8 @@ let dlCallback = function(dlPacket) {
     dlTriggerCallback(dlPacket);
   } else if (dlPacket.streamId.endsWith("MAXACC")) {
     dlMaxAccelerationCallback(dlPacket);
+  } else if (dlPacket.streamId.endsWith("PEAK")) {
+    dlPacketPeakCallback(dlPacket);
   }
 };
 
@@ -227,6 +258,35 @@ doplot = function(sta) {
   doPause(false);
 };
 
+wp.d3.select("button#peak").on("click", function(d) {
+  let trigtime = moment.utc()
+  let dutyOfficer = document.getElementsByName('dutyofficer')[0].value;
+  dutyOfficer = dutyOfficer.replace(/\W/, '');
+  dutyOfficer = dutyOfficer.replace(/_/, '');
+  dutyOfficer = dutyOfficer.toUpperCase();
+  let trigger = {
+        "type": "manual",
+        "dutyOfficer": dutyOfficer,
+        "time": trigtime.toISOString(),
+        "creation": trigtime.toISOString(),
+        "override": {
+            "modtime": trigtime.toISOString(),
+            "value": "enable"
+        }
+    };
+  let dlTriggerConn = new datalink.DataLinkConnection(writeDatalinkUrl, dlTriggerCallback, errorFn);
+  dlTriggerConn.connect().then(serverId => {
+    d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
+    d3.select("div.triggers").append("p").text(`Send Trigger: ${JSON.stringify(trigger)}`);
+    return dlTriggerConn.writeAck(`XX_MANUAL_TRIG_${dutyOfficer}/MTRIG`,
+      trigtime,
+      trigtime,
+      datalink.stringToUnit8Array(JSON.stringify(trigger)));
+  }).then(ack => {
+    dlTriggerConn.close();
+    d3.select("div.triggers").append("p").text(`Send trigger ack: ${ack}`);
+  });
+});
 
 wp.d3.select("button#trigger").on("click", function(d) {
   let trigtime = moment.utc()
