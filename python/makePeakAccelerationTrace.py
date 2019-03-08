@@ -227,7 +227,7 @@ def doTest():
                         "time": starttime.isoformat(),
                         "accel": maxMag
                     }
-                    writeJsonToDatalink(streamid, hpdatastart, hpdataend, jsonMessage)
+                    #writeJsonToDatalink(streamid, hpdatastart, hpdataend, jsonMessage)
                     for UsedPacket in Components:
                         packetDictionary[key].remove(UsedPacket)
            match_count=1
