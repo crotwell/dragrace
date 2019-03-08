@@ -9,7 +9,7 @@ let d3 = seisplotjs.d3;
 let moment = seisplotjs.moment;
 
 let net = 'CO';
-let staList = ['3605', 'PI01', 'PI03', 'PI04', 'PI06', 'PI07'];
+let staList = ['3605', 'PI01', 'PI03', 'PI04', 'PI06', 'PI07', 'PI99'];
 d3.select('#stationChoice')
   .selectAll("option")
   .data(staList)
