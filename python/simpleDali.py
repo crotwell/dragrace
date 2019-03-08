@@ -1,4 +1,5 @@
 import asyncio
+import json
 from datetime import datetime, timedelta
 
 MICROS = 1000000
@@ -94,6 +95,13 @@ class DataLink:
         hpdataend = int(msr.endtime().timestamp() * MICROS)
         if self.verbose: print("simpleDali.writeMSeed {} {} {}".format(streamid, hpdatastart, hpdataend))
         r = await self.writeAck(streamid, hpdatastart, hpdataend, msr.pack())
+        return r
+
+
+    async def writeJSON(self, streamid, hpdatastart, hpdataend, jsonMessage):
+        if self.verbose: print("simpleDali.writeMSeed {} {} {}".format(streamid, hpdatastart, hpdataend))
+        jsonAsByteArray = json.dumps(jsonMessage).encode('UTF-8')
+        r = await self.writeAck(streamid, hpdatastart, hpdataend, jsonAsByteArray)
         return r
 
     async def writeCommand(self, command, dataString=None):
