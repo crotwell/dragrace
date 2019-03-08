@@ -68,8 +68,8 @@ while keepGoing:
         "ip": myIPaddr
     }
     streamid = "{}.{}/IP".format(net, sta)
-    hpdatastart = simpleDali.datetimeToHPTime(starttime.timestamp())
-    hpdataend = simpleDali.datetimeToHPTime(starttime.timestamp())
+    hpdatastart = simpleDali.datetimeToHPTime(starttime)
+    hpdataend = simpleDali.datetimeToHPTime(starttime)
     jsonSendTask = loop.create_task(daliUpload.writeJSON(streamid, hpdatastart, hpdataend, jsonMessage))
     loop.run_until_complete(jsonSendTask)
     ack = jsonSendTask.result()
