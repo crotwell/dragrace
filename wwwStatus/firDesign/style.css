@@ -16,6 +16,11 @@ g.reout path {
   fill: none;
   stroke-width: 1px;
 }
+g.timedomain path {
+  stroke: goldenrod;
+  fill: none;
+  stroke-width: 1px;
+}
 
 ul {
   list-style: none;

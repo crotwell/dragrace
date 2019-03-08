@@ -55,6 +55,7 @@ let createFIR = function() {
   outData = firLp.filter(inData);
   filterDelay = (firLp.getCoefficients().length-1)/2
   reoutData = firLp.filter(outData.slice(filterDelay));
+  timeDomainData = applyTimeDomain(firLp.getCoefficients(), inData);
 
   //
   // let impulseDisplay = d3.select("div.impulse").select("ul").selectAll("li")
@@ -78,8 +79,10 @@ let createFIR = function() {
     .append("path").attr("d", lineFunc(inData));
   plotSvg.append("g").classed("out", true).attr("transform", "translate(" + margin.left + "," + margin.top + ")")
     .append("path").attr("d", lineFunc(outData.slice(filterDelay)));
-    plotSvg.append("g").classed("reout", true).attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-      .append("path").attr("d", lineFunc(reoutData.slice(filterDelay)));
+  plotSvg.append("g").classed("reout", true).attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    .append("path").attr("d", lineFunc(reoutData.slice(filterDelay)));
+  plotSvg.append("g").classed("timedomain", true).attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    .append("path").attr("d", lineFunc(timeDomainData.slice(filterDelay)));
 
 
 
@@ -99,11 +102,12 @@ let createFIR = function() {
 
   let inDataFFT = seisplotjs.filter.calcDFT(inData, inData.length);
   let outDataFFT = seisplotjs.filter.calcDFT(outData, outData.length);
+  let timeDomainDataFFT = seisplotjs.filter.calcDFT(timeDomainData, timeDomainData.length);
   for(let i=0; i<10;i++) {
     console.log(`fft out: ${outDataFFT[i]}  ${outDataFFT[outDataFFT.length-1-i]}`)
   }
 
-  seisplotjs.waveformplot.simpleOverlayFFTPlot([inDataFFT, outDataFFT], "div.fft", 1);
+  seisplotjs.waveformplot.simpleOverlayFFTPlot([inDataFFT, outDataFFT, timeDomainDataFFT], "div.fft", 1);
 //simpleLogPlot(inDataFFT, outDataFFT, "div.fft", 1);
 
   // lineFunc = d3.line()
@@ -130,6 +134,25 @@ let createFIR = function() {
 
 }
 
+function applyTimeDomain(coeff, data) {
+  let out = [];
+  let history = new Array(coeff.length);
+  history.fill(0);
+  for(let offset=0; offset<data.length+coeff.length; offset++) {
+    history = history.slice(1);
+    if (offset < data.length) {
+      history.push(data[offset]);
+    } else {
+      history.push(0);
+    }
+    let temp = 0;
+    for(let i=0; i<coeff.length; i++) {
+        temp += coeff[coeff.length-i-1]*history[i];
+    }
+    out.push(temp);
+  }
+  return out;
+}
 
 
 function simpleLogPlot(fft, fftB, cssSelector, sps) {
