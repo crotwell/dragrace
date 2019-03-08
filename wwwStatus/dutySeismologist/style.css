@@ -24,20 +24,22 @@ div.equalizer span div{
   display: inline-block;
     width:20px;
     height:2px;
-    background-color:#FF0099;
+    background-color:pink;
 }
 
 div.piStatus span div{
-  display: inline-block;
     width: 20px;
     height: 20px;
-    background-color:#00CC33;
+    background-color: #990000;
+    border-radius: 50%;
+    display: inline-block;
 }
-div.piStatus span.Struggling div{
+
+div.piStatus span.struggling div{
     background-color:#FFFF00;
 }
-div.piStatus span.Dead div{
-    background-color:#990000;
+div.piStatus span.good div{
+    background-color:#00CC33;
 }
 div.piStatus span{
   margin-right: 20px;
