@@ -13,9 +13,9 @@ import math
 from SeismogramTasks import *
 
 # note: each element of x,y,z makes one vector!
-array_x = [1,2,3,4]
-array_y = [5,6,7,8]
-array_z = [9,10,11,12]
+array_x = [1,2,3,4,500,15,25]
+array_y = [5,6,7,8,32,69,70]
+array_z = [9,10,11,12,47,100,0]
 
 # overall : take in raw packets (arrays Z,N,E), do rotation and rest state
 # correction, calculate peak counts over the entire time series, divide
@@ -46,10 +46,67 @@ def rest_state_correction(rotate_array_z):
         correct.append(i+rest_factor_z)
     return correct
 new_array_z = rest_state_correction(rotate_array_z)
-print(rotate_array_z)
+print(rotate_array_x)
+print(array_y)
 print(new_array_z)
+print('---')
 
 # now use: rotate_array_x, array_y, new_array_z
+
+# vmag = Magnitude_ThreeC_TimeSeries(rotate_array_x,array_y,new_array_z)
+# print('vmag: {}'.format(vmag))
+#
+# test_1 = math.sqrt((rotate_array_x[0]**2 + array_y[0]**2 + new_array_z[0]**2))
+# test_2 = VectorMagnitude(rotate_array_x[1],array_y[1],new_array_z[3])
+# test_3 = VectorMagnitude(rotate_array_x[2],array_y[2],new_array_z[2])
+# test_4 = VectorMagnitude(rotate_array_x[3],array_y[3],new_array_z[3])
+# print(test_1,test_2,test_3,test_4)
+
+def Magnitude_ThreeC_TimeSeries_jake(x,y,z):
+    nptsx=len(x)
+    nptsy=len(y)
+    nptsz=len(z)
+    if nptsx != nptsy:
+        print("x and y of different lengths",nptsx,nptsy)
+        return
+    elif nptsx != nptsz:
+        print("z different length than x and y",nptsx,nptsz)
+        return
+    # i=0
+    # vmag=0
+    # while i < nptsx:
+    #     vmag[i]=VectorMagnitude(x[i],y[i],z[i])
+    #     i=i+1
+    # return vmag
+    i = 0
+    vmag = []
+    while i < nptsx:
+        vmag.append(VectorMagnitude(x[i],y[i],z[i]))
+        i += 1
+    return vmag
+vmag = Magnitude_ThreeC_TimeSeries_jake(rotate_array_x,array_y,new_array_z)
+# print('vmag: {}'.format(vmag))
+
+# Divide vmag list by 4096 to convert counts to g's
+def countsTog(vmag):
+    npts = len(vmag)
+    peakAccel = []
+    i = 0
+    countsIng = 4096
+    while i < npts:
+        peakAccel.append(vmag[i]/countsIng)
+        i += 1
+    return peakAccel
+peakAccel = countsTog(vmag)
+print('peak_Accel: {}'.format(peakAccel))
+
+# now have a peakAccel list for as many times as we want 
+
+
+
+# max = 0
+# # timestamp = #
+# #(see picture)
 
 # next: Magnitude_ThreeC_TimeSeries --> vmag in counts, then divide this
 #  vmag from counts into g's (by some factor)
