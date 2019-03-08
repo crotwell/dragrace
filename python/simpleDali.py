@@ -96,6 +96,13 @@ class DataLink:
         r = await self.writeAck(streamid, hpdatastart, hpdataend, msr.pack())
         return r
 
+
+    async def writeJSON(self, streamid, hpdatastart, hpdataend, jsonMessage):
+        if self.verbose: print("simpleDali.writeMSeed {} {} {}".format(streamid, hpdatastart, hpdataend))
+        jsonAsByteArray = json.dumps(jsonMessage).encode('UTF-8')
+        r = await self.writeAck(streamid, hpdatastart, hpdataend, jsonAsByteArray)
+        return r
+
     async def writeCommand(self, command, dataString=None):
         if self.verbose: print("writeCommand: cmd: {} dataStr: {}".format(command, dataString))
         dataBytes = None

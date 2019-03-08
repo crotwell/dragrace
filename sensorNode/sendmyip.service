@@ -1,0 +1,15 @@
+[Unit]
+After=multi-user.target
+
+[Service]
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/mma8451
+StandardOutput=inherit
+StandardError=inherit
+Restart=no
+Type=idle
+ExecStart=/usr/bin/python3  /home/pi/dragrace/python/sendMyIP.py
+
+[Install]
+WantedBy=default.target
