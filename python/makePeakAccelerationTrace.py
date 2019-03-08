@@ -186,6 +186,7 @@ def doTest():
     packetCount=0
     Components=[]
     match_count=1
+    GotAllThree=False
 #    print("Entering test ... Initializing Components", match_count)
 
     while(keepGoing):
@@ -199,8 +200,6 @@ def doTest():
             packetDictionary[key].append(dlPacket)
         else:
            Components.append(dlPacket)
-#           print(packetDictionary)
-#           print("A ... putting DlPacket in Components",match_count,key)
            for value in packetDictionary[key]:
                 if matchingPackets(value,orientation,starttime):
     #                print("     A match: ",value,orientation,starttime)
@@ -210,6 +209,7 @@ def doTest():
 #                    print("B ... putting value in Components",match_count,key)
                 if match_count == 3:
     #                print("Got 3 components at the same time and station ... WooHoo")
+                    GotAllThree=True
 #                    print("Component Length",len(Components))
                     #print(Components)
                     maxMag, npts_packet=calculatePacketPeakMagnitude(Components)
@@ -227,16 +227,13 @@ def doTest():
                         "time": starttime.isoformat(),
                         "accel": maxMag
                     }
-                    #PeakInfo= {
-                    #    "type": "packet peak acceleration",
-                    #    "station": station,
-                    #    "Start": starttime.isoformat(),
-                    #    "value": maxMag
-                    #    }
                     writeJsonToDatalink(streamid, hpdatastart, hpdataend, jsonMessage)
+                    for UsedPacket in Components:
+                        packetDictionary[key].remove(UsedPacket)
            match_count=1
-           packetDictionary[key].append(dlPacket)
-#           print("Initializing Components",match_count)
+           if not GotAllThree:
+               packetDictionary[key].append(dlPacket)
+           GotAllThree=False
            Components=[]
 
         packetCount+=1
