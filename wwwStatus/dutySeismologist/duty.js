@@ -47,6 +47,12 @@ let host = EXTERNAL_HOST;
 let port = EXTERNAL_PORT;
 let path = EXTERNAL_PATH;
 
+    //PI status color change with  differences in maxacc packet time
+    //const StrugDur = moment.duration(3 'minutes');
+    //const DeadDur = moment.duration(6 'minutes');
+    const StrugDur = moment.duration(10, 'seconds');
+    const DeadDur = moment.duration(20, 'seconds');
+
 //host="127.0.0.1";
 //port=6382;
 
@@ -150,6 +156,7 @@ let dlTriggerCallback = function(dlPacket) {
 
 // update equilizer, but only as fast as the browser can handle redraws
 let drawEquilizer = function() {
+  d3.select("div.equalizer").selectAll(`span`).classed('struggling', false).classed('good', false);
   accelMaxValues.forEach((dlPacket, streamId, map) => {
     // turn all into string
     let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
@@ -161,8 +168,33 @@ let drawEquilizer = function() {
       // only update if the value changed
       prevAccelValue[streamId] = scaleAcc;
       let staSpan = d3.select("div.equalizer").select(`span.${maxacc.station}`);
-      staSpan.select("div").transition().style("height", `${scaleAcc}px`);
+      let color = staSpan.style("background-color");
+	    console.log(`color: ${color}`);
+      if (color == 'pink') {
+        color = 'yellow';
+      } else {
+	color = 'pink';
+      }
+      staSpan.select("div").transition().style("height", `${scaleAcc}px`).style("background-color", color);;
     }
+
+    let now = moment.utc();
+    let packtime = moment.utc(maxacc.time);
+      //var duration = moment.duration(now,diff(packtime));
+
+//determine time intervals and associate class names
+
+    let statpi = d3.select("div.piStatus");
+
+    if(now.subtract(StrugDur).isBefore(packtime)){
+      statpi.select(`span.${maxacc.station}`).classed('struggling', false).classed('good', true);
+    } else if(now.subtract(DeadDur).isBefore(packtime)){
+      statpi.select(`span.${maxacc.station}`).classed('struggling', true).classed('good', false);
+    } else {
+      statpi.select(`span.${maxacc.station}`).classed('struggling', false).classed('good', false);
+  }
+
+
   });
   // lather, rinse, repeat...
   window.requestAnimationFrame(drawEquilizer);
@@ -180,7 +212,7 @@ let dlPacketPeakCallback = function(dlPacket) {
     let maxacc = JSON.parse(s);
     let scaleAcc = Math.round(100*maxacc.accel/2); // 2g = 100px
     let staSpan = d3.selectAll("div.equalizer").selectAll(`span.${maxacc.station}`);
-    staSpan.selectAll("div").transition().style("height", `${scaleAcc}px`);
+    staSpan.selectAll("div").transition().style("height", `${scaleAcc}px`).style("background-color", "yellow");
     //console.log(`maxacc: ${maxacc.station}  ${maxacc.accel}  ${scaleAcc}`)
 }
 
