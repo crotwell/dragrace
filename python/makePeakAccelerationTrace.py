@@ -199,6 +199,7 @@ def doTest():
             packetDictionary[key]=[]
             packetDictionary[key].append(dlPacket)
         else:
+           packetDictionary[key].append(dlPacket)
            Components.append(dlPacket)
            for value in packetDictionary[key]:
                 if matchingPackets(value,orientation,starttime):
