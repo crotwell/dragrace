@@ -199,7 +199,6 @@ def doTest():
             packetDictionary[key]=[]
             packetDictionary[key].append(dlPacket)
         else:
-           packetDictionary[key].append(dlPacket)
            Components.append(dlPacket)
            for value in packetDictionary[key]:
                 if matchingPackets(value,orientation,starttime):
@@ -217,8 +216,8 @@ def doTest():
     #
     # TEMPORARY FIR FIlter # FIXME:
     #
-                    maxMag=maxMag/3113
-                    print("Peak Magnitude:",maxMag,npts_packet,key)
+                    maxMag=maxMag/4096
+                    #print("Peak Magnitude:",maxMag,maxMag*9.8,npts_packet,key)
                     #streamid = "{}/MAXACC".format(key)
                     streamid = "{}.{}/MAXACC".format("XX", station)
                     hpdatastart = int(starttime.timestamp() * simpleDali.MICROS)
@@ -229,6 +228,7 @@ def doTest():
                         "accel": maxMag
                     }
                     #writeJsonToDatalink(streamid, hpdatastart, hpdataend, jsonMessage)
+                    packetDictionary[key].append(dlPacket)
                     for UsedPacket in Components:
                         packetDictionary[key].remove(UsedPacket)
            match_count=1
