@@ -159,6 +159,7 @@ def calculatePacketPeakMagnitude(Components):
         #print(data[12])
         while i < len(data):
             if firstPass:
+                thedata=[]
                 datasqrd.append(data[i]*data[i])
             else:
                 datasqrd[i]=datasqrd[i]+(data[i]*data[i])
@@ -179,7 +180,7 @@ def doTest():
 
 
 #    initTask = loop.create_task(initConnections(".*PI04.*HNZ/MSEED"))
-    initTask = loop.create_task(initConnections(".*PI.*/MSEED"))
+    initTask = loop.create_task(initConnections(".*PI99.*/MSEED"))
     loop.run_until_complete(initTask)
 
     packetDictionary={}
@@ -208,6 +209,12 @@ def doTest():
                     match_count=match_count + 1
 #                    print("B ... putting value in Components",match_count,key)
                 if match_count == 3:
+                    for ThePacket in Components:
+                        mSeed = simpleMiniseed.unpackMiniseedRecord(ThePacket.data)
+                        thedata=mSeed.data
+                        StartTime = mSeed.header.starttime
+                        sta = mSeed.header.station
+                        Orient = mSeed.header.channel[2]
     #                print("Got 3 components at the same time and station ... WooHoo")
                     GotAllThree=True
 #                    print("Component Length",len(Components))
@@ -216,9 +223,7 @@ def doTest():
     #
     # TEMPORARY FIR FIlter # FIXME:
     #
-                    maxMag=maxMag/4096
-                    #print("Peak Magnitude:",maxMag,maxMag*9.8,npts_packet,key)
-                    #streamid = "{}/MAXACC".format(key)
+                    maxMag=maxMag
                     streamid = "{}.{}/MAXACC".format("XX", station)
                     hpdatastart = int(starttime.timestamp() * simpleDali.MICROS)
                     hpdataend = int(starttime.timestamp() * simpleDali.MICROS)
@@ -228,6 +233,7 @@ def doTest():
                         "accel": maxMag
                     }
                     writeJsonToDatalink(streamid, hpdatastart, hpdataend, jsonMessage)
+                    jsonMessage={}
                     packetDictionary[key].append(dlPacket)
                     for UsedPacket in Components:
                         packetDictionary[key].remove(UsedPacket)

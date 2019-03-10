@@ -63,7 +63,9 @@ async def doTest(loop):
         else:
             peakInfo={}
             peakInfo=json.loads(peakPacket.data)
-            print("{} acceleration is {:7.2f} at {}".format(peakInfo["station"],peakInfo["accel"],peakInfo["time"]))
+            #print(peakInfo)
+            print("{} acceleration is {:7.5f} at {}".format(peakInfo["station"],peakInfo["accel"],peakInfo["time"]))
+            peakInfo={}
 
     dali.close()
 
