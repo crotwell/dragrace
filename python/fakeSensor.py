@@ -96,10 +96,13 @@ class FakeSensor:
             data = []
             for i in range(self.watermark):
                 idx+=1
-                val = 4096*gain*math.sin(2*math.pi*idx/self.sinePeriod/sps)
-                data.append(val/100) # x
-                data.append(val/100) # and y are smaller
-                data.append(val)
+                #val = 4096*gain*math.sin(2*math.pi*idx/self.sinePeriod/sps)
+                #data.append(val/100) # x
+                #data.append(val/100) # and y are smaller
+                #data.append(val)
+                data.append(0)
+                data.append(0)
+                data.append(4096)
             now = lastTime + packetWidth
             status = self.watermark
             samplesAvail = self.watermark
