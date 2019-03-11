@@ -31,6 +31,7 @@ if (protocol == 'https:') {
   wsProtocol = 'wss:';
 }
 
+
 //
 // Note: currently rtserve.iris does not support wss, and so this will
 // not work from https pages as you cannot use non-encrypted (ws)
@@ -75,6 +76,18 @@ let margin = {top: 20, right: 20, bottom: 50, left: 60};
 let paused = false;
 let stopped = false;
 let numSteps = 0;
+
+wp.d3.select("div.class1 button.heatcollapse").on("click", function(d) {
+   let heatdiv = wp.d3.select("div.class1");
+   let imactive = heatdiv.select("button").classed("active");
+   if (imactive){
+     heatdiv.select("button").classed("active", false);
+     heatdiv.select(".panel").style("display","none");
+   } else {
+     heatdiv.select("button").classed("active", true);
+     heatdiv.select(".panel").style("display","block");
+   }
+});
 
 wp.d3.select("button#load").on("click", function(d) {
   let selectEl = document.getElementById("stationChoice");
