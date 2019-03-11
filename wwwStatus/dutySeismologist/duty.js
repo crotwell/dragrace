@@ -76,17 +76,25 @@ let margin = {top: 20, right: 20, bottom: 50, left: 60};
 let paused = false;
 let stopped = false;
 let numSteps = 0;
+let togglebutton = function(heatdiv) {
+  wp.d3.select("div.sidebar").selectAll("div").select(".panel").style("display","none");
+  wp.d3.select("div.sidebar").selectAll("div").select("button").classed("active", false);
 
+    heatdiv.select("button").classed("active", true);
+    heatdiv.select(".panel").style("display","block");
+};
 wp.d3.select("div.class1 button.heatcollapse").on("click", function(d) {
+  console.log("buttonclick "+d);
    let heatdiv = wp.d3.select("div.class1");
-   let imactive = heatdiv.select("button").classed("active");
-   if (imactive){
-     heatdiv.select("button").classed("active", false);
-     heatdiv.select(".panel").style("display","none");
-   } else {
-     heatdiv.select("button").classed("active", true);
-     heatdiv.select(".panel").style("display","block");
-   }
+   togglebutton(heatdiv);
+
+
+});
+wp.d3.select("div.class2 button.heatcollapse").on("click", function(d) {
+  console.log("buttonclick "+d);
+   let heatdiv = wp.d3.select("div.class2");
+   togglebutton(heatdiv);
+
 });
 
 wp.d3.select("button#load").on("click", function(d) {
