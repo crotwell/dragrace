@@ -422,4 +422,5 @@ function makeString(dataView , offset , length )  {
 let errorFn = function(error) {
   console.log("error: "+error);
   d3.select("div.triggers").append("p").text(`Error: ${error}`);
+  doDisconnect(true);
 };
