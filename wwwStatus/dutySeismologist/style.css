@@ -26,6 +26,36 @@ div.equalizer span div{
     height:2px;
     background-color:pink;
 }
+div.sidebar {
+  background-color: skyblue;
+  height: 100%;
+  width: 200px;
+  position: fixed;
+  z-index:1;
+  top: 0;
+  left:75%;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: 20px;
+
+}
+button.heatcollapse{
+  background-color: gray
+  color: #444;
+  cursor: pointer;
+  padding: 18px;
+  width: 200px;
+  text-align: left;
+  transition:0.4s;
+}
+div.panel{
+  padding: 0 18px;
+  background-color: white;
+  display: none;
+  overflow: hidden;
+}
+
 
 div.piStatus span div{
     width: 20px;
