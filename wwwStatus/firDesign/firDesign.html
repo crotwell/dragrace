@@ -15,6 +15,12 @@
       <label>Ws</label><input name="Ws" type="text" value="1">
 
     </div>
+    <div class="control2">
+      <input id="rmean" name="rmean" type="checkbox" checked><label>RMean</label>
+        <input id="loglog" name="loglog" type="checkbox" checked><label>LogLog</label>
+
+    </div>
+    <div class="message"></div>
 
     <h3>Random timeseries plot</h3>
     <h5>Blue: original, Red: filtered, Green: filtered twice, Orange: time domain filtered</h5>
@@ -23,9 +29,12 @@
     </div>
     <h3>FFT plot</h3>
     <h5>Blue: original, Green: filtered, Yellow: time domain</h5>
-    <div class="fft">
+    <div class="fft fftplot">
     </div>
 
+    <h3>FFT Ratio plot</h3>
+    <div class="fftplot fftratio">
+    </div>
     <h3 class="coefficients"></h3>
     <div class="coefficients">
       <ul></ul>
