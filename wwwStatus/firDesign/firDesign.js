@@ -6,6 +6,7 @@ const d3 = seisplotjs.d3;
 d3.select("button#load").on("click", function(d) {
   //let mseeedUrl = "testData/XX.PI04.RW.HNZ.2019.070.18";
   let mseedUrl = document.getElementsByName('mseedUrl')[0].value;
+  d3.select("div.message").selectAll("*").remove();
   loadTestData(mseedUrl).then(trace => {
     console.log(`after loadTestData ${trace}  ${trace.seisArray.length}`);
     let doRMean = d3.select("input[name=rmean]").property('checked');
@@ -42,7 +43,6 @@ let createFIR = function(testData) {
   const doLogLog = d3.select("input[name=loglog]").property('checked');
   let firLp = new odsp.filter.fir.equiripple.EquirippleLowpass(N, OmegaP, Wp, OmegaS, Ws);
 
-
   let filterDelay = (firLp.getCoefficients().length-1)/2;
   let delayCorrection = 0;
   if (fixdelay) {
@@ -64,6 +64,8 @@ let createFIR = function(testData) {
     .text(coeffDispFun);
   coeffDisplay.enter().append("li").text(coeffDispFun);
   coeffDisplay.exit().remove();
+
+  zeroFreqPlot(OmegaP, Wp, OmegaS, Ws)
 
   const NumPoints = parseInt(document.getElementsByName('NumPoints')[0].value);
   const plotWidth = 1024;
@@ -204,11 +206,53 @@ function loadTestData(mseedUrl) {
     return traceMap;
   }).then(function(traceMap) {
     console.log("After fetch promise resolve");
-    d3.select("div.message").append('p').text("After fetch promise resolve");
     return traceMap.values().next().value; // should only be one
   // }).catch( function(error) {
   //   d3.select("div.message").append('p').text("Error loading data." +error);
   //   console.assert(false, error);
   //   throw error;
   });
+}
+
+function zeroFreqPlot(OmegaP, Wp, OmegaS, Ws) {
+  const max = 100;
+  const min = 3;
+  const plotWidth = 1024;
+  const plotHeight = 300;
+  const margin = {top: 20, right: 30, bottom: 30, left: 40};
+  let width = plotWidth - margin.left - margin.right;
+  let height = plotHeight - margin.top - margin.bottom;
+
+  let firZeroGain = new Array(max).fill(0);
+  for (let tryN=min; tryN<firZeroGain.length; tryN++) {
+    tryLp = new odsp.filter.fir.equiripple.EquirippleLowpass(tryN, OmegaP, Wp, OmegaS, Ws);
+    let impulse = Array.from(tryLp.getCoefficients());
+    let tryFFT = seisplotjs.filter.fftForward(impulse);
+    firZeroGain[tryN] = tryFFT.amp[0];
+  }
+
+  let plotSvg = d3.select("div.zeroFreqGain").select("svg.zeroFreqGain");
+  plotSvg.attr("width", plotWidth).attr("height", plotHeight);
+  let xScale = d3.scaleLinear().range([0, width]).domain([0, max]);
+  let yMin = 0.9;
+  let yMax = 1.1;
+  let yScale = d3.scaleLinear().range([height, 0]).domain([yMin, yMax]);
+
+  lineFunc = d3.line()
+        .curve(d3.curveLinear)
+        .x(function(d, i) {return xScale(i); })
+        .y(function(d) {return yScale(d); });
+  plotSvg.selectAll("*").remove();
+
+  let xAxis = d3.axisBottom(xScale);
+  let yAxis = d3.axisLeft(yScale)
+    .tickSize(-width, 0, 0);
+  plotSvg.append("g").classed("yAxis", true).attr("transform", "translate("+margin.left+"," + margin.top + ")")
+    .call(yAxis);
+  plotSvg.append("g").classed("xAxis", true).attr("transform", "translate(" +margin.left  + ","+(margin.top +height)+")")
+    .call(xAxis);
+
+  plotSvg.append("g").classed("in", true).attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    .append("path").attr("d", lineFunc(firZeroGain));
+
 }

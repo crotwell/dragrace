@@ -57,3 +57,8 @@ div.fftplot svg g g.allfftpaths g:nth-child(9n+5) path {
 div.fftplot svg g g.allfftpaths g:nth-child(9n+6) path {
   stroke: orange;
 }
+
+svg g.yAxis  .tick line {
+    stroke: lightgrey;
+    opacity: 0.7;
+}
