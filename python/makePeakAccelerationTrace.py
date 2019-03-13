@@ -26,7 +26,12 @@ processid=0
 architecture="python"
 
 keepGoing = True
+verbose = False
 
+# -1 means run forever, otherwise stop after MAX_COUNT packets, for testing
+MAX_COUNT=-1
+
+COUNTS_PER_G=4096
 
 def handleSignal(sigNum, stackFrame):
     print("############ handleSignal {} ############".format(sigNum))
@@ -180,7 +185,7 @@ def doTest():
 
 
 #    initTask = loop.create_task(initConnections(".*PI04.*HNZ/MSEED"))
-    initTask = loop.create_task(initConnections(".*PI99.*/MSEED"))
+    initTask = loop.create_task(initConnections(".*PI.*/MSEED"))
     loop.run_until_complete(initTask)
 
     packetDictionary={}
@@ -194,7 +199,8 @@ def doTest():
 #        print("inside keepGoing loop")
         dlPacket = getNextPacket()
         key,orientation,starttime,station=buildPacketKey(dlPacket,"HN")
-#        print("Got another packet: ", key,orientation,starttime)
+        if verbose:
+            print("Got another packet: ", key,orientation,starttime)
         if not key in packetDictionary:
 #            print("     New Key: ", key,orientation,starttime)
             packetDictionary[key]=[]
@@ -223,7 +229,7 @@ def doTest():
     #
     # TEMPORARY FIR FIlter # FIXME:
     #
-                    maxMag=maxMag
+                    maxMag=maxMag / COUNTS_PER_G
                     streamid = "{}.{}/MAXACC".format("XX", station)
                     hpdatastart = int(starttime.timestamp() * simpleDali.MICROS)
                     hpdataend = int(starttime.timestamp() * simpleDali.MICROS)
@@ -232,6 +238,8 @@ def doTest():
                         "time": starttime.isoformat(),
                         "accel": maxMag
                     }
+                    if verbose:
+                        print("Send json max: {}".format(jsonMessage["accel"]));
                     writeJsonToDatalink(streamid, hpdatastart, hpdataend, jsonMessage)
                     jsonMessage={}
                     packetDictionary[key].append(dlPacket)
@@ -244,7 +252,7 @@ def doTest():
            Components=[]
 
         packetCount+=1
-        if packetCount>100000000:
+        if MAX_COUNT > 0 and packetCount>MAX_COUNT:
             keepGoing=False
     for key, db in dataBuffers.items():
 #            for key, db in dataBuffers.items():
