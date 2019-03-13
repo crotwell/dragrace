@@ -166,7 +166,7 @@ class DataLink:
 
     async def reconnect(self):
         self.close()
-        self.createDaliConnection(host, port)
+        self.createDaliConnection(self.host, self.port)
 
 class DaliResponse:
 
