@@ -55,7 +55,7 @@ class FIR:
 -0.014214811846613884])
 
         self.tapLen = len(self.filterTaps)
-        self.history=array('d', [0]*self.tapLen)
+        self.history=None
         self.currIdx=0
 
     def calcUnitySum(self):
@@ -71,6 +71,11 @@ class FIR:
         """pushes a value onto the history stack and pops
         the next value processed by the FIR filter.
         """
+        # first time through init history to all be the first value
+        # this helps when the input signal has a DC offset as initialize
+        # to zero gives a spike in values until the filter charges
+        if self.history is None:
+            self.history=array('d', [val]*self.tapLen)
         self.history[self.currIdx] = float(val)
         self.currIdx += 1
         if self.currIdx == self.tapLen:
