@@ -37,16 +37,7 @@ class MiniseedHeader:
         self.location=location     # Location designation, NULL terminated */
         self.channel=channel      # Channel designation, NULL terminated */
         self.dataquality='D'    # Data quality indicator */
-        self.starttime=starttime    # Record start time, corrected (first sample) */
-        if type(starttime).__name__ == 'datetime':
-            tt = starttime.timetuple()
-            self.btime = BTime(tt.tm_year, tt.tm_yday, tt.tm_hour, tt.tm_min, tt.tm_sec, int(starttime.microsecond/100))
-        elif type(starttime).__name__ == 'BTime':
-            self.btime = starttime
-            self.starttime = datetime(self.btime.year, 1, 1, hour=self.btime.hour, minute=self.btime.minute, second=self.btime.second, microsecond=100*self.btime.tenthMilli) \
-                + timedelta(days=self.btime.yday-1)
-        else:
-            raise Exception("unknown type of starttime {}".format(type(starttime)))
+        self.setStartTime(starttime)  # Record start time, corrected (first sample) */
         self.samprate=samprate          # Nominal sample rate (Hz) */
         self.numsamples=numsamples        # Number of samples in record */
         self.encoding=encoding    # Data encoding format */
@@ -112,6 +103,17 @@ class MiniseedHeader:
     def packBTime(self, header, time):
         tt = time.timetuple()
         struct.pack_into(self.endianChar+'HHBBBxH', header, 20, tt.tm_year, tt.tm_yday, tt.tm_hour, tt.tm_min, tt.tm_sec, int(time.microsecond/100))
+    def setStartTime(self, starttime):
+        self.starttime=starttime
+        if type(starttime).__name__ == 'datetime':
+            tt = starttime.timetuple()
+            self.btime = BTime(tt.tm_year, tt.tm_yday, tt.tm_hour, tt.tm_min, tt.tm_sec, int(starttime.microsecond/100))
+        elif type(starttime).__name__ == 'BTime':
+            self.btime = starttime
+            self.starttime = datetime(self.btime.year, 1, 1, hour=self.btime.hour, minute=self.btime.minute, second=self.btime.second, microsecond=100*self.btime.tenthMilli) \
+                + timedelta(days=self.btime.yday-1)
+        else:
+            raise Exception("unknown type of starttime {}".format(type(starttime)))
 
 class MiniseedRecord:
     def __init__(self, header, data, blockettes=[]):
