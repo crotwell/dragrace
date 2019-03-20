@@ -57,7 +57,6 @@ let path = EXTERNAL_PATH;
 //host="127.0.0.1";
 //port=6382;
 
-
 let datalinkUrl = wsProtocol+"//"+host+(port==80?'':':'+port)+path;
 console.log("URL: "+datalinkUrl);
 let writeDatalinkUrl = wsProtocol+"//"+INTERNAL_HOST+(INTERNAL_PORT==80?'':':'+INTERNAL_PORT)+INTERNAL_PATH;
@@ -76,6 +75,11 @@ let margin = {top: 20, right: 20, bottom: 50, left: 60};
 let paused = false;
 let stopped = false;
 let numSteps = 0;
+
+
+
+
+//go into sidebar buttons and deactivate
 let togglebutton = function(heatdiv) {
   wp.d3.select("div.sidebar").selectAll("div").select(".panel").style("display","none");
   wp.d3.select("div.sidebar").selectAll("div").select("button").classed("active", false);
@@ -97,6 +101,7 @@ wp.d3.select("div.class2 button.heatcollapse").on("click", function(d) {
 
 });
 
+//end trying to make heat buttons work
 wp.d3.select("button#load").on("click", function(d) {
   let selectEl = document.getElementById("stationChoice");
   let selectedIndex = selectEl.selectedIndex;
@@ -168,6 +173,9 @@ let dlTriggerCallback = function(dlPacket) {
   displayName = trig.dutyOfficer ? trig.dutyOfficer : "AutoTrigger";
   let mark = { markertype: 'predicted', name: displayName, time: moment.utc(trig.time) };
   markers.push(mark);
+  //Gabby & Emma tried to make two trigger flags appear at 3 seconds apart
+  //let mark = { markertype: 'predicted', name: displayName, time: moment.add.(3, 'seconds').utc(trig.time) };
+  //markers.push(mark);
   for (let sp of allSeisPlots.values()) {
     sp.appendMarkers( [ mark ]);
   }
