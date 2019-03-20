@@ -172,7 +172,7 @@ let dlTriggerCallback = function(dlPacket) {
   let trig = JSON.parse(s)
   displayName = trig.dutyOfficer ? trig.dutyOfficer : "AutoTrigger";
   let trigTime = moment.utc(trig.time)
-  let startMark = { markertype: 'predicted', name: displayName, time: trigTime.subtract(15, 'seconds').utc(trig.time) };
+  let startMark = { markertype: 'predicted', name: "Start"+displayName, time: trigTime.subtract(15, 'seconds') };
   markers.push(startMark);
   //Gabby & Emma tried to make two trigger flags appear at 3 seconds apart
   let endMark = { markertype: 'predicted', name: displayName, time: trigTime };
