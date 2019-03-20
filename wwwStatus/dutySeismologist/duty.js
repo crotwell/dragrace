@@ -171,13 +171,13 @@ let dlTriggerCallback = function(dlPacket) {
   d3.select("div.triggers").append("p").text(`Trigger: ${s}`);
   let trig = JSON.parse(s)
   displayName = trig.dutyOfficer ? trig.dutyOfficer : "AutoTrigger";
-  let mark = { markertype: 'predicted', name: displayName, time: moment.utc(trig.time) };
-  markers.push(mark);
+  let startMark = { markertype: 'predicted', name: displayName, time: moment.subtract.(3, 'seconds').utc(trig.time) };
+  markers.push(startMark);
   //Gabby & Emma tried to make two trigger flags appear at 3 seconds apart
-  //let mark = { markertype: 'predicted', name: displayName, time: moment.add.(3, 'seconds').utc(trig.time) };
-  //markers.push(mark);
+  let endMark = { markertype: 'predicted', name: displayName, time: moment.utc(trig.time) };
+  markers.push(endMark);
   for (let sp of allSeisPlots.values()) {
-    sp.appendMarkers( [ mark ]);
+    sp.appendMarkers( [ startMark,endMark ]);
   }
 
 };
