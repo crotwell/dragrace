@@ -16,17 +16,28 @@ import SeismogramTasks
 
 host = "129.252.35.36"
 port = 15003
+#port = 15004
+
 #host = "129.252.35.20"
 #host = "127.0.0.1"
 #port = 6382
 
+STREAM_PATTERN = ".*PI.*/MSEED"
+
 programname="makePeakAccelerationTrace"
 username="dragrace"
+#username="replayrace"
 processid=0
 architecture="python"
 
 keepGoing = True
 verbose = False
+
+replay = False
+if replay:
+    STREAM_PATTERN = ".*PI.*/MSEED"
+    port = 15004
+    username="replayrace"
 
 # -1 means run forever, otherwise stop after MAX_COUNT packets, for testing
 MAX_COUNT=-1
@@ -185,7 +196,7 @@ def doTest():
 
 
 #    initTask = loop.create_task(initConnections(".*PI04.*HNZ/MSEED"))
-    initTask = loop.create_task(initConnections(".*PI.*/MSEED"))
+    initTask = loop.create_task(initConnections(STREAM_PATTERN))
     loop.run_until_complete(initTask)
 
     packetDictionary={}
@@ -198,62 +209,65 @@ def doTest():
     while(keepGoing):
 #        print("inside keepGoing loop")
         dlPacket = getNextPacket()
-        key,orientation,starttime,station=buildPacketKey(dlPacket,"HN")
-        if verbose:
-            print("Got another packet: ", key,orientation,starttime)
-        if not key in packetDictionary:
-#            print("     New Key: ", key,orientation,starttime)
-            packetDictionary[key]=[]
-            packetDictionary[key].append(dlPacket)
-        else:
-           Components.append(dlPacket)
-           for value in packetDictionary[key]:
-                if matchingPackets(value,orientation,starttime):
-    #                print("     A match: ",value,orientation,starttime)
+        try:
+            key,orientation,starttime,station=buildPacketKey(dlPacket,"HN")
+            if verbose:
+                print("Got another packet: ", key,orientation,starttime)
+            if not key in packetDictionary:
+    #            print("     New Key: ", key,orientation,starttime)
+                packetDictionary[key]=[]
+                packetDictionary[key].append(dlPacket)
+            else:
+               Components.append(dlPacket)
+               for value in packetDictionary[key]:
+                    if matchingPackets(value,orientation,starttime):
+        #                print("     A match: ",value,orientation,starttime)
 
-                    Components.append(value)
-                    match_count=match_count + 1
-#                    print("B ... putting value in Components",match_count,key)
-                if match_count == 3:
-                    for ThePacket in Components:
-                        mSeed = simpleMiniseed.unpackMiniseedRecord(ThePacket.data)
-                        thedata=mSeed.data
-                        StartTime = mSeed.header.starttime
-                        sta = mSeed.header.station
-                        Orient = mSeed.header.channel[2]
-    #                print("Got 3 components at the same time and station ... WooHoo")
-                    GotAllThree=True
-#                    print("Component Length",len(Components))
-                    #print(Components)
-                    maxMag, npts_packet=calculatePacketPeakMagnitude(Components)
-    #
-    # TEMPORARY FIR FIlter # FIXME:
-    #
-                    maxMag=maxMag / COUNTS_PER_G
-                    streamid = "{}.{}/MAXACC".format("XX", station)
-                    hpdatastart = int(starttime.timestamp() * simpleDali.MICROS)
-                    hpdataend = int(starttime.timestamp() * simpleDali.MICROS)
-                    jsonMessage = {
-                        "station": station,
-                        "time": starttime.isoformat(),
-                        "accel": maxMag
-                    }
-                    if verbose:
-                        print("Send json max: {}".format(jsonMessage["accel"]));
-                    writeJsonToDatalink(streamid, hpdatastart, hpdataend, jsonMessage)
-                    jsonMessage={}
-                    packetDictionary[key].append(dlPacket)
-                    for UsedPacket in Components:
-                        packetDictionary[key].remove(UsedPacket)
-           match_count=1
-           if not GotAllThree:
-               packetDictionary[key].append(dlPacket)
-           GotAllThree=False
-           Components=[]
+                        Components.append(value)
+                        match_count=match_count + 1
+    #                    print("B ... putting value in Components",match_count,key)
+                    if match_count == 3:
+                        for ThePacket in Components:
+                            mSeed = simpleMiniseed.unpackMiniseedRecord(ThePacket.data)
+                            thedata=mSeed.data
+                            StartTime = mSeed.header.starttime
+                            sta = mSeed.header.station
+                            Orient = mSeed.header.channel[2]
+        #                print("Got 3 components at the same time and station ... WooHoo")
+                        GotAllThree=True
+    #                    print("Component Length",len(Components))
+                        #print(Components)
+                        maxMag, npts_packet=calculatePacketPeakMagnitude(Components)
+        #
+        # TEMPORARY FIR FIlter # FIXME:
+        #
+                        maxMag=maxMag / COUNTS_PER_G
+                        streamid = "{}.{}/MAXACC".format("XX", station)
+                        hpdatastart = int(starttime.timestamp() * simpleDali.MICROS)
+                        hpdataend = int(starttime.timestamp() * simpleDali.MICROS)
+                        jsonMessage = {
+                            "station": station,
+                            "time": starttime.isoformat(),
+                            "accel": maxMag
+                        }
+                        if verbose:
+                            print("Send json max: {}".format(jsonMessage["accel"]));
+                        writeJsonToDatalink(streamid, hpdatastart, hpdataend, jsonMessage)
+                        jsonMessage={}
+                        packetDictionary[key].append(dlPacket)
+                        for UsedPacket in Components:
+                            packetDictionary[key].remove(UsedPacket)
+               match_count=1
+               if not GotAllThree:
+                   packetDictionary[key].append(dlPacket)
+               GotAllThree=False
+               Components=[]
 
-        packetCount+=1
-        if MAX_COUNT > 0 and packetCount>MAX_COUNT:
-            keepGoing=False
+            packetCount+=1
+            if MAX_COUNT > 0 and packetCount>MAX_COUNT:
+                keepGoing=False
+        except Exception as e:
+            print("Got bad miniseed record, skipping..."+e)
     for key, db in dataBuffers.items():
 #            for key, db in dataBuffers.items():
         # just in case some data has not been sent

@@ -20,7 +20,7 @@ import simpleDali
 
 faulthandler.enable()
 keepGoing = True
-verbose = True
+verbose = False
 
 def handleSignal(sigNum, stackFrame):
     print("############ handleSignal {} ############".format(sigNum))
@@ -60,16 +60,19 @@ class OpenMiniseedFile:
         return msr
 
 class MiniseedReplay:
-    def __init__(self, daliUpload, dataDir, netGlob, staGlob, locGlob, chanGlob, startTime):
+    def __init__(self, daliUpload, dataDir, netGlob, staGlob, locGlob, chanGlob, startTime, duration=None):
         self.dali = daliUpload
         self.dataDir=dataDir
         self.netGlob = netGlob
         self.staGlob = staGlob
         self.locGlob = locGlob
         self.chanGlob = chanGlob
+        self.duration = duration
+        self.initTime = datetime.utcnow()
         self.startTime = startTime
-        self.deltaTime = datetime.utcnow() - self.startTime
-        self.pattern = "{net}/{sta}/{year}/{yday}/{net}.{sta}.{loc}.{chan}.{year}.{yday}.{hour}"
+        self.deltaTime = self.initTime - self.startTime
+        #self.pattern = "{net}/{sta}/{year}/{yday}/{net}.{sta}.{loc}.{chan}.{year}.{yday}.{hour}"
+        self.pattern = "Day_{yday}/{sta}.{chan}_{yday}_{hour}.mseed"
         self.openFiles = []
         self.prevSend = None
 
@@ -86,13 +89,24 @@ class MiniseedReplay:
         for f in p.glob(globPattern):
             hourFiles.append(OpenMiniseedFile(f))
         if len(hourFiles) == 0:
-            print("no files: glob={}  file={}".format( globPattern, list(p.glob(globPattern))))
+            print("no files: datadir={} glob={}  file={}".format(self.dataDir, globPattern, list(p.glob(globPattern))))
         return hourFiles
     def modifyRecord(self, msr):
         msr.header.setStartTime(msr.starttime() + self.deltaTime)
+        msr.header.network = "XX"
 
     def sendOldRecords(self):
         now = datetime.utcnow()
+        # check to see if time to start all over again
+        if self.duration is not None and now - self.initTime > self.duration:
+            if verbose:
+                print("restart after duration {}".format(self.duration))
+            self.initTime = now
+            self.deltaTime = self.initTime - self.startTime
+            for of in self.openFiles:
+                of.openFile.close()
+            self.openFiles = []
+            self.prevSend = None
         sendNow = now - self.deltaTime
         if self.prevSend is None or self.prevSend.hour != sendNow.hour:
             self.openFiles = self.openFiles + self.findHourFiles(sendNow)
@@ -114,13 +128,15 @@ def main(args):
 
     ############################################
     # values to change:
-    dataDir="oldmseed"
+    dataDir="Track_Data"
     netGlob = "XX"
     staGlob = "*"
     locGlob = "00"
     chanGlob = "HN[XYZ]"
     # if need seconds add :%S
-    startTime = datetime.strptime("2019-03-11T12:00Z", "%Y-%m-%dT%H:%MZ")
+    startTime = datetime.strptime("2018-10-14T11:00Z", "%Y-%m-%dT%H:%MZ")
+    duration = timedelta(hours=2)
+    repeat = True
     # end values to change
     ############################################
 
@@ -152,7 +168,7 @@ def main(args):
     print("Connect Upload: {}".format(info))
 
 
-    replay = MiniseedReplay(daliUpload, dataDir, netGlob, staGlob, locGlob, chanGlob, startTime)
+    replay = MiniseedReplay(daliUpload, dataDir, netGlob, staGlob, locGlob, chanGlob, startTime, duration=duration)
     while keepGoing:
         replay.sendOldRecords()
         time.sleep(0.5)
