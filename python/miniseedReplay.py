@@ -14,6 +14,7 @@ from pathlib import Path
 import asyncio
 import traceback
 import faulthandler
+import json
 
 import simpleMiniseed
 import simpleDali
@@ -97,6 +98,7 @@ class MiniseedReplay:
 
     def sendOldRecords(self):
         now = datetime.utcnow()
+        loop = asyncio.get_event_loop()
         # check to see if time to start all over again
         if self.duration is not None and now - self.initTime > self.duration:
             if verbose:
@@ -107,11 +109,12 @@ class MiniseedReplay:
                 of.openFile.close()
             self.openFiles = []
             self.prevSend = None
+            trigTask = loop.create_task(self.doDurationTrigger())
+            loop.run_until_complete(trigTask)
         sendNow = now - self.deltaTime
         if self.prevSend is None or self.prevSend.hour != sendNow.hour:
             self.openFiles = self.openFiles + self.findHourFiles(sendNow)
 
-        loop = asyncio.get_event_loop()
         for msFile in self.openFiles:
             msrList = msFile.recordsBefore(sendNow)
             for msr in msrList:
@@ -122,6 +125,25 @@ class MiniseedReplay:
                 loop.run_until_complete(sendTask)
         self.prevSend = sendNow
 
+    async def doDurationTrigger(self):
+        dutyOfficer="Re"+str(self.duration)
+
+        streamid = "REPLAY/MTRIG"
+        hpdatastart = int(self.startTime.timestamp() * simpleDali.MICROS)
+        hpdataend = int(self.startTime.timestamp() * simpleDali.MICROS)
+        trigInfo= {
+            "type": "manual",
+            "dutyOfficer": dutyOfficer,
+            "time": self.initTime.isoformat(),
+            "creation": self.startTime.isoformat(),
+            "override": {
+                "modtime": datetime.utcnow().isoformat(),
+                "value": "enable"
+            }
+        }
+        trigBytes = json.dumps(trigInfo).encode('UTF-8')
+        r = await self.dali.writeAck(streamid, hpdatastart, hpdataend, trigBytes)
+        print("writem trigger resp {}".format(r));
 
 def main(args):
     global keepGoing, verbose
@@ -136,6 +158,7 @@ def main(args):
     # if need seconds add :%S
     startTime = datetime.strptime("2018-10-14T11:00Z", "%Y-%m-%dT%H:%MZ")
     duration = timedelta(hours=2)
+    #duration = timedelta(seconds=20)
     repeat = True
     # end values to change
     ############################################
@@ -169,6 +192,8 @@ def main(args):
 
 
     replay = MiniseedReplay(daliUpload, dataDir, netGlob, staGlob, locGlob, chanGlob, startTime, duration=duration)
+    trigTask = loop.create_task(replay.doDurationTrigger())
+    loop.run_until_complete(trigTask)
     while keepGoing:
         replay.sendOldRecords()
         time.sleep(0.5)
