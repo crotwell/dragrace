@@ -1,6 +1,8 @@
 div.realtime {
   height: 250px;
 }
+body {background-color: #CCCCCC;
+}
 
 svg.seismograph {
   height: 150px;
@@ -27,7 +29,7 @@ div.equalizer span div{
     background-color:pink;
 }
 div.sidebar {
-  
+  background-color: skyblue;
   height: 100%;
   width: 200px;
   z-index:1;
