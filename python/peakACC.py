@@ -43,6 +43,8 @@ def peakAccelerationCalculation(x,y,z,theta,station,time):
         "MAXACC":max(peakAccel)
      }
     return maxAcceljson
+
+def 
     # time = datetime.datetime.utcnow()
     # time_2 = datetime.datetime.utcnow()
     # time_3 = time - time_2
