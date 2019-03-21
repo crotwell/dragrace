@@ -166,6 +166,7 @@ def main(args):
 
     host = "129.252.35.36"
     port = 15004
+    uri = "ws://www.seis.sc.edu/dragracews/datalink"
 
 
     programname="miniseedReplay"
@@ -179,7 +180,8 @@ def main(args):
     # create a separate upload datalink
     if verbose:
         print("Init Datalink to {}:{}".format(host, port))
-    daliUpload = simpleDali.DataLink(host, port)
+    dali = simpleDali.SocketDataLink(host, port)
+    #dali = simpleDali.WebSocketDataLink(uri)
     loop = asyncio.get_event_loop()
     #daliUpload.verbose = True
     idTask = loop.create_task(daliUpload.id(programname, username, processid, architecture))

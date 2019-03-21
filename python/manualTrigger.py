@@ -13,6 +13,7 @@ port = 15003
 #host = "127.0.0.1"
 #host = "129.252.35.20"
 #port = 6382
+uri = "ws://www.seis.sc.edu/dragracews/datalink"
 
 programname="simpleDali"
 username="dragrace"
@@ -21,7 +22,8 @@ architecture="python"
 
 
 async def doTest(loop):
-    dali = simpleDali.DataLink(host, port)
+    dali = simpleDali.SocketDataLink(host, port)
+    #dali = simpleDali.WebSocketDataLink(uri)
     serverId = yield from dali.id(programname, username, processid, architecture)
     print("Resp: {}".format(serverId))
     #serverInfo = yield from dali.info("STATUS")

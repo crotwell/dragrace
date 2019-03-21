@@ -16,6 +16,7 @@ port = 15003
 #host = "129.252.35.20"
 #host = "127.0.0.1"
 #port = 6382
+uri = "ws://www.seis.sc.edu/dragracews/datalink"
 
 programname="triggerListen"
 username="dragrace"
@@ -37,7 +38,8 @@ signal.signal(signal.SIGINT, handleSignal)
 signal.signal(signal.SIGTERM, handleSignal)
 
 async def doTest(loop):
-    dali = simpleDali.DataLink(host, port)
+    #dali = simpleDali.SocketDataLink(host, port)
+    dali = simpleDali.WebSocketDataLink(uri)
     dali.verbose = True
     serverId = await dali.id(programname, username, processid, architecture)
     print("Resp: {}".format(serverId))

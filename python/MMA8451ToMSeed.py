@@ -39,6 +39,7 @@ import decimate
 daliHost="129.252.35.36"
 daliPort=15003
 dali=None
+uri = "ws://www.seis.sc.edu/dragracews/datalink"
 
 pin = 18  # GPIO interrupt
 #MAX_SAMPLES = 2000

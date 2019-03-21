@@ -21,6 +21,7 @@ port = 15003
 #host = "129.252.35.20"
 #host = "127.0.0.1"
 #port = 6382
+uri = "ws://www.seis.sc.edu/dragracews/datalink"
 
 STREAM_PATTERN = ".*PI.*/MSEED"
 
@@ -73,7 +74,8 @@ def getDataBuffer(net, sta, loc, chan, outputSampleRate, outputDali):
 async def initConnections(matchPattern):
     global daliDownload
     global daliUpload
-    daliDownload = simpleDali.DataLink(host, port)
+    daliDownload = simpleDali.SocketDataLink(host, port)
+    #daliDownload = simpleDali.WebSocketDataLink(uri)
     #daliDownload.verbose = True
     serverId = await daliDownload.id(programname, username, processid, architecture)
     print("Connect Download: {}".format(serverId))
@@ -89,7 +91,8 @@ async def initConnections(matchPattern):
     print("match() Response {}".format(r))
 
     # create a separate upload datalink
-    daliUpload = simpleDali.DataLink(host, port)
+    daliUpload = simpleDali.SocketDataLink(host, port)
+    #daliUpload = simpleDali.WebSocketDataLink(uri)
     #daliUpload.verbose = True
     serverId = await daliUpload.id(programname, username, processid, architecture)
     print("Connect Upload: {}".format(serverId))
