@@ -106,7 +106,8 @@ class MiniseedReplay:
             self.initTime = now
             self.deltaTime = self.initTime - self.startTime
             for of in self.openFiles:
-                of.openFile.close()
+                if of.openFile is not None:
+                    of.openFile.close()
             self.openFiles = []
             self.prevSend = None
             trigTask = loop.create_task(self.doDurationTrigger())
