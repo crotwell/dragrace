@@ -3,7 +3,7 @@ import sys
 import struct
 import array
 import math
-from SeismogramTasks import Rotate_2D_TimeSeries,VectorMagnitude 
+from SeismogramTasks import Rotate_2D_TimeSeries,VectorMagnitude
 import datetime
 timestamp = datetime.datetime.utcnow().isoformat() # time need to be...
 # datetime.isoformat()
@@ -31,53 +31,11 @@ def peakAccelerationCalculation(x,y,z,theta,station,time):
     rotate_array_x = Rotate_2D_TimeSeries(array_x, array_z, theta)[0]
     rotate_array_z = Rotate_2D_TimeSeries(array_x, array_z, theta)[1]
 
-    # rest state correction
-    # function to correct rotate_array_z for the rest state correction of -1
-    # input = rotate_array_z
-    # output = new_array_z
     rest_factor_z = -1
-    def rest_state_correction(rotate_array_z):
-        correct = []
-        for i in rotate_array_z:
-            correct.append(i+rest_factor_z)
-        return correct
-    new_array_z = rest_state_correction(rotate_array_z)
+    new_array_z = rest_state_correction(rotate_array_z, rest_factor_z)
 
-    # magnitude time series
-    # function to take magnitude of rotated and rest state corrected time ...
-    # series
-    # input = rotate_array_x,array_y,new_array_z
-    # output = vmag
-    def Magnitude_ThreeC_TimeSeries_jake(x,y,z):
-        nptsx=len(x)
-        nptsy=len(y)
-        nptsz=len(z)
-        if nptsx != nptsy:
-            print("x and y of different lengths",nptsx,nptsy)
-            return
-        elif nptsx != nptsz:
-            print("z different length than x and y",nptsx,nptsz)
-            return
-        i = 0
-        vmag = []
-        while i < nptsx:
-            vmag.append(VectorMagnitude(x[i],y[i],z[i]))
-            i += 1
-        return vmag
     vmag = Magnitude_ThreeC_TimeSeries_jake(rotate_array_x,array_y,new_array_z)
 
-    # Divide vmag list by 4096 to convert counts to g's
-    # input = vmag
-    # output = peakAccel
-    def countsTog(vmag):
-        npts = len(vmag)
-        peakAccel = []
-        i = 0
-        countsIng = 4096
-        while i < npts:
-            peakAccel.append(vmag[i]/countsIng)
-            i += 1
-        return peakAccel
     peakAccel = countsTog(vmag)
     maxAcceljson = {
         "station":station,
@@ -106,6 +64,52 @@ def peakAccelerationCalculation(x,y,z,theta,station,time):
 
     # Create dictionary that return
     # peakAcceljson = {"station":s, "time": starttime, "maxacc": max(peakAccel)}
+
+
+# magnitude time series
+# function to take magnitude of rotated and rest state corrected time ...
+# series
+# input = rotate_array_x,array_y,new_array_z
+# output = vmag
+def Magnitude_ThreeC_TimeSeries_jake(x,y,z):
+    nptsx=len(x)
+    nptsy=len(y)
+    nptsz=len(z)
+    if nptsx != nptsy:
+        print("x and y of different lengths",nptsx,nptsy)
+        return
+    elif nptsx != nptsz:
+        print("z different length than x and y",nptsx,nptsz)
+        return
+    i = 0
+    vmag = []
+    while i < nptsx:
+        vmag.append(VectorMagnitude(x[i],y[i],z[i]))
+        i += 1
+    return vmag
+
+# Divide vmag list by 4096 to convert counts to g's
+# input = vmag
+# output = peakAccel
+def countsTog(vmag):
+    npts = len(vmag)
+    peakAccel = []
+    i = 0
+    countsIng = 4096
+    while i < npts:
+        peakAccel.append(vmag[i]/countsIng)
+        i += 1
+    return peakAccel
+
+# rest state correction
+# function to correct rotate_array_z for the rest state correction of -1
+# input = rotate_array_z
+# output = new_array_z
+def rest_state_correction(rotate_array_z, rest_factor_z):
+    correct = []
+    for i in rotate_array_z:
+        correct.append(i+rest_factor_z)
+    return correct
 
 print(peakAccelerationCalculation(array_x,array_y,array_z,theta,station,timestamp))
 
