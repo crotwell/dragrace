@@ -11,7 +11,7 @@ let moment = seisplotjs.moment;
 const doReplay = false
 
 let net = 'CO';
-let staList = ['3605', 'PI01', 'PI03', 'PI04', 'PI06', 'PI07', 'PI99'];
+let staList = ['PI01', 'PI02', 'PI03', 'PI04', 'PI05', 'PI06', 'PI07', 'PI99'];
 
 let timerInProgress = false;
 let clockOffset = 0; // should get from server somehow
