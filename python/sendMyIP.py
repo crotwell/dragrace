@@ -87,7 +87,7 @@ while keepGoing:
     loop.run_until_complete(jsonSendTask)
     ack = jsonSendTask.result()
     print("send ip as {} ip = {} as json, {}".format(streamid, myIPaddr, ack))
-    keepGoing = False
+    #keepGoing = False
     if keepGoing:
         time.sleep(interval)
 
