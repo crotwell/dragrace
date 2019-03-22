@@ -272,7 +272,7 @@ def decimate(decimator, data):
 
 def initDali(host, port):
     print("Init Dali at {0}:{1:d}".format(host, port))
-    dl = simpleDali.DataLink(host, port)
+    dl = simpleDali.SocketDataLink(host, port)
     return dl
 
 def getLocalHostname():
