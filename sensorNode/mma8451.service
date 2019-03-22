@@ -4,12 +4,12 @@ After=multi-user.target
 [Service]
 User=pi
 Group=pi
-WorkingDirectory=/home/pi/mma8451
+WorkingDirectory=/home/pi/Production/Run
 StandardOutput=inherit
 StandardError=inherit
 Restart=no
 Type=idle
-ExecStart=/home/pi/mma8451/startACQ.sh
+ExecStart=/home/pi/Production/Run/startACQ.sh
 
 [Install]
 WantedBy=default.target
