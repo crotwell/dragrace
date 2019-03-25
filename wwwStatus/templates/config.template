@@ -6,7 +6,8 @@
     "PI04":"NO",
     "PI05":"NO",
     "PI06":"NO",
-    "PI07":"NO"
+    "PI07":"NO",
+    "PI99":"FK"
   },
   "LocationDetails":{
     "FL":{
@@ -28,6 +29,10 @@
     "FR":{
       "Theta":0,
       "Name":"Far Right Wall"
+    },
+    "FK":{
+      "Theta":45,
+      "Name":"Fake Location for PI99"
     }
   }
 }
