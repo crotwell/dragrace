@@ -13,16 +13,6 @@ import simpleDali
 # note this time is associated with last element of x,y,z data we get
 # would like to compare first and last of two packets..?
 
-# note: each element of x,y,z makes one vector!
-array_x = [1,2,3,4,500,15,25]
-array_y = [5,6,7,8,32,69,70]
-array_z = [9,10,11,12,47,100,0]
-theta = 20.0
-station = 'PI01'
-start_time = datetime.utcnow()
-time_diff = timedelta(seconds=0.20)
-end_time = start_time + time_diff
-
 # overall : take in raw packets (arrays Z,N,E), do rotation and rest state
 # correction, calculate peak counts over the entire time series, divide
 #  time series by factor to convert into g's (4069 = 1g?), returns the g's
@@ -157,13 +147,26 @@ def rest_state_correction(rotate_array_z, rest_factor_z):
     return correct
 
 
-# print('---')
-# print(sendPeakAccel(newJson))
-# timedelta should be about 0.25-0.5 s
+if __name__ == "__main__":
+    # execute only if run directly as a script, ignore if imported
+    # note: each element of x,y,z makes one vector!
+    array_x = [1,2,3,4,500,15,25]
+    array_y = [5,6,7,8,32,69,70]
+    array_z = [9,10,11,12,47,100,0]
+    theta = 20.0
+    station = 'PI01'
+    start_time = datetime.utcnow()
+    time_diff = timedelta(seconds=0.20)
+    end_time = start_time + time_diff
 
-freshJson = peakAccelerationCalculation(array_x,array_y,array_z,theta,station,start_time,end_time)
-print(freshJson)
-# establishedJson =
-# need an IP catcher, config listener + thrower, and make a dictionary...
-#  that makes info dictionary for each heat (time, max accel, )
-# Theta is found from config listener + thrower from ring server
+
+    # print('---')
+    # print(sendPeakAccel(newJson))
+    # timedelta should be about 0.25-0.5 s
+
+    freshJson = peakAccelerationCalculation(array_x,array_y,array_z,theta,station,start_time,end_time)
+    print(freshJson)
+    # establishedJson =
+    # need an IP catcher, config listener + thrower, and make a dictionary...
+    #  that makes info dictionary for each heat (time, max accel, )
+    # Theta is found from config listener + thrower from ring server
