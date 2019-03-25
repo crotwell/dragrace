@@ -13,6 +13,7 @@ from pathlib import Path
 import asyncio
 import traceback
 import faulthandler
+from peakACC import peakAccelerationCalculation, compareSendPeakAccel
 
 faulthandler.enable()
 
@@ -99,6 +100,9 @@ if doFIR:
         "Y":decimate.DecimateTwo(),
         "Z":decimate.DecimateTwo(),
     }
+establishedJson = None
+maxWindow = timedelta(seconds=0.25)
+theta = 20.0
 
 def getSps():
     sps = 1
@@ -244,20 +248,26 @@ def sendToFile(now, dataPacket):
     curFile.write(dataPacket)
     return "write to {}".format(filename)
 
-def sendToMseed(now, status, samplesAvail, data):
+def sendToMseed(last_sample_time, status, samplesAvail, data):
     global staString
     global sta
     global net
     global loc
     global chanMap
+    global establishedJson
+    global maxWindow
+    global theta
     dataIdx = 0
-    start = now - timedelta(seconds=1.0*(samplesAvail-1)/sps)
+    start = last_sample_time - timedelta(seconds=1.0*(samplesAvail-1)/sps)
     xData, yData, zData = sensor.demux(data)
     if doFIR:
         start = start - decimateMap["X"].FIR.calcDelay(sps)
         xData = decimateMap["X"].process(xData)
         yData = decimateMap["Y"].process(yData)
         zData = decimateMap["Z"].process(zData)
+
+    freshJson = peakAccelerationCalculation(xData,yData,zData,theta,sta,start,last_sample_time)
+    establishedJson = compareSendPeakAccel(establishedJson, freshJson, getDali(), maxWindow)
 
     miniseedBuffers[chanMap["Z"]].push(start, zData)
     miniseedBuffers[chanMap["Y"]].push(start, yData)
