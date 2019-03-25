@@ -92,11 +92,13 @@ def Rotate_2D_TimeSeries(x,y,theta):
     if nptsx != nptsy:
         print("Mismatch npts",nptsx,nptsy)
         return
-    xprime=x
-    yprime=y
+    xprime=[]
+    yprime=[]
     i=0
     while i < nptsx:
-        [xprime[i], yprime[i]]=Coordinate_Rotation_2D(x[i],y[i],theta)
+        [xp, yp]=Coordinate_Rotation_2D(x[i],y[i],theta)
+        xprime.append(xp)
+        yprime.append(yp)
         i=i+1
     return [xprime, yprime]
 
