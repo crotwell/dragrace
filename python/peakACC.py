@@ -1,12 +1,13 @@
 # Making peak acceleration stuff
+import asyncio
 import sys
 import struct
 import array
 import math
 from SeismogramTasks import Rotate_2D_TimeSeries,VectorMagnitude
 from datetime import datetime, timedelta
-import json 
-# import simpleDali
+import json
+import simpleDali
 # timestamp = datetime.datetime.utcnow().isoformat() # time need to be...
 # datetime.isoformat()
 # note this time is associated with last element of x,y,z data we get
@@ -75,11 +76,17 @@ def compareSendPeakAccel(establishedJson, freshJson, Dali, maxWindow):
         # MAXCC
         return establishedJson
     else:
+        # need datetime to calc hp times
+        hpdatastart = simpleDali.datetimeToHPTime(establishedJson["start_time"])
+        hpdataend = simpleDali.datetimeToHPTime(establishedJson["end_time"])
         establishedJson["start_time"] = establishedJson["start_time"].isoformat()
         establishedJson["end_time"] = establishedJson["end_time"].isoformat()
         if Dali is not None:
             # send establishedJson to ring server
-            Dali.writeJsonToDatalink(establishedJson)
+            streamid = "{}.{}/MAXACC".format("XX", establishedJson["station"])
+            loop = asyncio.get_event_loop()
+            sendTask = loop.create_task(Dali.writeJSON(streamid, hpdatastart, hpdataend, establishedJson))
+            loop.run_until_complete(sendTask)
             print('sending to ringserver')
         else:
             print(json.dumps(establishedJson,indent = 4))
