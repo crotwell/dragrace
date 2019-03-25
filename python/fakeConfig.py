@@ -59,7 +59,7 @@ loop.run_until_complete(initTask)
 
 while keepGoing:
     time.sleep(interval)
-    starttime = datetime.utcnow()
+    starttime = datetime.now(timezone.utc)
     jsonMessage = {
         "Location":{
            "PI01": "NO",
