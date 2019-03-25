@@ -11,15 +11,21 @@ host = "129.252.35.36"
 port = 15003
 #host = "129.252.35.20"
 #port = 6383
+uri = "wss://www.seis.sc.edu/dragracews/datalink"
+
 programname="simpleDali"
 username="dragrace"
 processid=0
 architecture="python"
 
 
-async def doTest(loop):
-    dali = simpleDali.DataLink(host, port)
-    serverId = yield from dali.id(programname, username, processid, architecture)
+def doTest(loop):
+    #dali = simpleDali.SocketDataLink(host, port)
+    dali = simpleDali.WebSocketDataLink(uri, verbose=True)
+    idTask = loop.create_task(dali.id(programname, username, processid, architecture))
+    loop.run_until_complete(idTask)
+    serverId = idTask.result()
+    #serverId = await dali.id(programname, username, processid, architecture)
     print("Resp: {}".format(serverId))
     #serverInfo = yield from dali.info("STATUS")
     #print("Info: {} ".format(serverInfo.message))
@@ -48,12 +54,20 @@ async def doTest(loop):
     msh = simpleMiniseed.MiniseedHeader(network, station, location, channel, starttime, numsamples, samprate)
     msr = simpleMiniseed.MiniseedRecord(msh, shortData)
     print("before writeMSeed")
-    resp = yield from dali.writeMSeed(msr)
-    print("writemseed resp {}".format(resp))
-    dali.close()
+    sendTask = loop.create_task(dali.writeMSeed(msr))
+    loop.run_until_complete(sendTask)
+    #resp = await dali.writeMSeed(msr)
+    print("writemseed resp {}".format(sendTask.result()))
+    closeTask = loop.create_task(dali.close())
+    loop.run_until_complete(closeTask)
+
 
 
 loop = asyncio.get_event_loop()
 loop.set_debug(True)
-loop.run_until_complete(doTest(loop))
+
+doTest(loop)
+#pending_tasks = [
+#        task for task in asyncio.Task.all_tasks() if not task.done()]
+#loop.run_until_complete(asyncio.gather(*pending_tasks))
 loop.close()

@@ -1,83 +1,35 @@
+from abc import ABC, abstractmethod
 import asyncio
 import json
+import websockets
 from datetime import datetime, timedelta
 
 MICROS = 1000000
 
-class DataLink:
+class DataLink(ABC):
 
-    def __init__(self, host, port):
-        self.host = host
-        self.port = port
-        self.reader = None
-        self.writer = None
-        self.verbose = False
+    def __init__(self, verbose=False):
+        self.verbose = verbose
 
+    @abstractmethod
     async def createDaliConnection(self):
-        self.close()
-        self.reader, self.writer = await asyncio.open_connection(self.host, self.port)
+        pass
 
+    @abstractmethod
     async def send(self, header, data):
-        h = header.encode('UTF-8')
-        pre = "DL"
-        if self.reader is None or self.writer is None:
-             await self.createDaliConnection()
-        self.writer.write(pre.encode('UTF-8'))
-        lenByte = len(h).to_bytes(1, byteorder='big', signed=False)
-        self.writer.write(lenByte)
-        if self.verbose: print("send pre {} as {}{:d}".format(pre, pre.encode('UTF-8'),lenByte[0]))
-        self.writer.write(h)
-        if self.verbose: print("send head {}".format(header))
-        if(data):
-            self.writer.write(data)
-            if self.verbose: print("send data of size {:d}".format(len(data)))
-        out = await self.writer.drain()
-        if self.verbose: print("drained")
-        return out
+        pass
 
+    @abstractmethod
     async def parseResponse(self):
-        pre = await self.reader.readexactly(3)
-        # D ==> 68, L ==> 76
-        if pre[0] == 68 and pre[1] == 76:
-            hSize = pre[2]
-        else:
-            if self.verbose: print("did not receive DL from read pre {:d}{:d}{:d}".format(pre[0],pre[1],pre[2]))
-            self.close()
-            raise Exception("did not receive DL from read pre")
-        h = await self.reader.readexactly(hSize)
-        header = h.decode("utf-8")
-        type=None
-        value=None
-        message=None
-        #if self.verbose: print("parseRespone header: {}".format(h))
-        if header.startswith("PACKET "):
-            s = header.split(" ")
-            type = s[0]
-            streamId = s[1]
-            packetId = s[2]
-            packetTime = s[3]
-            dataStartTime = s[4]
-            dataEndTime = s[5]
-            dSize = int(s[6])
-            data = await self.reader.readexactly(dSize)
-            return DaliPacket(type, streamId, packetId, packetTime, dataStartTime, dataEndTime, dSize, data)
-        elif header.startswith("ID "):
-            s = header.split(" ")
-            type = s[0]
-            value = ""
-            message = header[3:]
-            return DaliResponse(type, value, message)
-        elif (header.startswith("INFO ") or header.startswith("OK ") or header.startswith("ERROR ")):
-            s = header.split(" ")
-            type = s[0]
-            value = s[1]
-            dSize = int(s[2])
-            m = await self.reader.readexactly(dSize)
-            message = m.decode("utf-8")
-            return DaliResponse(type, value, message)
-        else:
-            raise Exception("Header does not start with INFO, ID, PACKET, OK or ERROR: {}".format(header))
-        return DaliResponse(type, value, message)
+        pass
+
+    @abstractmethod
+    def isClosed(self):
+        pass
+
+    @abstractmethod
+    async def close(self):
+        pass
 
     async def write(self, streamid, hpdatastart, hpdataend, flags, data):
         header = "WRITE {} {:d} {:d} {} {:d}".format(streamid, hpdatastart, hpdataend, flags, len(data))
@@ -87,6 +39,9 @@ class DataLink:
     async def writeAck(self, streamid, hpdatastart, hpdataend, data):
         await self.write(streamid, hpdatastart, hpdataend, 'A', data)
         r = await  self.parseResponse()
+        if r.type == 'ERROR' and r.message.startswith("Write permission not granted, no soup for you!"):
+            # no write premission to ringserver, it usually closes connection
+            await self.close()
         return r
 
     async def writeMSeed(self, msr):
@@ -155,18 +110,182 @@ class DataLink:
         header = "ENDSTREAM"
         await self.send(header, None)
 
+    async def reconnect(self):
+        self.close()
+        self.createDaliConnection()
+
+class SocketDataLink(DataLink):
+    def __init__(self, host, port, verbose=False):
+        super(SocketDataLink, self).__init__(verbose)
+        self.host = host
+        self.port = port
+        self.reader = None
+        self.writer = None
+
+    async def createDaliConnection(self):
+        await self.close()
+        self.reader, self.writer = await asyncio.open_connection(self.host, self.port)
+
+    async def send(self, header, data):
+        h = header.encode('UTF-8')
+        pre = "DL"
+        if self.reader is None or self.writer is None:
+             await self.createDaliConnection()
+        self.writer.write(pre.encode('UTF-8'))
+        lenByte = len(h).to_bytes(1, byteorder='big', signed=False)
+        self.writer.write(lenByte)
+        if self.verbose: print("send pre {} as {}{:d}".format(pre, pre.encode('UTF-8'),lenByte[0]))
+        self.writer.write(h)
+        if self.verbose: print("send head {}".format(header))
+        if(data):
+            self.writer.write(data)
+            if self.verbose: print("send data of size {:d}".format(len(data)))
+        out = await self.writer.drain()
+        if self.verbose: print("drained")
+        return out
+
+    async def parseResponse(self):
+        pre = await self.reader.readexactly(3)
+        # D ==> 68, L ==> 76
+        if pre[0] == 68 and pre[1] == 76:
+            hSize = pre[2]
+        else:
+            if self.verbose: print("did not receive DL from read pre {:d}{:d}{:d}".format(pre[0],pre[1],pre[2]))
+            self.close()
+            raise Exception("did not receive DL from read pre")
+        h = await self.reader.readexactly(hSize)
+        header = h.decode("utf-8")
+        type=None
+        value=None
+        message=None
+        #if self.verbose: print("parseRespone header: {}".format(h))
+        if header.startswith("PACKET "):
+            s = header.split(" ")
+            type = s[0]
+            streamId = s[1]
+            packetId = s[2]
+            packetTime = s[3]
+            dataStartTime = s[4]
+            dataEndTime = s[5]
+            dSize = int(s[6])
+            data = await self.reader.readexactly(dSize)
+            return DaliPacket(type, streamId, packetId, packetTime, dataStartTime, dataEndTime, dSize, data)
+        elif header.startswith("ID "):
+            s = header.split(" ")
+            type = s[0]
+            value = ""
+            message = header[3:]
+            return DaliResponse(type, value, message)
+        elif (header.startswith("INFO ") or header.startswith("OK ") or header.startswith("ERROR ")):
+            s = header.split(" ")
+            type = s[0]
+            value = s[1]
+            dSize = int(s[2])
+            m = await self.reader.readexactly(dSize)
+            message = m.decode("utf-8")
+            return DaliResponse(type, value, message)
+        else:
+            raise Exception("Header does not start with INFO, ID, PACKET, OK or ERROR: {}".format(header))
+        return DaliResponse(type, value, message)
+
     def isClosed(self):
         return self.writer is None
 
-    def close(self):
+    async def close(self):
         if self.writer is not None:
             self.writer.close()
             self.writer = None
             self.reader = None
 
-    async def reconnect(self):
-        self.close()
-        self.createDaliConnection(host, port)
+
+
+class WebSocketDataLink(DataLink):
+    def __init__(self, uri, verbose=False):
+        super(WebSocketDataLink, self).__init__(verbose)
+        self.uri = uri
+        self.ws = None
+
+    async def createDaliConnection(self):
+        await self.close()
+        self.ws = await websockets.client.connect(self.uri)
+
+    async def send(self, header, data):
+        if self.isClosed():
+             await self.createDaliConnection()
+        h = header.encode('UTF-8')
+        if len(h) > 255:
+            raise Exception("header lengh must be <= 255, {}".format(len(h)))
+        pre = "DL"
+        sendBytesLen = 3 + len(h)
+        if(data):
+            sendBytesLen += len(data)
+        sendBytes = bytearray(sendBytesLen)
+        sendBytes[0:2] = pre.encode('UTF-8')
+        lenByte = len(h).to_bytes(1, byteorder='big', signed=False)
+        sendBytes[2] = lenByte[0]
+        sendBytes[3:len(h)+3] = h
+        if(data):
+            sendBytes[len(h)+3:] = data
+            if self.verbose: print("send data of size {:d}".format(len(data)))
+        out = await self.ws.send(bytes(sendBytes))
+        if self.verbose: print("sent {}{} {}".format(pre, len(h), header))
+        return out
+
+    async def parseResponse(self):
+        if self.ws is None:
+             await self.createDaliConnection()
+        response = await self.ws.recv()
+        # pre header
+        # D ==> 68, L ==> 76
+        if response[0] == 68 and response[1] == 76:
+            hSize = response[2]
+        else:
+            if self.verbose: print("did not receive DL from read pre {:d}{:d}{:d}".format(response[0],response[1],response[2]))
+            self.close()
+            raise Exception("did not receive DL from read pre")
+        h = response[3:hSize+3]
+        header = h.decode("utf-8")
+        type=None
+        value=None
+        message=None
+        if self.verbose: print("parseRespone header: {}".format(h))
+        if header.startswith("PACKET "):
+            s = header.split(" ")
+            type = s[0]
+            streamId = s[1]
+            packetId = s[2]
+            packetTime = s[3]
+            dataStartTime = s[4]
+            dataEndTime = s[5]
+            dSize = int(s[6])
+            data = response[hSize+3:]
+            return DaliPacket(type, streamId, packetId, packetTime, dataStartTime, dataEndTime, dSize, data)
+        elif header.startswith("ID "):
+            s = header.split(" ")
+            type = s[0]
+            value = ""
+            message = header[3:]
+            return DaliResponse(type, value, message)
+        elif (header.startswith("INFO ") or header.startswith("OK ") or header.startswith("ERROR ")):
+            s = header.split(" ")
+            type = s[0]
+            value = s[1]
+            dSize = int(s[2])
+            m = response[hSize+3:]
+            message = m.decode("utf-8")
+            return DaliResponse(type, value, message)
+        else:
+            raise Exception("Header does not start with INFO, ID, PACKET, OK or ERROR: {}".format(header))
+        return DaliResponse(type, value, message)
+
+    def isClosed(self):
+        return self.ws is None or self.ws.closed
+
+    async def close(self):
+        if self.ws is not None:
+            await self.ws.close()
+            self.ws = None
+
 
 class DaliResponse:
 

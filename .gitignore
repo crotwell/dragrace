@@ -8,4 +8,6 @@ ringserverDemo/ring/*
 ringserverDemo/ringserver
 sensorNode/Adafruit_CircuitPython_MMA8451
 docs/*.xlsx
-Oct_Stuff
+
+
+seisplotjs*.js

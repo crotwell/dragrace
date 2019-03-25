@@ -14,6 +14,7 @@ interval = 1
 
 host = "129.252.35.36"
 port = 15003
+uri = "ws://www.seis.sc.edu/dragracews/datalink"
 
 programname="fakePeakAccelerationTrace"
 username="dragrace"
@@ -37,7 +38,8 @@ signal.signal(signal.SIGTERM, handleSignal)
 async def initConnections():
     global daliUpload
     # create a separate upload datalink
-    daliUpload = simpleDali.DataLink(host, port)
+    daliUpload = simpleDali.SocketDataLink(host, port)
+    #daliUpload = simpleDali.WebSocketDataLink(uri)
     #daliUpload.verbose = True
     serverId = await daliUpload.id(programname, username, processid, architecture)
     print("Connect Upload: {}".format(serverId))

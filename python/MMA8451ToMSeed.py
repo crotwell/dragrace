@@ -39,6 +39,7 @@ import decimate
 daliHost="129.252.35.36"
 daliPort=15003
 dali=None
+uri = "ws://www.seis.sc.edu/dragracews/datalink"
 
 pin = 18  # GPIO interrupt
 #MAX_SAMPLES = 2000
@@ -271,7 +272,7 @@ def decimate(decimator, data):
 
 def initDali(host, port):
     print("Init Dali at {0}:{1:d}".format(host, port))
-    dl = simpleDali.DataLink(host, port)
+    dl = simpleDali.SocketDataLink(host, port)
     return dl
 
 def getLocalHostname():

@@ -13,6 +13,7 @@ port = 15003
 #host = "127.0.0.1"
 #host = "129.252.35.20"
 #port = 6382
+uri = "ws://www.seis.sc.edu/dragracews/datalink"
 
 programname="simpleDali"
 username="dragrace"
@@ -21,8 +22,8 @@ architecture="python"
 
 
 async def doTest(loop):
-    dali = simpleDali.DataLink(host, port)
-    serverId = yield from dali.id(programname, username, processid, architecture)
+    dali = simpleDali.SocketDataLink(host, port)
+    serverId = await dali.id(programname, username, processid, architecture)
     print("Resp: {}".format(serverId))
     #serverInfo = yield from dali.info("STATUS")
     #print("Info: {} ".format(serverInfo.message))
@@ -53,9 +54,9 @@ async def doTest(loop):
         }
     }
     trigBytes = json.dumps(trigInfo).encode('UTF-8')
-    r = yield from dali.writeAck(streamid, hpdatastart, hpdataend, trigBytes)
+    r = await dali.writeAck(streamid, hpdatastart, hpdataend, trigBytes)
     print("writem trigger resp {}".format(r));
-    dali.close()
+    await dali.close()
 
 
 loop = asyncio.get_event_loop()

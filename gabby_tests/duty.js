@@ -8,10 +8,14 @@ let wp = seisplotjs.waveformplot;
 let d3 = seisplotjs.d3;
 let moment = seisplotjs.moment;
 
-const doReplay = false
-
 let net = 'CO';
-let staList = ['PI01', 'PI02', 'PI03', 'PI04', 'PI05', 'PI06', 'PI07', 'PI99'];
+let staList = ['3605', 'PI01', 'PI03', 'PI04', 'PI06', 'PI07', 'PI99'];
+d3.select('#stationChoice')
+  .selectAll("option")
+  .data(staList)
+  .enter()
+    .append("option")
+    .text(function(d) {return d;});
 
 let timerInProgress = false;
 let clockOffset = 0; // should get from server somehow
@@ -36,21 +40,13 @@ if (protocol == 'https:') {
 const IRIS_HOST = "rtserve.iris.washington.edu";
 const INTERNAL_HOST = "dragrace.seis.sc.edu";
 const INTERNAL_PORT = 6383;
-const REPLAY_INTERNAL_PORT = 6384;
 const INTERNAL_PATH = '/datalink';
 const EXTERNAL_HOST = "www.seis.sc.edu";
 const EXTERNAL_PORT = 80;
 const EXTERNAL_PATH = '/dragracews/datalink';
-const REPLAY_PATH = '/replayracews/datalink';
-const REPLAY_INTERNAL_PATH = '/datalink';
 let host = EXTERNAL_HOST;
 let port = EXTERNAL_PORT;
 let path = EXTERNAL_PATH;
-
-if (doReplay) {
-  path = REPLAY_PATH;
-  staList = ['XB02', 'XB03', 'XB05', 'XB08', 'XB10'];
-}
 
     //PI status color change with  differences in maxacc packet time
     //const StrugDur = moment.duration(3 'minutes');
@@ -63,18 +59,7 @@ if (doReplay) {
 
 let datalinkUrl = wsProtocol+"//"+host+(port==80?'':':'+port)+path;
 console.log("URL: "+datalinkUrl);
-//let writeDatalinkUrl = wsProtocol+"//"+host+(port==80?'':':'+port)+path
 let writeDatalinkUrl = wsProtocol+"//"+INTERNAL_HOST+(INTERNAL_PORT==80?'':':'+INTERNAL_PORT)+INTERNAL_PATH;
-if (doReplay) {
-  writeDatalinkUrl = wsProtocol+"//"+INTERNAL_HOST+(REPLAY_INTERNAL_PORT==80?'':':'+REPLAY_INTERNAL_PORT)+REPLAY_INTERNAL_PATH;
-}
-
-d3.select('#stationChoice')
-  .selectAll("option")
-  .data(staList)
-  .enter()
-    .append("option")
-    .text(function(d) {return d;});
 
 d3.selectAll('.textHost').text(host);
 
@@ -186,13 +171,13 @@ let dlTriggerCallback = function(dlPacket) {
   d3.select("div.triggers").append("p").text(`Trigger: ${s}`);
   let trig = JSON.parse(s)
   displayName = trig.dutyOfficer ? trig.dutyOfficer : "AutoTrigger";
-  let startMark = { markertype: 'predicted', name: "Start"+displayName, time: moment.utc(trig.time).subtract(15, 'seconds') };
-  markers.push(startMark);
+  let mark = { markertype: 'predicted', name: displayName, time: moment.utc(trig.time) };
+  markers.push(mark);
   //Gabby & Emma tried to make two trigger flags appear at 3 seconds apart
-  let endMark = { markertype: 'predicted', name: displayName, time: moment.utc(trig.time) };
-  markers.push(endMark);
+  //let mark = { markertype: 'predicted', name: displayName, time: moment.add.(3, 'seconds').utc(trig.time) };
+  //markers.push(mark);
   for (let sp of allSeisPlots.values()) {
-    sp.appendMarkers( [ startMark,endMark ]);
+    sp.appendMarkers( [ mark ]);
   }
 
 };
@@ -274,14 +259,6 @@ let dlCallback = function(dlPacket) {
 
 let doDatalinkConnect = function() {
   let dlPromise = null;
-  if (dlConn && dlConn.isConnected()) {
-    try {
-      dlConn.endStream();
-    }catch(err) {
-        d3.select("div.triggers").append("p").text(`Error endStream ${err}`);
-        dlConn = null;
-    }
-  }
   if ( ! dlConn) {
     console.log(`doDatalinkConnect dlConn is null`);
     dlConn = new datalink.DataLinkConnection(datalinkUrl, dlCallback, errorFn);
@@ -290,6 +267,7 @@ let doDatalinkConnect = function() {
     console.log(`doDatalinkConnect dlConn exists, reuse`);
     try {
       if (dlConn.isConnected()) {
+        dlConn.endStream();
         dlPromise = new seisplotjs.RSVP.Promise(function(resolve, reject) {
           resolve(`reuse connection...${dlConn.serverId}`);
         });

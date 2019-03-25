@@ -37,16 +37,7 @@ class MiniseedHeader:
         self.location=location     # Location designation, NULL terminated */
         self.channel=channel      # Channel designation, NULL terminated */
         self.dataquality='D'    # Data quality indicator */
-        self.starttime=starttime    # Record start time, corrected (first sample) */
-        if type(starttime).__name__ == 'datetime':
-            tt = starttime.timetuple()
-            self.btime = BTime(tt.tm_year, tt.tm_yday, tt.tm_hour, tt.tm_min, tt.tm_sec, int(starttime.microsecond/100))
-        elif type(starttime).__name__ == 'BTime':
-            self.btime = starttime
-            self.starttime = datetime(self.btime.year, 1, 1, hour=self.btime.hour, minute=self.btime.minute, second=self.btime.second, microsecond=100*self.btime.tenthMilli) \
-                + timedelta(days=self.btime.yday-1)
-        else:
-            raise Exception("unknown type of starttime {}".format(type(starttime)))
+        self.setStartTime(starttime)  # Record start time, corrected (first sample) */
         self.samprate=samprate          # Nominal sample rate (Hz) */
         self.numsamples=numsamples        # Number of samples in record */
         self.encoding=encoding    # Data encoding format */
@@ -112,6 +103,17 @@ class MiniseedHeader:
     def packBTime(self, header, time):
         tt = time.timetuple()
         struct.pack_into(self.endianChar+'HHBBBxH', header, 20, tt.tm_year, tt.tm_yday, tt.tm_hour, tt.tm_min, tt.tm_sec, int(time.microsecond/100))
+    def setStartTime(self, starttime):
+        self.starttime=starttime
+        if type(starttime).__name__ == 'datetime':
+            tt = starttime.timetuple()
+            self.btime = BTime(tt.tm_year, tt.tm_yday, tt.tm_hour, tt.tm_min, tt.tm_sec, int(starttime.microsecond/100))
+        elif type(starttime).__name__ == 'BTime':
+            self.btime = starttime
+            self.starttime = datetime(self.btime.year, 1, 1, hour=self.btime.hour, minute=self.btime.minute, second=self.btime.second, microsecond=100*self.btime.tenthMilli) \
+                + timedelta(days=self.btime.yday-1)
+        else:
+            raise Exception("unknown type of starttime {}".format(type(starttime)))
 
 class MiniseedRecord:
     def __init__(self, header, data, blockettes=[]):
@@ -153,12 +155,12 @@ class MiniseedRecord:
         if type(b).__name__ == 'Blockette1000':
             return self.packB1000(recordBytes, offset, b)
         elif type(b).__name__ == 'BlocketteUnknown':
-            return self.packBlocketteUnknown(recordBytes, offset, bUnk)
+            return self.packBlocketteUnknown(recordBytes, offset, b)
 
     def packBlocketteUnknown(self, recordBytes, offset, bUnk):
-        struct.pack_into(self.header.endianChar+'HH', recordBytes, offset, bUnk.blocketteNum, offset+len(bUnk.rawData))
-        recordBytes[offset+4:offset+len(bUnk.rawData)-4] = bUnk.rawData[4:]
-        return offset+len(bUnk.rawData)
+        struct.pack_into(self.header.endianChar+'HH', recordBytes, offset, bUnk.blocketteNum, offset+len(bUnk.rawBytes))
+        recordBytes[offset+4:offset+len(bUnk.rawBytes)-4] = bUnk.rawBytes[4:]
+        return offset+len(bUnk.rawBytes)
 
     def packB1000(self, recordBytes, offset, b):
         struct.pack_into(self.header.endianChar+'HHBBBx', recordBytes, offset, b.blocketteNum, b.nextOffset, self.header.encoding, self.header.byteorder, self.header.recordLengthExp)
@@ -248,17 +250,21 @@ def unpackMiniseedRecord(recordBytes):
         nextBOffset = header.blocketteOffset
         #print("Next Byte Offset",nextBOffset)
         while(nextBOffset > 0):
-            b = unpackBlockette(recordBytes, nextBOffset, endianChar)
-            blockettes.append(b)
-    #        print('blockette name',type(b).__name__)
-            # return added just to get past this ... no help
-            if type(b).__name__ == 'Blockette1000':
-                header.encoding = b.encoding
-#            else:
-#                print("Found non-1000 blockette: {}".format(type(b).__name__))
-                #return added by tjo just to get out of the loop
-#                return
-            nextBOffset = b.nextOffset
+            try:
+                b = unpackBlockette(recordBytes, nextBOffset, endianChar)
+                blockettes.append(b)
+        #        print('blockette name',type(b).__name__)
+                # return added just to get past this ... no help
+                if type(b).__name__ == 'Blockette1000':
+                    header.encoding = b.encoding
+    #            else:
+    #                print("Found non-1000 blockette: {}".format(type(b).__name__))
+                    #return added by tjo just to get out of the loop
+    #                return
+                nextBOffset = b.nextOffset
+            except struct.error as e:
+                print("Unable to unpack blockette, fail codes: {} start: {} {}".format(header.codes(), header.starttime, e))
+                raise
     data = []
     if header.encoding == ENC_SHORT:
         data = array('h', recordBytes[header.dataOffset:header.dataOffset+2*header.numsamples])
