@@ -1,0 +1,25 @@
+{
+  "Location":{
+    "PI01":"NO",
+    "PI02":"NO",
+    "PI03":"NO",
+    "PI04":"NO",
+    "PI05":"NO",
+    "PI06":"NO",
+    "PI07":"NO"
+  }
+  "Theta":{
+    "FL":00,
+    "NL":00,
+    "CT":00,
+    "NR":00,
+    "FR":00
+  }
+  "Name":{
+    "FL":"Far Left Wall",
+    "NL":"Left Timer Area",
+    "CT":"Center Wall End",
+    "NR":"Right Timer Area",
+    "FR":"Far Right Wall"
+  }
+}
