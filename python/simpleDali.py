@@ -71,6 +71,16 @@ class DataLink(ABC):
         r = await  self.parseResponse()
         return r
 
+    async def auth(self, token):
+        if self.verbose: print("simpleDali.auth {} ".format(token))
+        header = "AUTHORIZATION {:d}".format(len(token))
+        r = await self.send(header, token)
+        r = await  self.parseResponse()
+        if r.type == 'ERROR' and r.message.startswith("Write permission not granted, no soup for you!"):
+            # no write premission to ringserver, it usually closes connection
+            await self.close()
+        return r
+
     async def id(self, programname, username, processid, architecture):
         header = "ID {}:{}:{}:{}".format(programname, username, processid, architecture)
         r = await self.writeCommand(header, None)
@@ -145,48 +155,52 @@ class SocketDataLink(DataLink):
         return out
 
     async def parseResponse(self):
-        pre = await self.reader.readexactly(3)
-        # D ==> 68, L ==> 76
-        if pre[0] == 68 and pre[1] == 76:
-            hSize = pre[2]
-        else:
-            if self.verbose: print("did not receive DL from read pre {:d}{:d}{:d}".format(pre[0],pre[1],pre[2]))
-            self.close()
-            raise Exception("did not receive DL from read pre")
-        h = await self.reader.readexactly(hSize)
-        header = h.decode("utf-8")
-        type=None
-        value=None
-        message=None
-        #if self.verbose: print("parseRespone header: {}".format(h))
-        if header.startswith("PACKET "):
-            s = header.split(" ")
-            type = s[0]
-            streamId = s[1]
-            packetId = s[2]
-            packetTime = s[3]
-            dataStartTime = s[4]
-            dataEndTime = s[5]
-            dSize = int(s[6])
-            data = await self.reader.readexactly(dSize)
-            return DaliPacket(type, streamId, packetId, packetTime, dataStartTime, dataEndTime, dSize, data)
-        elif header.startswith("ID "):
-            s = header.split(" ")
-            type = s[0]
-            value = ""
-            message = header[3:]
+        try:
+            pre = await self.reader.readexactly(3)
+            # D ==> 68, L ==> 76
+            if pre[0] == 68 and pre[1] == 76:
+                hSize = pre[2]
+            else:
+                if self.verbose: print("did not receive DL from read pre {:d}{:d}{:d}".format(pre[0],pre[1],pre[2]))
+                self.close()
+                raise Exception("did not receive DL from read pre")
+            h = await self.reader.readexactly(hSize)
+            header = h.decode("utf-8")
+            type=None
+            value=None
+            message=None
+            #if self.verbose: print("parseRespone header: {}".format(h))
+            if header.startswith("PACKET "):
+                s = header.split(" ")
+                type = s[0]
+                streamId = s[1]
+                packetId = s[2]
+                packetTime = s[3]
+                dataStartTime = s[4]
+                dataEndTime = s[5]
+                dSize = int(s[6])
+                data = await self.reader.readexactly(dSize)
+                return DaliPacket(type, streamId, packetId, packetTime, dataStartTime, dataEndTime, dSize, data)
+            elif header.startswith("ID "):
+                s = header.split(" ")
+                type = s[0]
+                value = ""
+                message = header[3:]
+                return DaliResponse(type, value, message)
+            elif (header.startswith("INFO ") or header.startswith("OK ") or header.startswith("ERROR ")):
+                s = header.split(" ")
+                type = s[0]
+                value = s[1]
+                dSize = int(s[2])
+                m = await self.reader.readexactly(dSize)
+                message = m.decode("utf-8")
+                return DaliResponse(type, value, message)
+            else:
+                raise Exception("Header does not start with INFO, ID, PACKET, OK or ERROR: {}".format(header))
             return DaliResponse(type, value, message)
-        elif (header.startswith("INFO ") or header.startswith("OK ") or header.startswith("ERROR ")):
-            s = header.split(" ")
-            type = s[0]
-            value = s[1]
-            dSize = int(s[2])
-            m = await self.reader.readexactly(dSize)
-            message = m.decode("utf-8")
-            return DaliResponse(type, value, message)
-        else:
-            raise Exception("Header does not start with INFO, ID, PACKET, OK or ERROR: {}".format(header))
-        return DaliResponse(type, value, message)
+        except streams.IncompleteReadError as err:
+            await self.close()
+            raise
 
     def isClosed(self):
         return self.writer is None

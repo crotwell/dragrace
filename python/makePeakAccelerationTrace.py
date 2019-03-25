@@ -246,8 +246,8 @@ def doTest():
         #
                         maxMag=maxMag / COUNTS_PER_G
                         streamid = "{}.{}/MAXACC".format("XX", station)
-                        hpdatastart = int(starttime.timestamp() * simpleDali.MICROS)
-                        hpdataend = int(starttime.timestamp() * simpleDali.MICROS)
+                        hpdatastart = simpleDali.datetimeToHPTime(starttime)
+                        hpdataend = simpleDali.datetimeToHPTime(starttime)
                         jsonMessage = {
                             "station": station,
                             "time": starttime.isoformat(),
