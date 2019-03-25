@@ -7,19 +7,27 @@
     "PI05":"NO",
     "PI06":"NO",
     "PI07":"NO"
-  }
-  "Theta":{
-    "FL":00,
-    "NL":00,
-    "CT":00,
-    "NR":00,
-    "FR":00
-  }
-  "Name":{
-    "FL":"Far Left Wall",
-    "NL":"Left Timer Area",
-    "CT":"Center Wall End",
-    "NR":"Right Timer Area",
-    "FR":"Far Right Wall"
+  },
+  "LocationDetails":{
+    "FL":{
+      "Theta":0,
+      "Name":"Far Left Wall"
+    },
+    "NL":{
+      "Theta":0,
+      "Name":"Left Starters Area"
+    },
+    "CT":{
+      "Theta":0,
+      "Name":"Center Wall End"
+    },
+    "NR":{
+      "Theta":0,
+      "Name":"Right Starters Area"
+    },
+    "FR":{
+      "Theta":0,
+      "Name":"Far Right Wall"
+    }
   }
 }
