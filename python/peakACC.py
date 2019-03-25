@@ -26,13 +26,13 @@ def peakAccelerationCalculation(x,y,z,theta,station,start_time,end_time):
     #  z in for y in code
     # input: array_x, array_z, theta
     # output: rotate_array_x, rotate_array_z
-    rotate_array_x = Rotate_2D_TimeSeries(array_x, array_z, theta)[0]
-    rotate_array_z = Rotate_2D_TimeSeries(array_x, array_z, theta)[1]
+    rotate_array_x = Rotate_2D_TimeSeries(x, z, theta)[0]
+    rotate_array_z = Rotate_2D_TimeSeries(x, z, theta)[1]
 
     rest_factor_z = -1
     new_array_z = rest_state_correction(rotate_array_z, rest_factor_z)
 
-    vmag = Magnitude_ThreeC_TimeSeries_jake(rotate_array_x,array_y,new_array_z)
+    vmag = Magnitude_ThreeC_TimeSeries_jake(rotate_array_x, y, new_array_z)
 
     peakAccel = countsTog(vmag)
     maxAcceljson = {
