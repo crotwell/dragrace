@@ -146,55 +146,59 @@ def dataCallback(now, status, samplesAvail, data):
     dataQueue.put(item)
 
 def sending_worker():
-    print("starting worker")
+    try:
+        print("starting worker")
 
-    time.sleep(5)
-    global keepGoing
-    global startACQ
-    global dataQueue
-    my_loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(my_loop)
-    my_loop.set_debug(True)
+        global keepGoing
+        global startACQ
+        global dataQueue
+        my_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(my_loop)
+        my_loop.set_debug(True)
 
-    if dali:
-        programname="MMA8451ToMseed"
-        username="me"
-        processid="0"
-        architecture="python"
-        task = my_loop.create_task(dali.id( programname, username, processid, architecture))
-        my_loop.run_until_complete(task)
-        r = task.result()
-        print("id respones {}".format(r))
-    while keepGoing:
-        try:
-            item = dataQueue.get(timeout=2)
-            if item is None or not keepGoing:
-                print("Worker exiting")
-                dataQueue.task_done()
-                break
-            now, status, samplesAvail, data = item
+        if dali:
+            programname="MMA8451ToMseed"
+            username="me"
+            processid="0"
+            architecture="python"
+            task = my_loop.create_task(dali.id( programname, username, processid, architecture))
+            my_loop.run_until_complete(task)
+            r = task.result()
+            print("id respones {}".format(r))
+        while keepGoing:
             try:
-                do_work( now, status, samplesAvail, data)
-                dataQueue.task_done()
-            except Exception as err:
-                # try once more?
-                #do_work(now, status, samplesAvail, data)
-                print("Exception sending packet: {}".format(err))
-                traceback.print_exc()
-                if dali:
-                    # if at first you don't suceed, try try again
-                    dali.reconnect()
-                    try:
-                        do_work( now, status, samplesAvail, data)
-                        dataQueue.task_done()
-                    except Exception as err:
-                        dataQueue.task_done()
-                        print("2nd Exception sending packet: {}".format(err))
-                        traceback.print_exc()
-                        if quitOnError:
-                            keepGoing = False
-        except queue.Empty:
-            print("no data in queue??? startACQ={0:b}".format(startACQ))
+                item = dataQueue.get(timeout=2)
+                if item is None or not keepGoing:
+                    print("Worker exiting")
+                    dataQueue.task_done()
+                    break
+                now, status, samplesAvail, data = item
+                try:
+                    do_work( now, status, samplesAvail, data)
+                    dataQueue.task_done()
+                except Exception as err:
+                    # try once more?
+                    #do_work(now, status, samplesAvail, data)
+                    print("Exception sending packet: {}".format(err), file=sys.stderr)
+                    traceback.print_exc()
+                    if dali:
+                        # if at first you don't suceed, try try again
+                        dali.reconnect()
+                        try:
+                            do_work( now, status, samplesAvail, data)
+                            dataQueue.task_done()
+                        except Exception as err:
+                            dataQueue.task_done()
+                            print("2nd Exception sending packet: {}".format(err), file=sys.stderr)
+                            traceback.print_exc()
+                            if quitOnError:
+                                keepGoing = False
+            except queue.Empty:
+                print("no data in queue??? startACQ={0:b}".format(startACQ))
+    except Exception as err:
+        keepGoing = False
+        print("send thread fail on {}".format(err), file=sys.stderr)
+        traceback.print_exc()
     print("Worker exited")
     cleanUp()
     asyncio.get_event_loop().close()
@@ -306,6 +310,8 @@ def doQuit():
         sys.exit(0)
 
 def cleanUp():
+    global keepGoing
+    keepGoing = False
     if sensor is not None:
         if not doFake:
             print("remove gpio interrupt pin")
@@ -320,6 +326,14 @@ def cleanUp():
     if (dali != None):
         dali.close()
 
+def busyWaitStdInReader():
+    global keepGoing
+    while keepGoing:
+        line = sys.stdin.readline()
+        if (line.startswith("q")):
+            keepGoing = False
+            break
+        time.sleep(0.1)
 
 
 
@@ -345,13 +359,18 @@ for key, chan in chanMap.items():
              continuityFactor=5)
 
 
+stdinThread = Thread(target = busyWaitStdInReader)
+stdinThread.daemon=True
+print("stdinThread start")
+stdinThread.start()
+
 dataQueue = queue.Queue()
 print("before create thead")
 sendThread = Thread(target = sending_worker)
 sendThread.daemon=True
 print("thread start")
 sendThread.start()
-time.sleep(3)
+time.sleep(1)
 print("after thread start sleep")
 
 try:
@@ -362,10 +381,6 @@ try:
     gain = getGain()
 
     while keepGoing:
-        line = sys.stdin.readline()
-        if (line.startswith("q")):
-            keepGoing = False
-            break
         time.sleep(0.1)
     print("before sendThread.join()")
 
