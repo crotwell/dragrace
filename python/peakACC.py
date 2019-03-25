@@ -47,12 +47,13 @@ def peakAccelerationCalculation(x,y,z,theta,station,start_time,end_time):
 
 def compareSendPeakAccel(establishedJson, freshJson, Dali, maxWindow):
     if freshJson is None:
-        print('freshjson is none')
+        #print('freshjson is none')
+        pass
     if establishedJson is None:
-        print('established is none')
+        #print('established is none')
         return freshJson
     if freshJson["end_time"] - establishedJson["start_time"] < maxWindow:
-        print('in time window')
+        #print('in time window')
         establishedJson["end_time"] = freshJson["end_time"]
         if freshJson["MAXACC"] > establishedJson["MAXACC"]:
             establishedJson["MAXACC"] = freshJson["MAXACC"]
@@ -77,7 +78,7 @@ def compareSendPeakAccel(establishedJson, freshJson, Dali, maxWindow):
             loop = asyncio.get_event_loop()
             sendTask = loop.create_task(Dali.writeJSON(streamid, hpdatastart, hpdataend, establishedJson))
             loop.run_until_complete(sendTask)
-            print('sending to ringserver')
+            #print('sending to ringserver')
         else:
             print(json.dumps(establishedJson,indent = 4))
         return freshJson
