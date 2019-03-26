@@ -45,7 +45,7 @@ class DataLink(ABC):
         return r
 
     async def writeMSeed(self, msr):
-        streamid = "{}/MSEED".format(msr.codes())
+        streamid = "{}/MSEED".format(msr.codes(sep='_'))
         hpdatastart = int(msr.starttime().timestamp() * MICROS)
         hpdataend = int(msr.endtime().timestamp() * MICROS)
         if self.verbose: print("simpleDali.writeMSeed {} {} {}".format(streamid, hpdatastart, hpdataend))
@@ -222,6 +222,8 @@ class WebSocketDataLink(DataLink):
     async def createDaliConnection(self):
         await self.close()
         self.ws = await websockets.client.connect(self.uri)
+        if self.verbose:
+            print("Websocket connect to {}".format(self.uri))
 
     async def send(self, header, data):
         if self.isClosed():

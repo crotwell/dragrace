@@ -75,8 +75,8 @@ class MiniseedHeader:
         self.recordLengthExp = 9 # default to 512
         self.recordLength = 2**self.recordLengthExp
 
-    def codes(self):
-        return "{}.{}.{}.{}".format(self.network.strip(), self.station.strip(), self.location.strip(), self.channel.strip())
+    def codes(self, sep='.'):
+        return "{n}{sep}{s}{sep}{l}{sep}{c}".format(sep=sep,n=self.network.strip(), s=self.station.strip(), l=self.location.strip(), c=self.channel.strip())
 
     def pack(self):
         header = bytearray(48)
@@ -121,8 +121,8 @@ class MiniseedRecord:
         self.blockettes = blockettes
         self.data = data
 
-    def codes(self):
-        return self.header.codes()
+    def codes(self, sep='.'):
+        return self.header.codes(sep=sep)
 
     def starttime(self):
         return self.header.starttime
