@@ -43,6 +43,7 @@ const EXTERNAL_PORT = 80;
 const EXTERNAL_PATH = '/dragracews/datalink';
 const REPLAY_PATH = '/replayracews/datalink';
 const REPLAY_INTERNAL_PATH = '/datalink';
+const AUTH_PATH = '/authracews/datalink'
 let host = EXTERNAL_HOST;
 let port = EXTERNAL_PORT;
 let path = EXTERNAL_PATH;
@@ -67,6 +68,28 @@ console.log("URL: "+datalinkUrl);
 let writeDatalinkUrl = wsProtocol+"//"+INTERNAL_HOST+(INTERNAL_PORT==80?'':':'+INTERNAL_PORT)+INTERNAL_PATH;
 if (doReplay) {
   writeDatalinkUrl = wsProtocol+"//"+INTERNAL_HOST+(REPLAY_INTERNAL_PORT==80?'':':'+REPLAY_INTERNAL_PORT)+REPLAY_INTERNAL_PATH;
+}
+
+let jwtToken = null;
+let jwtTokenPromise = null;
+let jwtTokenUrl = protocol+"//"+host+(port==80?'':':'+port)+'/authrace/token.jwt';
+if (protocol == 'https:') {
+  // only try to get token if https
+  writeDatalinkUrl =  wsProtocol+"//"+host+(port==80?'':':'+port)+AUTH_PATH;
+  jwtTokenPromise = fetch(jwtTokenUrl, {
+    credentials: 'same-origin'
+  }).then(function(response) {
+    if(response.ok) {
+      return response.text();
+    }
+    throw new Error('Network response for jwt token was not ok.');
+  }).then(function(jwtText) {
+    jwtToken = jwtText.trim();
+    jwtTokenPromise = null;
+    console.log(`got jwt: ${jwtToken}`);
+  }).catch(function(error) {
+    console.log('There has been a problem with fetch jwt token: ', error.message);
+  });
 }
 
 d3.select('#stationChoice')
@@ -299,7 +322,7 @@ let doDatalinkConnect = function() {
     return null;
   }).then(serverId => {
     d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
-    return dlConn.awaitDLCommand("MATCH", `(${staCode}.*\.HNZ/MSEED)|(.*/MTRIG)|(.*/MAXACC)`);
+    return dlConn.awaitDLCommand("MATCH", `(${staCode}.*(_|\.)HNZ/MSEED)|(.*/MTRIG)|(.*/MAXACC)`);
   }).then(response => {
     d3.select("div.triggers").append("p").text(`MATCH response: ${response}`);
     return dlConn.awaitDLCommand(`POSITION AFTER ${datalink.momentToHPTime(timeWindow.start)}`);
@@ -352,6 +375,17 @@ wp.d3.select("button#peak").on("click", function(d) {
   let dlTriggerConn = new datalink.DataLinkConnection(writeDatalinkUrl, dlTriggerCallback, errorFn);
   dlTriggerConn.connect().then(serverId => {
     d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
+    if (jwtTokenPromise === null && jwtToken) {
+      return dlTriggerConn.awaitDLCommand(`AUTHORIZATION`, jwtToken);
+    } else {
+      d3.select("div.triggers").append("p").text(`Unable to send trigger, not auth`);
+      throw new Error(`Unable to send trigger, not auth`);
+    }
+  }).then(authResponse => {
+    d3.select("div.triggers").append("p").text(`AUTH ack: ${authResponse}`);
+    if ( ! authResponse.startsWith("OK")) {
+      throw new Error(`AUTH ack: ${authResponse}`);
+    }
     d3.select("div.triggers").append("p").text(`Send Trigger: ${JSON.stringify(trigger)}`);
     return dlTriggerConn.writeAck(`XX_MANUAL_TRIG_${dutyOfficer}/MTRIG`,
       trigtime,
