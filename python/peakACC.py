@@ -41,7 +41,7 @@ def peakAccelerationCalculation(x,y,z,theta,station,start_time,end_time):
         # "start_time":start in MMA8451 line 254
         "end_time":end_time,
         # "end_time": last_sample_time in MMA8451 line, also as now
-        "MAXACC":max(peakAccel)
+        "maxacc":max(peakAccel)
      }
     return maxAcceljson
 
@@ -55,8 +55,8 @@ def compareSendPeakAccel(establishedJson, freshJson, Dali, maxWindow):
     if freshJson["end_time"] - establishedJson["start_time"] < maxWindow:
         #print('in time window')
         establishedJson["end_time"] = freshJson["end_time"]
-        if freshJson["MAXACC"] > establishedJson["MAXACC"]:
-            establishedJson["MAXACC"] = freshJson["MAXACC"]
+        if freshJson["maxacc"] > establishedJson["maxacc"]:
+            establishedJson["maxacc"] = freshJson["maxacc"]
             # if "freshly calculated" maxAcceljson has larger MAXCC than
             # "already established" json, then establsihed takes on values of
             # freshjson
@@ -97,7 +97,7 @@ def compareSendPeakAccel(establishedJson, freshJson, Dali, maxWindow):
     # make new maxAcceljson every 0.25 secs
     # def sendPeakAccel():
     #     now = datetime.datetime.utcnow()
-    #     prevAcc = maxAcceljson["MAXACC"]
+    #     prevAcc = maxAcceljson["maxacc"]
     #     prevTime = maxAcceljson["time"]
     #     # if now - datetime.datetime.timedelta(seconds=0.25):
 

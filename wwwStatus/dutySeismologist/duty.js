@@ -204,38 +204,30 @@ let drawEquilizer = function() {
   accelMaxValues.forEach((dlPacket, streamId, map) => {
     // turn all into string
     let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
-    let maxacc = JSON.parse(s);
-    let scaleAcc = Math.round(100*maxacc.accel/2); // 2g = 100px
+    let maxaccJson = JSON.parse(s);
+    let scaleAcc = Math.round(100*maxaccJson.maxacc/2); // 2g = 100px
 
+    let now = moment.utc();
+    let packtime = moment.utc(maxaccJson.time);
+      //var duration = moment.duration(now,diff(packtime));
 
     if ( ! prevAccelValue[streamId] || prevAccelValue[streamId] !== scaleAcc) {
       // only update if the value changed
       prevAccelValue[streamId] = scaleAcc;
-      let staSpan = d3.select("div.equalizer").select(`span.${maxacc.station}`);
-      let color = staSpan.style("background-color");
-	    console.log(`color: ${color}`);
-      if (color == 'pink') {
-        color = 'yellow';
-      } else {
-	color = 'pink';
-      }
-      staSpan.select("div").transition().style("height", `${scaleAcc}px`).style("background-color", color);;
+      let staSpan = d3.select("div.equalizer").select(`span.${maxaccJson.station}`);
+      staSpan.select("div").transition().style("height", `${scaleAcc}px`);
     }
-
-    let now = moment.utc();
-    let packtime = moment.utc(maxacc.time);
-      //var duration = moment.duration(now,diff(packtime));
 
 //determine time intervals and associate class names
 
     let statpi = d3.select("div.piStatus");
 
     if(now.subtract(StrugDur).isBefore(packtime)){
-      statpi.select(`span.${maxacc.station}`).classed('struggling', false).classed('good', true);
+      statpi.select(`span.${maxaccJson.station}`).classed('struggling', false).classed('good', true);
     } else if(now.subtract(DeadDur).isBefore(packtime)){
-      statpi.select(`span.${maxacc.station}`).classed('struggling', true).classed('good', false);
+      statpi.select(`span.${maxaccJson.station}`).classed('struggling', true).classed('good', false);
     } else {
-      statpi.select(`span.${maxacc.station}`).classed('struggling', false).classed('good', false);
+      statpi.select(`span.${maxaccJson.station}`).classed('struggling', false).classed('good', false);
   }
 
 
@@ -254,10 +246,10 @@ let dlPacketPeakCallback = function(dlPacket) {
     // turn all into string
     let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
     let maxacc = JSON.parse(s);
-    let scaleAcc = Math.round(100*maxacc.accel/2); // 2g = 100px
+    let scaleAcc = Math.round(100*maxacc.maxacc/2); // 2g = 100px
     let staSpan = d3.selectAll("div.equalizer").selectAll(`span.${maxacc.station}`);
     staSpan.selectAll("div").transition().style("height", `${scaleAcc}px`).style("background-color", "yellow");
-    //console.log(`maxacc: ${maxacc.station}  ${maxacc.accel}  ${scaleAcc}`)
+    //console.log(`maxacc: ${maxacc.station}  ${maxacc.maxacc}  ${scaleAcc}`)
 }
 
 let dlCallback = function(dlPacket) {
