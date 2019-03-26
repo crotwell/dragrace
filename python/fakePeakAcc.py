@@ -63,7 +63,7 @@ for s in stations:
 
 while keepGoing:
     time.sleep(interval)
-    starttime = datetime.utcnow()
+    starttime = datetime.now(timezone.utc)
     for s in stations:
         val = prevAcc[s] + 0.1*(2-random.randrange(5))
         if val > 2:
