@@ -94,7 +94,7 @@ class FakeSensor:
         while self.keepGoing:
             time.sleep(sleepTime)
             # change method here to get different type of fake data
-            data = self.createFakeConstantUp(idx)
+            data = self.createFakeSine(idx)
             if (len(data) != 3*self.watermark):
                 print("expect {:d} sample from fake calc but got {:d}".format(3*self.watermark, len(data)))
                 self.keepGoing
@@ -111,12 +111,14 @@ class FakeSensor:
 
     def createFakeSine(self, curIdx):
         data = []
+        gain = self.getGain()
+        sps = self.getSps()
         for i in range(curIdx, curIdx+self.watermark):
             val = 4096*gain*math.sin(2*math.pi*(i)/self.sinePeriod/sps)
             data.append(val/100) # x
             data.append(val/100) # and y are smaller
             data.append(val)
-        return idx, data
+        return data
 
     def createFakeConstantUp(self, curIdx):
         data = []
