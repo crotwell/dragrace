@@ -1,3 +1,4 @@
+# Calculate Peak Acceleration
 # Making peak acceleration stuff
 import asyncio
 import sys
@@ -7,6 +8,16 @@ import math
 from SeismogramTasks import Rotate_2D_TimeSeries,VectorMagnitude
 from datetime import datetime, timedelta
 import json
+
+# note: each element of x,y,z makes one vector!
+array_x = [1,2,3,4,500,15,25]
+array_y = [5,6,7,8,32,69,70]
+array_z = [9,10,11,12,47,100,0]
+# theta = 20.0
+# station = 'PI01'
+# start_time = datetime.utcnow()
+# time_diff = timedelta(seconds=0.20)
+# end_time = start_time + time_diff
 import simpleDali
 # timestamp = datetime.datetime.utcnow().isoformat() # time need to be...
 # datetime.isoformat()
@@ -29,7 +40,7 @@ def peakAccelerationCalculation(x,y,z,theta,station,start_time,end_time):
     rotate_array_x = Rotate_2D_TimeSeries(x, z, theta)[0]
     rotate_array_z = Rotate_2D_TimeSeries(x, z, theta)[1]
 
-    rest_factor_z = -1
+    rest_factor_z = -4096 # may need to be -4096, counts not g
     new_array_z = rest_state_correction(rotate_array_z, rest_factor_z)
 
     vmag = Magnitude_ThreeC_TimeSeries_jake(rotate_array_x, y, new_array_z)
@@ -58,13 +69,10 @@ def compareSendPeakAccel(establishedJson, freshJson, Dali, maxWindow):
         if freshJson["maxacc"] > establishedJson["maxacc"]:
             establishedJson["maxacc"] = freshJson["maxacc"]
             # if "freshly calculated" maxAcceljson has larger MAXCC than
-            # "already established" json, then establsihed takes on values of
+            # "already established" json, then establsihed takes on MAXACC of
             # freshjson
         else:
             None
-        # compare the peak accel
-        # update prevJson to have end_time of newJson, as well as newJson's
-        # MAXCC
         return establishedJson
     else:
         # need datetime to calc hp times
@@ -106,7 +114,6 @@ def compareSendPeakAccel(establishedJson, freshJson, Dali, maxWindow):
 # series
 # input = rotate_array_x,array_y,new_array_z
 # output = vmag
-
 def Magnitude_ThreeC_TimeSeries_jake(x,y,z):
     nptsx=len(x)
     nptsy=len(y)
