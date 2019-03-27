@@ -2,6 +2,7 @@
 
 let datalink = seisplotjs.datalink
 
+
 //let wp = require('seisplotjs-waveformplot');
 // this global comes from the seisplotjs_waveformplot standalone js
 let wp = seisplotjs.waveformplot;
@@ -284,6 +285,10 @@ let dlCallback = function(dlPacket) {
     dlMaxAccelerationCallback(dlPacket);
   } else if (dlPacket.streamId.endsWith("PEAK")) {
     dlPacketPeakCallback(dlPacket);
+  } else if (dlPacket.streamId.endsWith("ZMAXCFG")) {
+    dlPacketConfigCallback(dlPacket);
+  } else if (dlPacket.streamId.endsWith("IP")) {
+    dlPacketIPCallback(dlPacket);
   }
 };
 
@@ -322,7 +327,7 @@ let doDatalinkConnect = function() {
     return null;
   }).then(serverId => {
     d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
-    return dlConn.awaitDLCommand("MATCH", `(${staCode}.*(_|\.)HNZ/MSEED)|(.*/MTRIG)|(.*/MAXACC)`);
+    return dlConn.awaitDLCommand("MATCH", `(${staCode}.*(_|\.)HNZ/MSEED)|(.*/MTRIG)|(.*/MAXACC)|(.*/ZMAXCFG)|(.*/IP)`);
   }).then(response => {
     d3.select("div.triggers").append("p").text(`MATCH response: ${response}`);
     return dlConn.awaitDLCommand(`POSITION AFTER ${datalink.momentToHPTime(timeWindow.start)}`);
@@ -501,3 +506,28 @@ let errorFn = function(error) {
   d3.select("div.triggers").append("p").text(`Error: ${error}`);
   doDisconnect(true);
 };
+//go into config file and grab info to place in href html pi status
+let dlPacketConfigCallback = function(dlPacket) {
+
+  let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
+  let config = JSON.parse(s);
+
+  console.log("GE"+config.Location)
+  console.log(s)
+
+  let statpi = d3.select("div.piStatus");
+for (let [PIkey,PILoc] of Object.entries(config.Location)) {
+if (PILoc !== "NO"){
+
+console.log(`GE Pies ${PIkey} ${PILoc}`)
+
+    let theta = config.LocationDetails[PILoc].Theta;
+    statpi.select("span."+PILoc).attr(`title`,`${PIkey},${theta}`);
+  }
+
+}
+}
+
+let dlPacketIPCallback = function(dlPacket) {
+
+}
