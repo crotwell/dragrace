@@ -1,9 +1,6 @@
-<<<<<<< HEAD
 # Calculate Peak Acceleration
-=======
 # Making peak acceleration stuff
 import asyncio
->>>>>>> c39381ab7c9c6c8ec41bad3a07effa62d1a445ee
 import sys
 import struct
 import array
@@ -11,7 +8,6 @@ import math
 from SeismogramTasks import Rotate_2D_TimeSeries,VectorMagnitude
 from datetime import datetime, timedelta
 import json
-<<<<<<< HEAD
 
 # note: each element of x,y,z makes one vector!
 array_x = [1,2,3,4,500,15,25]
@@ -22,7 +18,6 @@ array_z = [9,10,11,12,47,100,0]
 # start_time = datetime.utcnow()
 # time_diff = timedelta(seconds=0.20)
 # end_time = start_time + time_diff
-=======
 import simpleDali
 # timestamp = datetime.datetime.utcnow().isoformat() # time need to be...
 # datetime.isoformat()
@@ -34,7 +29,6 @@ import simpleDali
 #  time series by factor to convert into g's (4069 = 1g?), returns the g's
 # magnitude over a small amount of time (depends on len of arrays given),
 # and sends this mag to ring server
->>>>>>> c39381ab7c9c6c8ec41bad3a07effa62d1a445ee
 
 def peakAccelerationCalculation(x,y,z,theta,station,start_time,end_time):
     # rotation correction
@@ -46,7 +40,7 @@ def peakAccelerationCalculation(x,y,z,theta,station,start_time,end_time):
     rotate_array_x = Rotate_2D_TimeSeries(x, z, theta)[0]
     rotate_array_z = Rotate_2D_TimeSeries(x, z, theta)[1]
 
-    rest_factor_z = -1
+    rest_factor_z = -4096 # may need to be -4096, counts not g
     new_array_z = rest_state_correction(rotate_array_z, rest_factor_z)
 
     vmag = Magnitude_ThreeC_TimeSeries_jake(rotate_array_x, y, new_array_z)
@@ -96,8 +90,6 @@ def compareSendPeakAccel(establishedJson, freshJson, Dali, maxWindow):
         else:
             print(json.dumps(establishedJson,indent = 4))
         return freshJson
-<<<<<<< HEAD
-=======
         # if time between samples is >= 0.25s, then make establishedJson take
         # on values of freshJson, so freshJson will can be compared to
 
@@ -116,7 +108,6 @@ def compareSendPeakAccel(establishedJson, freshJson, Dali, maxWindow):
     #     prevAcc = maxAcceljson["maxacc"]
     #     prevTime = maxAcceljson["time"]
     #     # if now - datetime.datetime.timedelta(seconds=0.25):
->>>>>>> c39381ab7c9c6c8ec41bad3a07effa62d1a445ee
 
 # magnitude time series
 # function to take magnitude of rotated and rest state corrected time ...
@@ -162,8 +153,6 @@ def rest_state_correction(rotate_array_z, rest_factor_z):
     for i in rotate_array_z:
         correct.append(i+rest_factor_z)
     return correct
-<<<<<<< HEAD
-=======
 
 
 if __name__ == "__main__":
@@ -189,4 +178,3 @@ if __name__ == "__main__":
     # need an IP catcher, config listener + thrower, and make a dictionary...
     #  that makes info dictionary for each heat (time, max accel, )
     # Theta is found from config listener + thrower from ring server
->>>>>>> c39381ab7c9c6c8ec41bad3a07effa62d1a445ee
