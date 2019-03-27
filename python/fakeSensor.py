@@ -7,7 +7,7 @@ import math
 import struct
 import queue
 from threading import Thread
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import sys, os, signal
 from pathlib import Path
 import asyncio
@@ -89,20 +89,17 @@ class FakeSensor:
         gain = self.getGain()
         sleepTime = 1.0*self.watermark/sps
         packetWidth = timedelta(seconds=sleepTime)
-        lastTime = now = datetime.utcnow()
+        lastTime = now = datetime.now(timezone.utc)
         print("sleep for {} seconds per chunk {}".format(sleepTime, self.watermark))
         while self.keepGoing:
             time.sleep(sleepTime)
-            data = []
-            for i in range(self.watermark):
-                idx+=1
-                #val = 4096*gain*math.sin(2*math.pi*idx/self.sinePeriod/sps)
-                #data.append(val/100) # x
-                #data.append(val/100) # and y are smaller
-                #data.append(val)
-                data.append(0)
-                data.append(0)
-                data.append(4096)
+            # change method here to get different type of fake data
+            data = self.createFakeSine(idx)
+            if (len(data) != 3*self.watermark):
+                print("expect {:d} sample from fake calc but got {:d}".format(3*self.watermark, len(data)))
+                self.keepGoing
+                return
+            idx += self.watermark
             now = lastTime + packetWidth
             status = self.watermark
             samplesAvail = self.watermark
@@ -111,3 +108,22 @@ class FakeSensor:
             #print("after callback: {} {}".format(now, len(data)))
             #if idx > 4000:
             #    self.keepGoing = False
+
+    def createFakeSine(self, curIdx):
+        data = []
+        gain = self.getGain()
+        sps = self.getSps()
+        for i in range(curIdx, curIdx+self.watermark):
+            val = 4096*gain*math.sin(2*math.pi*(i)/self.sinePeriod/sps)
+            data.append(val/100) # x
+            data.append(val/100) # and y are smaller
+            data.append(val)
+        return data
+
+    def createFakeConstantUp(self, curIdx):
+        data = []
+        for i in range(curIdx, curIdx+self.watermark):
+            data.append(0)
+            data.append(0)
+            data.append(4096)
+        return data

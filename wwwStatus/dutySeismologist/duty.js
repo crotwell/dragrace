@@ -43,6 +43,7 @@ const EXTERNAL_PORT = 80;
 const EXTERNAL_PATH = '/dragracews/datalink';
 const REPLAY_PATH = '/replayracews/datalink';
 const REPLAY_INTERNAL_PATH = '/datalink';
+const AUTH_PATH = '/authracews/datalink'
 let host = EXTERNAL_HOST;
 let port = EXTERNAL_PORT;
 let path = EXTERNAL_PATH;
@@ -67,6 +68,28 @@ console.log("URL: "+datalinkUrl);
 let writeDatalinkUrl = wsProtocol+"//"+INTERNAL_HOST+(INTERNAL_PORT==80?'':':'+INTERNAL_PORT)+INTERNAL_PATH;
 if (doReplay) {
   writeDatalinkUrl = wsProtocol+"//"+INTERNAL_HOST+(REPLAY_INTERNAL_PORT==80?'':':'+REPLAY_INTERNAL_PORT)+REPLAY_INTERNAL_PATH;
+}
+
+let jwtToken = null;
+let jwtTokenPromise = null;
+let jwtTokenUrl = protocol+"//"+host+(port==80?'':':'+port)+'/authrace/token.jwt';
+if (protocol == 'https:') {
+  // only try to get token if https
+  writeDatalinkUrl =  wsProtocol+"//"+host+(port==80?'':':'+port)+AUTH_PATH;
+  jwtTokenPromise = fetch(jwtTokenUrl, {
+    credentials: 'same-origin'
+  }).then(function(response) {
+    if(response.ok) {
+      return response.text();
+    }
+    throw new Error('Network response for jwt token was not ok.');
+  }).then(function(jwtText) {
+    jwtToken = jwtText.trim();
+    jwtTokenPromise = null;
+    console.log(`got jwt: ${jwtToken}`);
+  }).catch(function(error) {
+    console.log('There has been a problem with fetch jwt token: ', error.message);
+  });
 }
 
 d3.select('#stationChoice')
@@ -204,38 +227,30 @@ let drawEquilizer = function() {
   accelMaxValues.forEach((dlPacket, streamId, map) => {
     // turn all into string
     let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
-    let maxacc = JSON.parse(s);
-    let scaleAcc = Math.round(100*maxacc.accel/2); // 2g = 100px
+    let maxaccJson = JSON.parse(s);
+    let scaleAcc = Math.round(100*maxaccJson.maxacc/2); // 2g = 100px
 
+    let now = moment.utc();
+    let packtime = moment.utc(maxaccJson.time);
+      //var duration = moment.duration(now,diff(packtime));
 
     if ( ! prevAccelValue[streamId] || prevAccelValue[streamId] !== scaleAcc) {
       // only update if the value changed
       prevAccelValue[streamId] = scaleAcc;
-      let staSpan = d3.select("div.equalizer").select(`span.${maxacc.station}`);
-      let color = staSpan.style("background-color");
-	    console.log(`color: ${color}`);
-      if (color == 'pink') {
-        color = 'yellow';
-      } else {
-	color = 'pink';
-      }
-      staSpan.select("div").transition().style("height", `${scaleAcc}px`).style("background-color", color);;
+      let staSpan = d3.select("div.equalizer").select(`span.${maxaccJson.station}`);
+      staSpan.select("div").transition().style("height", `${scaleAcc}px`);
     }
-
-    let now = moment.utc();
-    let packtime = moment.utc(maxacc.time);
-      //var duration = moment.duration(now,diff(packtime));
 
 //determine time intervals and associate class names
 
     let statpi = d3.select("div.piStatus");
 
     if(now.subtract(StrugDur).isBefore(packtime)){
-      statpi.select(`span.${maxacc.station}`).classed('struggling', false).classed('good', true);
+      statpi.select(`span.${maxaccJson.station}`).classed('struggling', false).classed('good', true);
     } else if(now.subtract(DeadDur).isBefore(packtime)){
-      statpi.select(`span.${maxacc.station}`).classed('struggling', true).classed('good', false);
+      statpi.select(`span.${maxaccJson.station}`).classed('struggling', true).classed('good', false);
     } else {
-      statpi.select(`span.${maxacc.station}`).classed('struggling', false).classed('good', false);
+      statpi.select(`span.${maxaccJson.station}`).classed('struggling', false).classed('good', false);
   }
 
 
@@ -254,10 +269,10 @@ let dlPacketPeakCallback = function(dlPacket) {
     // turn all into string
     let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
     let maxacc = JSON.parse(s);
-    let scaleAcc = Math.round(100*maxacc.accel/2); // 2g = 100px
+    let scaleAcc = Math.round(100*maxacc.maxacc/2); // 2g = 100px
     let staSpan = d3.selectAll("div.equalizer").selectAll(`span.${maxacc.station}`);
     staSpan.selectAll("div").transition().style("height", `${scaleAcc}px`).style("background-color", "yellow");
-    //console.log(`maxacc: ${maxacc.station}  ${maxacc.accel}  ${scaleAcc}`)
+    //console.log(`maxacc: ${maxacc.station}  ${maxacc.maxacc}  ${scaleAcc}`)
 }
 
 let dlCallback = function(dlPacket) {
@@ -307,7 +322,7 @@ let doDatalinkConnect = function() {
     return null;
   }).then(serverId => {
     d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
-    return dlConn.awaitDLCommand("MATCH", `(${staCode}.*\.HNZ/MSEED)|(.*/MTRIG)|(.*/MAXACC)`);
+    return dlConn.awaitDLCommand("MATCH", `(${staCode}.*(_|\.)HNZ/MSEED)|(.*/MTRIG)|(.*/MAXACC)`);
   }).then(response => {
     d3.select("div.triggers").append("p").text(`MATCH response: ${response}`);
     return dlConn.awaitDLCommand(`POSITION AFTER ${datalink.momentToHPTime(timeWindow.start)}`);
@@ -360,6 +375,17 @@ wp.d3.select("button#peak").on("click", function(d) {
   let dlTriggerConn = new datalink.DataLinkConnection(writeDatalinkUrl, dlTriggerCallback, errorFn);
   dlTriggerConn.connect().then(serverId => {
     d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
+    if (jwtTokenPromise === null && jwtToken) {
+      return dlTriggerConn.awaitDLCommand(`AUTHORIZATION`, jwtToken);
+    } else {
+      d3.select("div.triggers").append("p").text(`Unable to send trigger, not auth`);
+      throw new Error(`Unable to send trigger, not auth`);
+    }
+  }).then(authResponse => {
+    d3.select("div.triggers").append("p").text(`AUTH ack: ${authResponse}`);
+    if ( ! authResponse.startsWith("OK")) {
+      throw new Error(`AUTH ack: ${authResponse}`);
+    }
     d3.select("div.triggers").append("p").text(`Send Trigger: ${JSON.stringify(trigger)}`);
     return dlTriggerConn.writeAck(`XX_MANUAL_TRIG_${dutyOfficer}/MTRIG`,
       trigtime,

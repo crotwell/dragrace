@@ -68,7 +68,7 @@ class DataBuffer:
         self.numpts = 0
         self.starttime = None
         self.dataArray = None
-        if self.verbose: print("flush {}".format(result))
+        if self.verbose: print("flush {} {} {}".format(msr.codes(), msr.header.starttime, result))
         return result
 
     def close(self):
