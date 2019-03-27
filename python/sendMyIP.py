@@ -62,9 +62,14 @@ async def initConnections():
 
 def getIPAddr():
     for interf in interfaces():
-        if ifaddresses(interf)[AF_INET] is not None:
-            return ifaddresses(interf)[AF_INET][0].get('addr')
-    raise Exception("No interface has an IPv4 address")
+        if AF_INET in ifaddresses(interf):
+            for interCon in ifaddresses(interf)[AF_INET]:
+                if 'addr' in interCon:
+                    ip = interCon.get('addr')
+                    if ip != "127.0.0.1":
+                        #print("bla {} {} {}".format(interf, AF_INET, ip))
+                        return ip
+    raise Exception("No interface has a public IPv4 address")
 
 loop = asyncio.get_event_loop()
 loop.set_exception_handler(exceptionHandler)
