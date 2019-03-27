@@ -94,8 +94,7 @@ class FakeSensor:
         while self.keepGoing:
             time.sleep(sleepTime)
             # change method here to get different type of fake data
-            data = self.createFakeXhalfG(idx)
-            print(data)
+            data = self.createOtherRotate(idx)
             if (len(data) != 3*self.watermark):
                 print("expect {:d} sample from fake calc but got {:d}".format(3*self.watermark, len(data)))
                 self.keepGoing
@@ -128,6 +127,7 @@ class FakeSensor:
             data.append(0)
             data.append(4096)
         return data
+
     def createFakeXhalfG(self, curIdx):
         data = []
         for i in range(curIdx, curIdx+self.watermark):
@@ -135,3 +135,43 @@ class FakeSensor:
             data.append(2048)
             data.append(4096)
         return data
+
+    def createFakeRotate(self, curIdx):
+        # 45 deg rotation about y axis
+        data = []
+        for i in range(curIdx, curIdx+self.watermark):
+            data.append(-0.353553*4096)
+            data.append(0)
+            data.append((0.7071068+0.353553)*4096)
+        return data
+
+    def createOtherRotate(self, curIdx):
+        # 20 deg rotation about y axis
+        # lets try 90 degree rotation 
+        data = []
+        for i in range(curIdx, curIdx+self.watermark):
+            degrees = math.radians(20)
+            accel = 0.5
+            data.append((-math.sin(degrees)*accel)*4096)
+            data.append(0)
+            data.append(((math.sin(degrees)*accel)+math.cos(degrees))*4096)
+        return data
+    # def createFakeRotate(self, curIdx):
+    #     data = []
+    #     for i in range(curIdx, curIdx+self.watermark):
+    #         if i//140.0 == 0:
+    #             data.append(-0.353553*4096)
+    #             data.append(0)
+    #             data.append((0.7071068+0.353553)*4096)
+    #             print('in 150', curIdx)
+    #         elif i//252.0 == 0:
+    #             data.append((-0.7071068-0.353553)*4096)
+    #             data.append(0)
+    #             data.append((0.7071068-0.353553)*4096)
+    #             print('in 200',curIdx)
+    #         else:
+    #             data.append(0)
+    #             data.append(0)
+    #             data.append(4096)
+    #             print('not in either',curIdx)
+    #     return data
