@@ -107,9 +107,10 @@ class FIR:
     def calcDelay(self, sps):
         return timedelta(seconds=(self.tapLen-1)/2/sps)
 
-    def pushPop(self, val, gain=1.0):
-        """pushes a value onto the history stack and pops
-        the next value processed by the FIR filter.
+    def push(self, val):
+        """pushes a value onto the history stack but does
+           not calc output value. Useful when decimating
+           for values that will be tossed anyway
         """
         # first time through init history to all be the first value
         # this helps when the input signal has a DC offset as initialize
@@ -120,6 +121,12 @@ class FIR:
         self.currIdx += 1
         if self.currIdx == self.tapLen:
             self.currIdx = 0
+
+    def pushPop(self, val, gain=1.0):
+        """pushes a value onto the history stack and pops
+        the next value processed by the FIR filter.
+        """
+        self.push(val)
         acc = 0.0
         idx = self.currIdx
         for i in range(self.tapLen):
@@ -136,9 +143,12 @@ class DecimateTwo:
     def process(self, dataArray):
         out = []
         for v in dataArray:
-            p = self.FIR.pushPop(v)
             if self.tickTock:
-                out.append(p)
+                # keep this output
+                out.append(self.FIR.pushPop(v))
+            else:
+                # toss this output
+                self.FIR.push(v)
             self.tickTock = not self.tickTock
         return out
 
