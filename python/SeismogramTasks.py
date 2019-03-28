@@ -17,45 +17,45 @@ def Magnitude_ThreeC_TimeSeries(x,y,z):
         print("z different length than x and y",nptsx,nptsz)
         return
     i=0
-    vmag=x
+    vmag=[]
     while i < nptsx:
-        vmag[i]=VectorMagnitude(x[i],y[i],z[i])
+        vmag.append(VectorMagnitude(x[i],y[i],z[i]))
         i=i+1
     return vmag
 
 def Divide_TimeSeries(x,factor):
     npts=len(x)
     i=0
-    xf=x
+    xf=[]
     while i < npts:
-        xf[i]=x[i]/factor
+        xf.append(x[i]/factor)
         i=i+1
     return xf
 
 def Multiply_TimeSeries(x,factor):
     npts=len(x)
     i=0
-    xf=x
+    xf=[]
     while i < npts:
-        xf[i]=x[i]*factor
+        xf.append(x[i]*factor)
         i=i+1
     return xf
 
 def Add_TimeSeries(x,factor):
     npts=len(x)
     i=0
-    xf=x
+    xf=[]
     while i < npts:
-        xf[i]=x[i]+factor
+        xf.append(x[i]+factor)
         i=i+1
     return xf
 
 def Subtract_TimeSeries(x,factor):
     npts=len(x)
     i=0
-    xf=x
+    xf=[]
     while i < npts:
-        xf[i]=x[i]-factor
+        xf.append(x[i]-factor)
         i=i+1
     return xf
 
