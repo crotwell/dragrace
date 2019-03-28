@@ -261,6 +261,7 @@ def sendToMseed(last_sample_time, status, samplesAvail, data):
     global establishedJson
     global maxWindow
     global theta
+    global sps
     dataIdx = 0
     start = last_sample_time - timedelta(seconds=1.0*(samplesAvail-1)/sps)
     xData, yData, zData = sensor.demux(data)
