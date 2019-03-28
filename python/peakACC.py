@@ -46,14 +46,14 @@ def peakAccelerationCalculation(x,y,z,theta,station,start_time,end_time):
 
     vmag = Magnitude_ThreeC_TimeSeries_jake(rotate_array_x, y, new_array_z)
 
-    peakAccel = countsTog(vmag)
+    peakAccel = max(vmag)/rest_factor_z
     maxAcceljson = {
         "station":station,
         "start_time":start_time,
         # "start_time":start in MMA8451 line 254
         "end_time":end_time,
         # "end_time": last_sample_time in MMA8451 line, also as now
-        "maxacc":max(peakAccel)
+        "maxacc":peakAccel
      }
     return maxAcceljson
 
