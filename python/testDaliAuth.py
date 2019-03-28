@@ -73,7 +73,7 @@ def doTest(loop, token):
 
 def main():
     secretKey = '234jkasdf342saf345h6'
-    token = simpleDali.encodeAuthToken(username, timedelta(seconds=60), 'XX_.*/MTRIG', secretKey)
+    token = simpleDali.encodeAuthToken(username, timedelta(minutes=60), 'XX_.*/MTRIG', secretKey)
     print("token: {}".format(str(token)))
     print("token expires in {}".format(simpleDali.timeUntilExpireToken(token)))
     loop = asyncio.get_event_loop()
