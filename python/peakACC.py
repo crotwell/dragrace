@@ -37,8 +37,9 @@ def peakAccelerationCalculation(x,y,z,theta,station,start_time,end_time):
     #  z in for y in code
     # input: array_x, array_z, theta
     # output: rotate_array_x, rotate_array_z
-    rotate_array_x = Rotate_2D_TimeSeries(x, z, theta)[0]
-    rotate_array_z = Rotate_2D_TimeSeries(x, z, theta)[1]
+    r = Rotate_2D_TimeSeries(x, z, theta)
+    rotate_array_x = r[0]
+    rotate_array_z = r[1]
 
     rest_factor_z = -4096 # may need to be -4096, counts not g
     new_array_z = rest_state_correction(rotate_array_z, rest_factor_z)
