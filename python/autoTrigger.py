@@ -33,7 +33,7 @@ async def doTest(loop):
     station = "TEST"
     location = "00"
     channel = "HNZ"
-    trigtime = datetime.utcnow()
+    trigtime = simpleDali.utcnowWithTz()
 
     streamid = "{}.{}.{}.{}/MTRIG".format(network, station, location, channel)
     hpdatastart = int(trigtime.timestamp() * simpleDali.MICROS)

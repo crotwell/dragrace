@@ -15,11 +15,11 @@ array_y = [5,6,7,8,32,69,70]
 array_z = [9,10,11,12,47,100,0]
 # theta = 20.0
 # station = 'PI01'
-# start_time = datetime.utcnow()
+# start_time = simpleDali.utcnowWithTz()
 # time_diff = timedelta(seconds=0.20)
 # end_time = start_time + time_diff
 import simpleDali
-# timestamp = datetime.datetime.utcnow().isoformat() # time need to be...
+# timestamp = simpleDali.utcnowWithTz().isoformat() # time need to be...
 # datetime.isoformat()
 # note this time is associated with last element of x,y,z data we get
 # would like to compare first and last of two packets..?
@@ -93,8 +93,8 @@ def compareSendPeakAccel(establishedJson, freshJson, Dali, maxWindow):
         # if time between samples is >= 0.25s, then make establishedJson take
         # on values of freshJson, so freshJson will can be compared to
 
-    # time = datetime.datetime.utcnow()
-    # time_2 = datetime.datetime.utcnow()
+    # time = simpleDali.utcnowWithTz()
+    # time_2 = simpleDali.utcnowWithTz()
     # time_3 = time - time_2
     # return time_3
     # NOTE: can do:  if now - prevTime == 0.25 update maxAcceljson dictionary
@@ -104,7 +104,7 @@ def compareSendPeakAccel(establishedJson, freshJson, Dali, maxWindow):
     # need to then send this dictionary every 0.25-0.5 sec
     # make new maxAcceljson every 0.25 secs
     # def sendPeakAccel():
-    #     now = datetime.datetime.utcnow()
+    #     now = simpleDali.utcnowWithTz()
     #     prevAcc = maxAcceljson["maxacc"]
     #     prevTime = maxAcceljson["time"]
     #     # if now - datetime.datetime.timedelta(seconds=0.25):
@@ -163,7 +163,7 @@ if __name__ == "__main__":
     array_z = [9,10,11,12,47,100,0]
     theta = 20.0
     station = 'PI01'
-    start_time = datetime.utcnow()
+    start_time = simpleDali.utcnowWithTz()
     time_diff = timedelta(seconds=0.20)
     end_time = start_time + time_diff
 

@@ -34,7 +34,7 @@ for chan in chanList:
     miniseedBuffers[chan] = dataBuffer.DataBuffer(net, sta, loc, chan,
              sps, encoding=simpleMiniseed.ENC_SHORT)
 
-nextStart = datetime.utcnow()
+nextStart = simpleDali.utcnowWithTz()
 for i in range(int(numPackets)):
     packetDeltaTime=timedelta(seconds=1.0*(samplesAvail-1)/sps)
     start = nextStart - packetDeltaTime

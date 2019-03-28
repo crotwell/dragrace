@@ -20,25 +20,6 @@ username="dragrace"
 processid=0
 architecture="python"
 
-def encode_auth_token(user_id, secretKey):
-    """
-    Generates the Auth Token
-    :return: string
-    """
-    payload = {
-        'exp': datetime.utcnow() + timedelta(days=0, seconds=5),
-        'iat': datetime.utcnow(),
-        'sub': user_id,
-        'wpat': 'XX_.*/MSEED'
-    }
-    encoded = jwt.encode(
-        payload,
-        secretKey,
-        algorithm='HS256'
-    )
-    decoded = jwt.decode(encoded, secretKey, algotithms='HS256')
-    print("decode: {}".format(decoded))
-    return encoded
 
 def doTest(loop):
     dali = simpleDali.SocketDataLink(host, port)
@@ -62,19 +43,11 @@ def doTest(loop):
     # nowTime = datetime.utcnow()
     # print("hptime now: {} {}".format(hptime, simpleDali.datetimeToHPTime(simpleDali.hptimeToDatetime(int(hptime)))))
 
-    # test auth
-    secretKey = '234jkasdf342saf345h6'
-    token = encode_auth_token(username, secretKey)
-    print("token: {}".format(token))
-    authTask = loop.create_task(dali.auth(token))
-    loop.run_until_complete(authTask)
-    print("Auth Resp: {}".format(authTask.result()))
-
     network = "XX"
     station = "TEST"
     location = "00"
     channel = "HNZ"
-    starttime = datetime.utcnow()
+    starttime = simpleDali.utcnowWithTz()
     numsamples = 100
     samprate=200
     shortData = array("h") # shorts

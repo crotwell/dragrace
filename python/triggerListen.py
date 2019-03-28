@@ -50,7 +50,7 @@ async def doTest(loop):
     r = await dali.match(".*/MTRIG")
     print("match() Resonse {}".format(r))
 
-    begintime = datetime.utcnow() - timedelta(minutes=5)
+    begintime = simpleDali.utcnowWithTz() - timedelta(minutes=5)
     r = await dali.positionAfter(begintime)
     if r.type.startswith("ERROR"):
         print("positionAfter() Resonse {}, ringserver might not know about these packets?".format(r))

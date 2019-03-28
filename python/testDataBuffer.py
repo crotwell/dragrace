@@ -10,7 +10,7 @@ def doTest():
     station = "TEST"
     location = "00"
     channel = "HNZ"
-    starttime = datetime.utcnow()
+    starttime = simpleDali.utcnowWithTz()
     numsamples = 40
     samprate=200
     sampPeriod = timedelta(microseconds = MICRO/samprate)

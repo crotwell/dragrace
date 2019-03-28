@@ -69,7 +69,7 @@ class MiniseedReplay:
         self.locGlob = locGlob
         self.chanGlob = chanGlob
         self.duration = duration
-        self.initTime = datetime.utcnow()
+        self.initTime = simpleDali.utcnowWithTz()
         self.startTime = startTime
         self.deltaTime = self.initTime - self.startTime
         #self.pattern = "{net}/{sta}/{year}/{yday}/{net}.{sta}.{loc}.{chan}.{year}.{yday}.{hour}"
@@ -97,7 +97,7 @@ class MiniseedReplay:
         msr.header.network = "XX"
 
     def sendOldRecords(self):
-        now = datetime.utcnow()
+        now = simpleDali.utcnowWithTz()
         loop = asyncio.get_event_loop()
         # check to see if time to start all over again
         if self.duration is not None and now - self.initTime > self.duration:
@@ -138,7 +138,7 @@ class MiniseedReplay:
             "time": self.initTime.isoformat(),
             "creation": self.startTime.isoformat(),
             "override": {
-                "modtime": datetime.utcnow().isoformat(),
+                "modtime": simpleDali.utcnowWithTz().isoformat(),
                 "value": "enable"
             }
         }

@@ -35,7 +35,7 @@ async def doTest(loop):
     location = "00"
     channel = "HNZ"
     dutyOfficer="Philip"
-    trigtime = datetime.utcnow()
+    trigtime = simpleDali.utcnowWithTz()
 
     streamid = "{}.{}.{}.{}/MTRIG".format(network, station, location, channel)
     hpdatastart = int(trigtime.timestamp() * simpleDali.MICROS)

@@ -79,7 +79,7 @@ while keepGoing:
         initTask = loop.create_task(initConnections())
         loop.run_until_complete(initTask)
     myIPaddr = getIPAddr()
-    starttime = datetime.utcnow()
+    starttime = simpleDali.utcnowWithTz()
     jsonMessage = {
         "station": sta,
         "time": starttime.isoformat(),
