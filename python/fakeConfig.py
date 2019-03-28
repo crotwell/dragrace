@@ -91,7 +91,10 @@ while keepGoing:
     streamid = "{}.{}/ZMAXCFG".format(net, 'ZMAX')
     hpdatastart = simpleDali.datetimeToHPTime(starttime)
     hpdataend = simpleDali.datetimeToHPTime(starttime)
-    ack = daliUpload.writeJSON(streamid, hpdatastart, hpdataend, jsonMessage)
+    jsonSendTask = loop.create_task(daliUpload.writeJSON(streamid, hpdatastart, hpdataend, jsonMessage))
+    loop.run_until_complete(jsonSendTask)
+    ack = jsonSendTask.result()
+    print("send config: {}  {}".format(ack, streamid))
 
 
 daliUpload.close()
