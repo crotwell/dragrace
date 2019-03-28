@@ -510,28 +510,45 @@ let errorFn = function(error) {
 
 //go into config file and grab info to place in href html pi status
 let dlPacketConfigCallback = function(dlPacket) {
+  if (! config || dlPacket.hppacketend > datalink.momentToHPTime(moment.utc().subtract(20, 'seconds'))){
 
-  let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
-  config = JSON.parse(s);
 
-  let statpi = d3.select("div.piStatus");
-  for (let [PIkey,PILoc] of Object.entries(config.Location)) {
-    if (PILoc !== "NO"){
-      let theta = config.LocationDetails[PILoc].Theta;
-      statpi.select("span."+PILoc).attr(`title`,`PI=${PIkey},Theta=${theta}, IP=`);
-      statpi.select("span."+PILoc).attr(`title`,`PI=${PIkey},Theta=${theta}, IP=${ipmap.get(PIkey)}`);
+    let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
+    let currConfig = JSON.parse(s);
+
+    let statpi = d3.select("div.piStatus");
+    for (let [PIkey,PILoc] of Object.entries(currConfig.Location)) {
+      if (PILoc !== "NO"){
+        let oldTheta = null;
+        if (config && config.LocationDetails[PILoc]) {
+          oldTheta = config.LocationDetails[PILoc].Theta;
+        }
+        let theta = currConfig.LocationDetails[PILoc].Theta;
+        if (oldTheta !== theta) {
+          console.log(`config packet, theta change ${PILoc}  ${PIkey} ${theta}`);
+          statpi.select("span."+PILoc).attr(`title`,`PI=${PIkey},Theta=${theta}, IP=${ipmap.get(PIkey)}`);
+        }
+      }
     }
+    config = currConfig; // save for next time
   }
 }
 let dlPacketIPCallback = function(dlPacket) {
-  if (config){
-    let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
-    let ipjson = JSON.parse(s);
-    ipmap.set(ipjson.station,ipjson.ip);
-    let PIkey = ipjson.station;
-    let PILoc = config.Location[ipjson.station]
-    let theta = config.LocationDetails[PILoc].Theta;
-    let statpi = d3.select("div.piStatus");
-    statpi.select("span."+PILoc).attr(`title`,`PI=${PIkey},Theta=${theta}, IP=${ipmap.get(PIkey)}`);
+  if (dlPacket.hppacketend > datalink.momentToHPTime(moment.utc().subtract(20, 'seconds'))){
+    
+    if (config){
+      let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
+      let ipjson = JSON.parse(s);
+      // only do update if the IP has changed
+      if ( ! ipmap.has(ipjson.station) || ipmap.get(ipjson.station) !== ipjson.ip) {
+        console.log(`ip packet ${ipjson.station}  ${ipjson.ip}`);
+        ipmap.set(ipjson.station,ipjson.ip);
+        let PIkey = ipjson.station;
+        let PILoc = config.Location[ipjson.station]
+        let theta = config.LocationDetails[PILoc].Theta;
+        let statpi = d3.select("div.piStatus");
+        statpi.select("span."+PILoc).attr(`title`,`PI=${PIkey},Theta=${theta}, IP=${ipmap.get(PIkey)}`);
+      }
+    }
   }
 }
