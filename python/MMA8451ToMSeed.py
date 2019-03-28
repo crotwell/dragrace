@@ -13,6 +13,9 @@ from pathlib import Path
 import asyncio
 import traceback
 import faulthandler
+
+from multiprocessing import Process, Queue, Pipe
+
 from peakACC import peakAccelerationCalculation, compareSendPeakAccel
 
 faulthandler.enable()
@@ -50,6 +53,7 @@ MAX_SAMPLES = -1
 doDali = True
 doArchive = True
 doFIR = True
+doMultiprocess = True
 decimationFactor = 1
 if doFIR:
     decimationFactor = 2
@@ -95,11 +99,18 @@ loc = "00"
 chanMap = { "X":"HNX", "Y":"HNY", "Z":"HNZ"}
 decimateMap = {}
 if doFIR:
-    decimateMap = {
-        "X":decimate.DecimateTwo(),
-        "Y":decimate.DecimateTwo(),
-        "Z":decimate.DecimateTwo(),
-    }
+    if doMultiprocess:
+        decimateMap = {
+            "X":decimate.DecimateTwoSubprocess(),
+            "Y":decimate.DecimateTwoSubprocess(),
+            "Z":decimate.DecimateTwoSubprocess(),
+        }
+    else:
+        decimateMap = {
+            "X":decimate.DecimateTwo(),
+            "Y":decimate.DecimateTwo(),
+            "Z":decimate.DecimateTwo(),
+        }
 establishedJson = None
 maxWindow = timedelta(seconds=0.25)
 theta = 20.0
@@ -152,6 +163,7 @@ def sending_worker():
         global keepGoing
         global startACQ
         global dataQueue
+        global sps
         my_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(my_loop)
         my_loop.set_debug(True)
@@ -262,14 +274,23 @@ def sendToMseed(last_sample_time, status, samplesAvail, data):
     global maxWindow
     global theta
     global sps
+    global firDelay
     dataIdx = 0
     start = last_sample_time - timedelta(seconds=1.0*(samplesAvail-1)/sps)
     xData, yData, zData = sensor.demux(data)
     if doFIR:
-        start = start - decimateMap["X"].FIR.calcDelay(sps)
-        xData = decimateMap["X"].process(xData)
-        yData = decimateMap["Y"].process(yData)
-        zData = decimateMap["Z"].process(zData)
+        start = start - firDelay
+        if doMultiprocess:
+            decimateMap["X"].process(xData)
+            decimateMap["Y"].process(yData)
+            decimateMap["Z"].process(zData)
+            xData = decimateMap["X"].results()
+            yData = decimateMap["Y"].results()
+            zData = decimateMap["Z"].results()
+        else:
+            xData = decimateMap["X"].process(xData)
+            yData = decimateMap["Y"].process(yData)
+            zData = decimateMap["Z"].process(zData)
 
     freshJson = peakAccelerationCalculation(xData,yData,zData,theta,sta,start,last_sample_time)
     establishedJson = compareSendPeakAccel(establishedJson, freshJson, getDali(), maxWindow)
@@ -277,13 +298,6 @@ def sendToMseed(last_sample_time, status, samplesAvail, data):
     miniseedBuffers[chanMap["Z"]].push(start, zData)
     miniseedBuffers[chanMap["Y"]].push(start, yData)
     miniseedBuffers[chanMap["X"]].push(start, xData)
-
-
-def decimate(decimator, data):
-    out = []
-    for v in data:
-        out.append(decimator.pushPop(v))
-    return out
 
 def initDali(host, port):
     print("Init Dali at {0}:{1:d}".format(host, port))
@@ -343,6 +357,10 @@ signal.signal(signal.SIGINT, handleSignal)
 sta = getLocalHostname()[0:5].upper()
 print("set station code to {}".format(sta))
 
+sps = getSps()
+firDelay = decimate.DecimateTwo().FIR.calcDelay(sps)
+gain = getGain()
+
 if doDali:
     try:
         print("try to init dali")
@@ -378,8 +396,6 @@ try:
     print('task creation started')
     before = time.perf_counter()
     sensor.enableFifoBuffer(28, pin, dataCallback)
-    sps = getSps()
-    gain = getGain()
 
     while keepGoing:
         time.sleep(0.1)

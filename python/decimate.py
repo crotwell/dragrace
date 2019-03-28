@@ -1,5 +1,6 @@
 from array import array
 from datetime import timedelta
+from multiprocessing import Process, Pipe
 import math
 
 # Calculate using QregonDSP with:
@@ -134,7 +135,6 @@ class FIR:
             acc += self.history[idx] * self.filterTaps[i]
         return int(round(acc*gain))
 
-
 class DecimateTwo:
     def __init__(self):
         self.FIR = FIR()
@@ -151,6 +151,33 @@ class DecimateTwo:
                 self.FIR.push(v)
             self.tickTock = not self.tickTock
         return out
+
+def _internal_decimatetwo_process(pipeEnd):
+    decimateTwo = DecimateTwo()
+    while True:
+        msg = pipeEnd.recv()    # Read from the output pipe and do nothing
+        if msg=='DONE':
+            break
+        else:
+            # msg is dataArray
+            result = decimateTwo.process(msg)
+            pipeEnd.send(result)
+
+class DecimateTwoSubprocess:
+    def __init__(self):
+        """ Create separate process to handle decimation to take advantage
+            of multiple cores. Returns Pipe to send new data and retrieve
+            results.
+        """
+        pipeEndMine, pipeEndTheirs = Pipe()
+        self.pipeEndMine = pipeEndMine
+        self.dectwo_p = Process(target=_internal_decimatetwo_process, args=(pipeEndTheirs,))
+        self.dectwo_p.daemon = True
+        self.dectwo_p.start()     # Launch the process
+    def process(self, dataArray):
+        self.pipeEndMine.send(dataArray)
+    def results(self):
+        return self.pipeEndMine.recv()
 
 if __name__ == "__main__":
     # execute only if run as a script
