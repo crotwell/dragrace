@@ -22,6 +22,7 @@ architecture="python"
 
 daliUpload = None
 keepGoing = True
+verbose = False
 
 def handleSignal(sigNum, stackFrame):
     print("############ handleSignal {} ############".format(sigNum))
@@ -94,7 +95,8 @@ while keepGoing:
     jsonSendTask = loop.create_task(daliUpload.writeJSON(streamid, hpdatastart, hpdataend, jsonMessage))
     loop.run_until_complete(jsonSendTask)
     ack = jsonSendTask.result()
-    print("send config: {}  {}".format(ack, streamid))
+    if verbose:
+        print("send config: {}  {}".format(ack, streamid))
 
 
 daliUpload.close()
