@@ -91,7 +91,7 @@ while keepGoing:
     streamid = "{}.{}/ZMAXCFG".format(net, 'ZMAX')
     hpdatastart = simpleDali.datetimeToHPTime(starttime)
     hpdataend = simpleDali.datetimeToHPTime(starttime)
-    ack = simpleDali.writeJSON(streamid, hpdatastart, hpdataend, jsonMessage)
+    ack = daliUpload.writeJSON(streamid, hpdatastart, hpdataend, jsonMessage)
 
 
 daliUpload.close()
