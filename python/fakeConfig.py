@@ -43,23 +43,13 @@ async def initConnections():
     serverId = await daliUpload.id(programname, username, processid, architecture)
     print("Connect Upload: {}".format(serverId))
 
-
-def writeJsonToDatalink(streamid, hpdatastart, hpdataend, jsonMessage):
-    global daliUpload
-    jsonAsByteArray = json.dumps(jsonMessage).encode('UTF-8')
-    loop = asyncio.get_event_loop()
-    jsonSendTask = loop.create_task(daliUpload.writeAck(streamid, hpdatastart, hpdataend, jsonAsByteArray))
-    loop.run_until_complete(jsonSendTask)
-    return jsonSendTask.result()
-
-
 loop = asyncio.get_event_loop()
 initTask = loop.create_task(initConnections())
 loop.run_until_complete(initTask)
 
 while keepGoing:
     time.sleep(interval)
-    starttime = datetime.now(timezone.utc)
+    starttime = simpleDali.utcnowWithTz()
     jsonMessage = {
         "Location":{
            "PI01": "NO",
@@ -99,9 +89,9 @@ while keepGoing:
        }
     }
     streamid = "{}.{}/ZMAXCFG".format(net, 'ZMAX')
-    hpdatastart = int(starttime.timestamp() * simpleDali.MICROS)
-    hpdataend = int(starttime.timestamp() * simpleDali.MICROS)
-    ack = writeJsonToDatalink(streamid, hpdatastart, hpdataend, jsonMessage)
+    hpdatastart = simpleDali.datetimeToHPTime(starttime)
+    hpdataend = simpleDali.datetimeToHPTime(starttime)
+    ack = simpleDali.writeJSON(streamid, hpdatastart, hpdataend, jsonMessage)
 
 
 daliUpload.close()
