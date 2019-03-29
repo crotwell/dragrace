@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 from datetime import timedelta
+import json
 import sys
 
 import simpleDali
@@ -38,12 +39,16 @@ def main(argv):
 
     secretKey = args.secretFile.readline().strip()
     token = simpleDali.encodeAuthToken(args.username, timedelta(minutes=args.expire), args.pattern, secretKey)
-    print("token: \n\n{}\n".format(token.decode('utf-8')))
-    print("token expires in {}".format(simpleDali.timeUntilExpireToken(token)))
 
     if args.outputFile is not None:
         args.outputFile.write(token.decode('utf-8'))
         args.outputFile.close()
+    else:
+        prettyPayload = json.dumps(simpleDali.decodeAuthToken(token, secretKey), indent=4, sort_keys=True)
+        print("token payload as json: \n{}".format(prettyPayload))
+        print("token: \n\n{}\n".format(token.decode('utf-8')))
+        print("token expires in {}".format(simpleDali.timeUntilExpireToken(token)))
+
     if args.verify is not None:
         loop = asyncio.get_event_loop()
         #loop.set_debug(True)

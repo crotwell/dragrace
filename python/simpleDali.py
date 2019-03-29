@@ -74,6 +74,8 @@ class DataLink(ABC):
 
     async def auth(self, token):
         if self.verbose: print("simpleDali.auth {} ".format(token))
+        if isinstance(token, str):
+            token = token.encode('utf-8')
         header = "AUTHORIZATION {:d}".format(len(token))
         r = await self.send(header, token)
         r = await  self.parseResponse()
@@ -381,9 +383,10 @@ def encodeAuthToken(user_id, expireDelta, writePattern, secretKey):
         secretKey,
         algorithm='HS256'
     )
-    decoded = jwt.decode(encoded, secretKey, algotithms='HS256')
-    print("decode: {}".format(decoded))
     return encoded
+
+def decodeAuthToken(encodedToken, secretKey):
+    return jwt.decode(encodedToken, secretKey, algotithms='HS256')
 
 def timeUntilExpireToken(token):
     payload = jwt.decode(token, verify=False)
