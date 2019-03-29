@@ -315,7 +315,7 @@ class WebSocketDataLink(DataLink):
             raise
 
     def isClosed(self):
-        return self.ws is None or self.ws.closed
+        return self.ws is None or not self.ws.open
 
     async def close(self):
         if self.ws is not None:
