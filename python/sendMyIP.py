@@ -7,95 +7,128 @@ import time
 from datetime import datetime, timedelta
 from netifaces import interfaces, ifaddresses, AF_INET
 import socket
+import traceback
 
 import simpleDali
 
+class SendMyIP:
+    def __init__(self):
+        self.net = "XX"
+        self.sta = self.getLocalHostname()[0:5].upper()
+        print("set station code to {}".format(self.sta))
 
-def getLocalHostname():
-    hostname = socket.gethostname().split('.')[0]
-    return hostname.strip()
+        self.interval = 10 # sleep in seconds
 
+        self.host = "129.252.35.36"
+        self.port = 15003
+        self.uri = "ws://www.seis.sc.edu/dragracews/datalink"
 
+        self.programname="sendMyIP"
+        self.username="dragrace"
+        self.processid=0
+        self.architecture="python"
 
-net = "XX"
-sta = getLocalHostname()[0:5].upper()
-print("set station code to {}".format(sta))
+        self.daliUpload = None
+        self.keepGoing = True
 
-interval = 10 # sleep in seconds
-
-host = "129.252.35.36"
-port = 15003
-uri = "ws://www.seis.sc.edu/dragracews/datalink"
-
-programname="sendMyIP"
-username="dragrace"
-processid=0
-architecture="python"
-
-daliUpload = None
-keepGoing = True
-
-def handleSignal(sigNum, stackFrame):
-    print("############ handleSignal {} ############".format(sigNum))
-    global keepGoing
-    if keepGoing:
-        keepGoing = False
-    else:
-        sys.exit(0)
-
-signal.signal(signal.SIGINT, handleSignal)
-signal.signal(signal.SIGTERM, handleSignal)
-
-def exceptionHandler(lopp, context):
-    global daliUpload
-    daliUpload = None
-    print("oh noooooo,   {}".format(context['message']));
-
-async def initConnections():
-    global daliUpload
-    # create a separate upload datalink
-    daliUpload = simpleDali.SocketDataLink(host, port)
-    #daliUpload = simpleDali.WebSocketDataLink(uri)
-    #daliUpload.verbose = True
-    serverId = await daliUpload.id(programname, username, processid, architecture)
-    print("Connect Upload: {}".format(serverId))
-
-def getIPAddr():
-    for interf in interfaces():
-        if AF_INET in ifaddresses(interf):
-            for interCon in ifaddresses(interf)[AF_INET]:
-                if 'addr' in interCon:
-                    ip = interCon.get('addr')
-                    if ip != "127.0.0.1":
-                        #print("bla {} {} {}".format(interf, AF_INET, ip))
-                        return ip
-    raise Exception("No interface has a public IPv4 address")
-
-loop = asyncio.get_event_loop()
-loop.set_exception_handler(exceptionHandler)
-
-while keepGoing:
-    if daliUpload is None:
-        initTask = loop.create_task(initConnections())
-        loop.run_until_complete(initTask)
-    myIPaddr = getIPAddr()
-    starttime = simpleDali.utcnowWithTz()
-    jsonMessage = {
-        "station": sta,
-        "time": starttime.isoformat(),
-        "ip": myIPaddr
-    }
-    streamid = "{}.{}/IP".format(net, sta)
-    hpdatastart = simpleDali.datetimeToHPTime(starttime)
-    hpdataend = simpleDali.datetimeToHPTime(starttime)
-    jsonSendTask = loop.create_task(daliUpload.writeJSON(streamid, hpdatastart, hpdataend, jsonMessage))
-    loop.run_until_complete(jsonSendTask)
-    ack = jsonSendTask.result()
-    print("send ip as {} ip = {} as json, {}".format(streamid, myIPaddr, ack))
-    #keepGoing = False
-    if keepGoing:
-        time.sleep(interval)
+    def getLocalHostname(self):
+        hostname = socket.gethostname().split('.')[0]
+        return hostname.strip()
 
 
-loop.run_until_complete(loop.create_task(daliUpload.close()))
-loop.close()
+    def exceptionHandler(self, loop, context):
+        if self.daliUpload is not None:
+            self.daliUpload.close()
+        self.daliUpload = None
+        print("oh noooooo,   {}".format(context['message']));
+
+    async def initConnections(self, daliUpload):
+        if self.daliUpload is None:
+            # create a separate upload datalink
+            self.daliUpload = simpleDali.SocketDataLink(self.host, self.port)
+            #daliUpload = simpleDali.WebSocketDataLink(self.uri)
+        else:
+            self.daliUpload.reconnect()
+        #daliUpload.verbose = True
+        serverId = await self.daliUpload.id(self.programname, self.username, self.processid, self.architecture)
+        print("Connect Upload: {}".format(serverId))
+        return self.daliUpload
+
+    def getIPAddr(self):
+        for interf in interfaces():
+            if AF_INET in ifaddresses(interf):
+                for interCon in ifaddresses(interf)[AF_INET]:
+                    if 'addr' in interCon:
+                        ip = interCon.get('addr')
+                        if ip != "127.0.0.1":
+                            #print("bla {} {} {}".format(interf, AF_INET, ip))
+                            return ip
+        raise Exception("No interface has a public IPv4 address")
+
+    def run(self):
+        loop = asyncio.get_event_loop()
+        loop.set_exception_handler(self.exceptionHandler)
+
+        repeatException = False
+        while self.keepGoing:
+            try:
+                if self.daliUpload is None or self.daliUpload.isClosed():
+                    initTask = loop.create_task(self.initConnections(self.daliUpload))
+                    loop.run_until_complete(initTask)
+                    if initTask.exception() is not None:
+                        raise initTask.exception()
+                    self.daliUpload = initTask.result()
+                myIPaddr = self.getIPAddr()
+                starttime = simpleDali.utcnowWithTz()
+                jsonMessage = {
+                    "station": self.sta,
+                    "time": starttime.isoformat(),
+                    "ip": myIPaddr
+                }
+                streamid = "{}.{}/IP".format(self.net, self.sta)
+                hpdatastart = simpleDali.datetimeToHPTime(starttime)
+                hpdataend = simpleDali.datetimeToHPTime(starttime)
+                jsonSendTask = loop.create_task(self.daliUpload.writeJSON(streamid, hpdatastart, hpdataend, jsonMessage))
+                loop.run_until_complete(jsonSendTask)
+                if jsonSendTask.exception() is not None:
+                    self.daliUpload.close()
+                    print("Exception sending json: {}".format( jsonSendTask.exception()))
+                else:
+                    ack = jsonSendTask.result()
+                    print("send ip as {} ip = {} as json, {}".format(streamid, myIPaddr, ack))
+                    #keepGoing = False
+                if repeatException:
+                    print("Recovered from repeat exception")
+                    repeatException = False
+            except Exception:
+                if self.daliUpload is None:
+                    self.close()
+                if not repeatException:
+                    print(traceback.format_exc())
+                    repeatException = True
+            for tempSleep in range(self.interval):
+                # sleep for interval seconds, but check to see if we should
+                # quit once a second
+                if self.keepGoing:
+                    time.sleep(1)
+
+
+        loop.run_until_complete(loop.create_task(self.daliUpload.close()))
+        loop.close()
+        # end run()
+
+if __name__ == "__main__":
+    # execute only if run as a script
+    sendMyIP = SendMyIP()
+
+    def handleSignal(sigNum, stackFrame):
+        print("############ handleSignal {} ############".format(sigNum))
+        global sendMyIP
+        if sendMyIP.keepGoing:
+            sendMyIP.keepGoing = False
+        else:
+            sys.exit(0)
+
+    signal.signal(signal.SIGINT, handleSignal)
+    signal.signal(signal.SIGTERM, handleSignal)
+    sendMyIP.run()
