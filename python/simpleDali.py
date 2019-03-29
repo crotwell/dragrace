@@ -7,10 +7,13 @@ from datetime import datetime, timedelta, timezone
 
 MICROS = 1000000
 
+NO_SOUP = "Write permission not granted, no soup for you!"
+
 class DataLink(ABC):
 
     def __init__(self, verbose=False):
         self.verbose = verbose
+
 
     @abstractmethod
     async def createDaliConnection(self):
