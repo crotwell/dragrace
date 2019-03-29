@@ -22,11 +22,16 @@ def main(argv):
                         dest="username",
                         required=True,
                         help="username")
-    parser.add_argument("-e",
-                        dest="expire",
+    parser.add_argument("--em",
+                        dest="expireMinutes",
                         type=int,
-                        default=60,
-                        help="expire time in minutes")
+                        default=10,
+                        help="expire time from now in minutes")
+    parser.add_argument("--ed",
+                        dest="expireDays",
+                        type=int,
+                        default=0,
+                        help="expire time from now in days")
     parser.add_argument("--verify",
                         dest="verify",
                         help="verify by sending an authorization requst to the datalink server at the given uri")
@@ -38,7 +43,7 @@ def main(argv):
     args = parser.parse_args(argv)
 
     secretKey = args.secretFile.readline().strip()
-    token = simpleDali.encodeAuthToken(args.username, timedelta(minutes=args.expire), args.pattern, secretKey)
+    token = simpleDali.encodeAuthToken(args.username, timedelta(days=args.expireDays, minutes=args.expireMinutes), args.pattern, secretKey)
 
     if args.outputFile is not None:
         args.outputFile.write(token.decode('utf-8'))
