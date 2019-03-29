@@ -74,10 +74,11 @@ if (doReplay) {
 
 let jwtToken = null;
 let jwtTokenPromise = null;
-let jwtTokenUrl = protocol+"//"+host+(port==80?'':':'+port)+'/authrace/token.jwt';
+let jwtTokenUrl = protocol+"//"+host+(port==80?'':':'+port)+'/authrace/dutytoken.jwt';
 if (protocol == 'https:') {
   // only try to get token if https
-  writeDatalinkUrl =  wsProtocol+"//"+host+(port==80?'':':'+port)+AUTH_PATH;
+  //writeDatalinkUrl =  wsProtocol+"//"+host+(port==80?'':':'+port)+AUTH_PATH;
+  writeDatalinkUrl = datalinkUrl
   jwtTokenPromise = fetch(jwtTokenUrl, {
     credentials: 'same-origin'
   }).then(function(response) {
@@ -535,7 +536,7 @@ let dlPacketConfigCallback = function(dlPacket) {
 }
 let dlPacketIPCallback = function(dlPacket) {
   if (dlPacket.hppacketend > datalink.momentToHPTime(moment.utc().subtract(20, 'seconds'))){
-    
+
     if (config){
       let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
       let ipjson = JSON.parse(s);
