@@ -120,7 +120,7 @@ class SendMyIP:
                     "time": starttime.isoformat(),
                     "ip": myIPaddr
                 }
-                streamid = "{}.{}/IP".format(self.net, self.sta)
+                streamid = "{}_{}/IP".format(self.net, self.sta)
                 hpdatastart = simpleDali.datetimeToHPTime(starttime)
                 hpdataend = simpleDali.datetimeToHPTime(starttime)
                 jsonSendTask = loop.create_task(self.daliUpload.writeJSON(streamid, hpdatastart, hpdataend, jsonMessage))
