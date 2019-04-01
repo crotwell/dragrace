@@ -12,7 +12,8 @@ let moment = seisplotjs.moment;
 const doReplay = false
 
 let net = 'CO';
-let staList = ['PI01', 'PI02', 'PI03', 'PI04', 'PI05', 'PI06', 'PI07', 'PI99'];
+//let staList = ['PI01', 'PI02', 'PI03', 'PI04', 'PI05', 'PI06', 'PI07', 'PI99'];
+let staList = ['FL', 'NL', 'CT', 'NR', 'FR'];
 let config = null;
 let ipmap = new Map();
 let timerInProgress = false;
