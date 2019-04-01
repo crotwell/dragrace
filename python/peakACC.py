@@ -41,12 +41,12 @@ def peakAccelerationCalculation(x,y,z,theta,station,start_time,end_time):
     rotate_array_x = r[0]
     rotate_array_z = r[1]
 
-    rest_factor_z = 4096 # may need to be -4096, counts not g
-    new_array_z = rest_state_correction(rotate_array_z, rest_factor_z)
+    countToGravity = 4096 # may need to be -4096, counts not g
+    new_array_z = subtractGravity(rotate_array_z, countToGravity)
 
     vmag = Magnitude_ThreeC_TimeSeries_jake(rotate_array_x, y, new_array_z)
 
-    peakAccel = max(vmag)/rest_factor_z
+    peakAccel = max(vmag)/countToGravity
     maxAcceljson = {
         "station":station,
         "start_time":start_time,
@@ -54,6 +54,7 @@ def peakAccelerationCalculation(x,y,z,theta,station,start_time,end_time):
         "end_time":end_time,
         # "end_time": last_sample_time in MMA8451 line, also as now
         "maxacc":peakAccel
+        # add in x,y,z and x',y',z', theta
      }
     return maxAcceljson
 
@@ -149,10 +150,10 @@ def countsTog(vmag):
 # function to correct rotate_array_z for the rest state correction of -1
 # input = rotate_array_z
 # output = new_array_z
-def rest_state_correction(rotate_array_z, rest_factor_z):
+def subtractGravity(rotate_array_z, countToGravity):
     correct = []
     for i in rotate_array_z:
-        correct.append(i+rest_factor_z)
+        correct.append(i-countToGravity) # substracting gravity
     return correct
 
 
