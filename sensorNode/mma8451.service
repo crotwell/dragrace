@@ -7,9 +7,10 @@ Group=pi
 WorkingDirectory=/home/pi/Production/Run
 StandardOutput=inherit
 StandardError=inherit
-Restart=no
+Restart=always
+RestartSec=5
 Type=idle
-ExecStart=/home/pi/Production/Run/startACQ.sh
+ExecStart=/usr/bin/python3 /home/pi/Production/dragrace/python/MMA8451ToMSeed.py
 
 [Install]
 WantedBy=default.target
