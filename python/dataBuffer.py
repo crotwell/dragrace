@@ -64,6 +64,8 @@ class DataBuffer:
             loop = asyncio.get_event_loop()
             sendTask = loop.create_task(self.miniseedToDali(msr))
             loop.run_until_complete(sendTask)
+            if sendTask.exception():
+                raise Exception("Unable to flush data from buffer to dali") from sendTask.exception()
             result = sendTask.result()
         self.numpts = 0
         self.starttime = None

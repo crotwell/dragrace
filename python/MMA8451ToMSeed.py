@@ -195,7 +195,11 @@ def sending_worker():
                     traceback.print_exc()
                     if dali:
                         # if at first you don't suceed, try try again
-                        dali.reconnect()
+                        time.sleep(3)
+                        task = my_loop.create_task(dali.reconnect())
+                        my_loop.run_until_complete(task)
+                        r = task.result()
+                        print("reconnect respones {}".format(r))
                         try:
                             do_work( now, status, samplesAvail, data)
                             dataQueue.task_done()
@@ -348,7 +352,7 @@ def busyWaitStdInReader():
         if (line.startswith("q")):
             keepGoing = False
             break
-        time.sleep(0.1)
+        time.sleep(1.0)
 
 
 
