@@ -113,7 +113,7 @@ class SendConfig:
                        "PI04": "NO",
                        "PI05": "FR",
                        "PI06": "NO",
-                       "PI07": "NO",
+                       "PI07": "CT",
                        "PI99": "FK"
                    },
                    "LocationDetails":{
@@ -126,7 +126,7 @@ class SendConfig:
                           "Name": "Left Starters Area"
                        },
                        "CT":{
-                          "Theta": 0,
+                          "Theta": -20,
                           "Name": "Center Wall End"
                        },
                        "NR":{
