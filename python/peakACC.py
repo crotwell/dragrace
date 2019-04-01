@@ -41,7 +41,7 @@ def peakAccelerationCalculation(x,y,z,theta,station,start_time,end_time):
     rotate_array_x = r[0]
     rotate_array_z = r[1]
 
-    rest_factor_z = -4096 # may need to be -4096, counts not g
+    rest_factor_z = 4096 # may need to be -4096, counts not g
     new_array_z = rest_state_correction(rotate_array_z, rest_factor_z)
 
     vmag = Magnitude_ThreeC_TimeSeries_jake(rotate_array_x, y, new_array_z)
