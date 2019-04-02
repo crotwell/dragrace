@@ -88,6 +88,8 @@ def compareSendPeakAccel(establishedJson, freshJson, Dali, maxWindow):
             loop = asyncio.get_event_loop()
             sendTask = loop.create_task(Dali.writeJSON(streamid, hpdatastart, hpdataend, establishedJson))
             loop.run_until_complete(sendTask)
+            if (sendTask.exception()):
+                raise Exception("Unable to send peak acc") from sendTask.exception()
             #print('sending to ringserver')
         else:
             print(json.dumps(establishedJson,indent = 4))
