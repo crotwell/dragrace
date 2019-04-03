@@ -3,6 +3,19 @@
 import math
 import array
 import numpy as np
+import vpython as vp # pip install vpython
+
+v1 = vp.vector(0,0,1) # creates a vector of floating points [0.0,0.0,1.0]
+# print(v1)
+# print(type(v1)) # class 'vpython.cyvector.vector'
+# print(v1.x, v1.y, v1.z) # returns each component
+
+# ROTATE
+degrees_rotate = 110.0
+theta = vp.radians(degrees_rotate) # theta is radians of measured degrees
+v2 = vp.rotate(v1,angle=theta,axis=vp.vector(0,1,0))
+print(v2) # outputs a rotation of v1 about the y-axis by theta radians
+
 
 # xlocal,ylocal,zlocal are components of a vector in the
 # accelerometer's coordinate system.
@@ -37,8 +50,8 @@ zlocal = [0,0,1]
 #         A[m][n] = 1
 
 
-
-print(A)
+#
+# print(A)
 
 # print(np.shape(A))
 # print(range(2))
