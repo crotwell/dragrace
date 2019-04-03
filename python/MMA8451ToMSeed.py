@@ -3,6 +3,7 @@
 # Simple demo of fifo mode on the MMA8451.
 # Author: Philip Crotwell
 import time
+import json
 import struct
 import queue
 from threading import Thread
@@ -354,11 +355,27 @@ def busyWaitStdInReader():
             break
         time.sleep(1.0)
 
-
+async def getConfig():
+    # FIX... only gets one packet and then stops listening
+    global daliPort
+    global daliHost
+    configDali = initDali(daliHost, daliPort)
+    await configDali.match("/ZMAXCFG")
+    await configDali.positionAfter(simpleDali.utcnowWithTz()-timedelta(seconds=90))
+    await configDali.stream()
+    while(True):
+        print("wait for packets")
+        peakPacket = await configDali.parseResponse()
+        print("got a packet: {}".format(peakPacket.streamId,))
+        if  peakPacket.streamId.endswith("ZMAXCFG"):
+            config = json.loads(peakPacket.data.decode("'UTF-8'"))
+            await configDali.close()
+            return config
 
 signal.signal(signal.SIGTERM, handleSignal)
 signal.signal(signal.SIGINT, handleSignal)
-sta = getLocalHostname()[0:5].upper()
+hostname = getLocalHostname()[0:5].upper()
+sta = hostname
 print("set station code to {}".format(sta))
 
 sps = getSps()
@@ -367,6 +384,13 @@ gain = getGain()
 
 if doDali:
     try:
+        loop = asyncio.get_event_loop()
+        print("Try to get station from config via dali")
+        configTask = loop.create_task(getConfig())
+        loop.run_until_complete(configTask)
+        config = configTask.result()
+        sta = config["Location"][hostname]
+        print("set station code from config to {}".format(sta))
         print("try to init dali")
         dali = getDali()
         print("init DataLink at {0} {1:d}".format(daliHost, daliPort))
