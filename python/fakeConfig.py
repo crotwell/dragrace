@@ -118,7 +118,10 @@ class SendConfig:
                    },
                    "LocationDetails":{
                        "FL":{
-                          "Theta": 0,
+                          "Orientation": {
+                            "Theta": 70.0,
+                            "Alpha": 0.0
+                          },
                           "Name": "Far Left Wall"
                        },
                        "NL":{
