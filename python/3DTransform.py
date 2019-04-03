@@ -11,10 +11,16 @@ v1 = vp.vector(0,0,1) # creates a vector of floating points [0.0,0.0,1.0]
 # print(v1.x, v1.y, v1.z) # returns each component
 
 # ROTATE
-degrees_rotate = 110.0
+degrees_rotate = 20.0
 theta = vp.radians(degrees_rotate) # theta is radians of measured degrees
 v2 = vp.rotate(v1,angle=theta,axis=vp.vector(0,1,0))
-print(v2) # outputs a rotation of v1 about the y-axis by theta radians
+print("vp rotate {}".format(v2))
+# print(v2) # outputs a rotation of v1 about the y-axis by theta radians
+
+A = np.array([[0.94, 0.0, 0.34],[0,1,0],[-0.342,0.0,0.94]])  # coordinate transform matrix for 20 deg
+v_prime = np.array([1,0,0])
+v = np.matmul(A,v_prime)
+print("matlab rotate {}".format(v))
 
 
 # xlocal,ylocal,zlocal are components of a vector in the
