@@ -127,3 +127,6 @@ def Convolve_TimeSeries(d,ld,f,lf,o,lo):
 #            print(i,j,k)
             o[k]=o[k]+d[i]*f[j]
     return
+
+# CoordinateTransformTheta(x,y,z,theta)
+# theta = angle in degrees from vertical 

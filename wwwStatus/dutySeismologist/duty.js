@@ -428,6 +428,17 @@ wp.d3.select("button#trigger").on("click", function(d) {
   let dlTriggerConn = new datalink.DataLinkConnection(writeDatalinkUrl, dlTriggerCallback, errorFn);
   dlTriggerConn.connect().then(serverId => {
     d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
+    if (jwtTokenPromise === null && jwtToken) {
+      return dlTriggerConn.awaitDLCommand(`AUTHORIZATION`, jwtToken);
+    } else {
+      d3.select("div.triggers").append("p").text(`Unable to send trigger, not auth`);
+      throw new Error(`Unable to send trigger, not auth. jwt: ${jwtToken != null} ${jwtToken}`);
+    }
+  }).then(authResponse => {
+    d3.select("div.triggers").append("p").text(`AUTH ack: ${authResponse}`);
+    if ( ! authResponse.startsWith("OK")) {
+      throw new Error(`AUTH ack: ${authResponse}`);
+    }
     d3.select("div.triggers").append("p").text(`Send Trigger: ${JSON.stringify(trigger)}`);
     return dlTriggerConn.writeAck(`XX_MANUAL_TRIG_${dutyOfficer}/MTRIG`,
       trigtime,
