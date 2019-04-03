@@ -330,7 +330,11 @@ let doDatalinkConnect = function() {
     return null;
   }).then(serverId => {
     d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
+    if (staCode){
     return dlConn.awaitDLCommand("MATCH", `(${staCode}.*(_|\.)HNZ/MSEED)|(.*/MTRIG)|(.*/MAXACC)|(.*/ZMAXCFG)|(.*/IP)`);
+  } else {
+    return dlConn.awaitDLCommand("MATCH", `(.*/MTRIG)|(.*/MAXACC)|(.*/ZMAXCFG)|(.*/IP)`)
+  }
   }).then(response => {
     d3.select("div.triggers").append("p").text(`MATCH response: ${response}`);
     return dlConn.awaitDLCommand(`POSITION AFTER ${datalink.momentToHPTime(timeWindow.start)}`);
@@ -554,3 +558,6 @@ let dlPacketIPCallback = function(dlPacket) {
     }
   }
 }
+//
+let staCode = null
+doDatalinkConnect()
