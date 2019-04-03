@@ -22,19 +22,20 @@ print("vp rotate: {}".format(v2))
 A = np.array([[0.94, 0.0, 0.34],[0,1,0],[-0.342,0.0,0.94]])  # coordinate transform matrix for 20 deg
 v_prime = np.array([1,0,0])
 v = np.matmul(A,v_prime)
-print("matlab rotate: {}".format(v))
+# print("matlab rotate: {}".format(v))
 
-# making own CS transform of 20 deg from vertical = 110 deg roration 
+# making own CS transform of 20 deg from vertical = 110 deg roration
 A_jake = np.array([[math.cos(math.radians(110)),math.cos(math.radians(0.0)),math.cos(math.radians(200.0))],
                 [0,math.cos(math.radians(0)),0],
                 [math.cos(math.radians(20)),0,math.cos(math.radians(110))]])
 # coordiate rotation matrix of 110 deg counter clockwise about y axis
-print(A_jake)
+# print(A_jake)
 v_prime_jake = np.array([1,0,0]) # vector in prime CS aligned with x' axis
 v_jake = np.matmul(A_jake,v_prime_jake)
 print("v_jake rotate: {}".format(v_jake))
 
-
+# try to flip this vector about z axis
+# A_flip =
 # xlocal,ylocal,zlocal are components of a vector in the
 # accelerometer's coordinate system.
 # First, build 3x3 transformation matrix A given a theta to rotate with.
