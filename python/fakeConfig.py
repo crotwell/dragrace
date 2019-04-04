@@ -125,23 +125,38 @@ class SendConfig:
                           "Name": "Far Left Wall"
                        },
                        "NL":{
-                          "Theta": 0,
+                          "Orientation": {
+                            "Theta": 90.0,
+                            "Alpha": 0.0
+                          },
                           "Name": "Left Starters Area"
                        },
                        "CT":{
-                          "Theta": -20,
+                          "Orientation": {
+                            "Theta": 0.0,
+                            "Alpha": 0.0
+                          },
                           "Name": "Center Wall End"
                        },
                        "NR":{
-                          "Theta": 0,
+                          "Orientation": {
+                            "Theta": 90.0,
+                            "Alpha": 180.0
+                          },
                           "Name": "Right Starters Area"
                        },
                        "FR":{
-                          "Theta": 0,
+                          "Orientation": {
+                            "Theta": 70.0,
+                            "Alpha": 180.0
+                          },
                           "Name": "Far Right Wall"
                        },
                        "FK":{
-                          "Theta": 45,
+                          "Orientation": {
+                            "Theta": 45.0,
+                            "Alpha": 0.0
+                          },
                           "Name": "Fake Location for PI99"
                        }
                    }
