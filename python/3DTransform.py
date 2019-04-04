@@ -29,7 +29,7 @@ print("vp rotate: {}".format(v2))
 # v_jake = np.matmul(A_jake,v_prime_jake)
 # print("v_jake rotate: {}".format(v_jake))
 
-
+# theta will be dip of wall (from horizontal)
 def CoordinateRotation_3D(x,y,z,theta,alpha):
     v1 = vp.vector(x,y,z)
     # Rotate about y'-axis for x' to x and z' to z
