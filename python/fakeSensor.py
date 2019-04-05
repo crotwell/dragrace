@@ -94,7 +94,7 @@ class FakeSensor:
         while self.keepGoing:
             time.sleep(sleepTime)
             # change method here to get different type of fake data
-            data = self.createOtherRotate(idx)
+            data = self.createFakeConstantUp(idx)
             if (len(data) != 3*self.watermark):
                 print("expect {:d} sample from fake calc but got {:d}".format(3*self.watermark, len(data)))
                 self.keepGoing
@@ -125,7 +125,7 @@ class FakeSensor:
         for i in range(curIdx, curIdx+self.watermark):
             data.append(0)
             data.append(0)
-            data.append(4096)
+            data.append(4096/math.cos(math.radians(70)))
         return data
 
     def createFakeXhalfG(self, curIdx):
@@ -147,7 +147,7 @@ class FakeSensor:
 
     def createOtherRotate(self, curIdx):
         # 20 deg rotation about y axis
-        # lets try 90 degree rotation 
+        # lets try 90 degree rotation
         data = []
         for i in range(curIdx, curIdx+self.watermark):
             degrees = math.radians(20)
