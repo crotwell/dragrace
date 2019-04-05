@@ -4,6 +4,7 @@ import array
 import math
 import vpython as vp # pip install vpython
 
+
 def VectorMagnitude(x,y,z):
     return math.sqrt(x*x+y*y+z*z)
 
@@ -145,7 +146,6 @@ def CoordinateRotation_3D(x,y,z,theta,alpha):
     v_z = v_aboutx.z
     return [v_x,v_y,v_z]
 
-
 def Rotate_3D_TimeSeries(x,y,z,theta,alpha):
     nptsx=len(x)
     nptsy=len(y)
@@ -164,3 +164,9 @@ def Rotate_3D_TimeSeries(x,y,z,theta,alpha):
         zprime.append(zp)
         i=i+1
     return [xprime, yprime, zprime]
+
+def subtractGravity(rotate_array_z, countToGravity):
+    correct = []
+    for i in rotate_array_z:
+        correct.append(i-countToGravity) # substracting gravity
+    return correct
