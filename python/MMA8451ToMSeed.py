@@ -114,7 +114,8 @@ if doFIR:
         }
 establishedJson = None
 maxWindow = timedelta(seconds=0.25)
-theta = 20.0
+theta = 70.0
+alpha = 0.0
 
 def getSps():
     sps = 1
@@ -278,6 +279,7 @@ def sendToMseed(last_sample_time, status, samplesAvail, data):
     global establishedJson
     global maxWindow
     global theta
+    global alpha
     global sps
     global firDelay
     dataIdx = 0
@@ -297,7 +299,7 @@ def sendToMseed(last_sample_time, status, samplesAvail, data):
             yData = decimateMap["Y"].process(yData)
             zData = decimateMap["Z"].process(zData)
 
-    freshJson = peakAccelerationCalculation(xData,yData,zData,theta,sta,start,last_sample_time)
+    freshJson = peakAccelerationCalculation(xData,yData,zData,theta,alpha,sta,start,last_sample_time)
     establishedJson = compareSendPeakAccel(establishedJson, freshJson, getDali(), maxWindow)
 
     miniseedBuffers[chanMap["Z"]].push(start, zData)
