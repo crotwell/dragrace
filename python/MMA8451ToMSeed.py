@@ -7,7 +7,7 @@ import json
 import struct
 import queue
 from threading import Thread
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import sys, os, signal
 import socket
 from pathlib import Path
@@ -26,14 +26,19 @@ faulthandler.enable()
 
 # to generate fake data as PI99 set to True
 doFake = False
+doReplay = False
 
-if not doFake:
+if doFake:
+    import fakeSensor
+elif doReplay:
+    import fakeSensor
+    import replaySensor
+else:
+    # real thing
     import board
     import busio
     import RPi.GPIO as GPIO
     import adafruit_mma8451
-else:
-    import fakeSensor
 
 import simpleMiniseed
 import simpleDali
@@ -61,7 +66,7 @@ if doFIR:
 
 quitOnError = True
 
-if not doFake:
+if not doFake and not doReplay:
     # Initialize I2C bus.
     i2c = busio.I2C(board.SCL, board.SDA)
 
@@ -76,7 +81,34 @@ if not doFake:
     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.remove_event_detect(pin)
 else:
-    sensor = fakeSensor.FakeSensor()
+    if doFake:
+        sensor = fakeSensor.FakeSensor()
+    else:
+        ############################################
+        # values to change:
+        dataDir="Track_Data"
+        netGlob = "XX"
+        staGlob = "XB08"
+        locGlob = "00"
+        chanGlob = "HN[XYZ]"
+        # if need seconds add :%S
+        startTime = datetime.strptime("2018-10-14T11:00Z", "%Y-%m-%dT%H:%MZ").replace(tzinfo=timezone.utc)
+        duration = timedelta(hours=2)
+        staRemap = {
+            'XB02': 'PI02',
+            'XB03': 'PI03',
+            'XB05': 'PI05',
+            'XB08': 'PI05',
+            'XB10': 'PI10'
+        }
+        #elf.duration = timedelta(seconds=20)
+        repeat = True
+        # end values to change
+        ############################################
+        replaySta = staRemap[staGlob]
+        sensor = replaySensor.ReplaySensor(dataDir, netGlob, staGlob, locGlob, chanGlob, startTime, staRemap, duration=None)
+        sensor.verbose = True
+        doFIR = False
     adafruit_mma8451 = fakeSensor.FakeAdafruit()
 
 # Optionally change the range from its default of +/-4G:
@@ -305,6 +337,7 @@ def sendToMseed(last_sample_time, status, samplesAvail, data):
     miniseedBuffers[chanMap["Z"]].push(start, zData)
     miniseedBuffers[chanMap["Y"]].push(start, yData)
     miniseedBuffers[chanMap["X"]].push(start, xData)
+    print("sendToMseed {} {} {}".format(sta, start, len(xData)))
 
 def initDali(host, port):
     print("Init Dali at {0}:{1:d}".format(host, port))
@@ -378,6 +411,8 @@ signal.signal(signal.SIGTERM, handleSignal)
 signal.signal(signal.SIGINT, handleSignal)
 hostname = getLocalHostname()[0:5].upper()
 sta = hostname
+if doReplay:
+    hostname = replaySta
 print("set station code to {}".format(sta))
 
 sps = getSps()
@@ -391,8 +426,12 @@ if doDali:
         configTask = loop.create_task(getConfig())
         loop.run_until_complete(configTask)
         config = configTask.result()
-        sta = config["Location"][hostname]
-        print("set station code from config to {}".format(sta))
+        if hostname in config["Location"]:
+            sta = config["Location"][hostname]
+            print("set station code from config to {}".format(sta))
+        else:
+            print("host not in config, keep default name {}".format(sta))
+
         print("try to init dali")
         dali = getDali()
         print("init DataLink at {0} {1:d}".format(daliHost, daliPort))
