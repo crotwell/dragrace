@@ -123,9 +123,11 @@ class FakeSensor:
     def createFakeConstantUp(self, curIdx):
         data = []
         for i in range(curIdx, curIdx+self.watermark):
+            # data.append(0)
+            data.append(-3848.98097)
             data.append(0)
-            data.append(0)
-            data.append(4096)
+            # data.append(4096)
+            data.append(1400.91451)
         return data
 
     def createFakeXhalfG(self, curIdx):
