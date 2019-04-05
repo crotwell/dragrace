@@ -134,6 +134,9 @@ class MiniseedRecord:
     def endtime(self):
         return self.starttime() + self.header.sampPeriod * (self.header.numsamples-1)
 
+    def clone(self):
+        return unpackMiniseedRecord(self.pack())
+        
     def pack(self):
         recordBytes = bytearray(self.header.recordLength)
         recordBytes[0:48] = self.header.pack()
