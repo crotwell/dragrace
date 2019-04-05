@@ -5,7 +5,7 @@ import sys
 import struct
 import array
 import math
-from SeismogramTasks import Rotate_2D_TimeSeries,VectorMagnitude
+from SeismogramTasks import Rotate_2D_TimeSeries,VectorMagnitude,Rotate_3D_TimeSeries
 from datetime import datetime, timedelta
 import json
 
@@ -30,16 +30,17 @@ import simpleDali
 # magnitude over a small amount of time (depends on len of arrays given),
 # and sends this mag to ring server
 
-def peakAccelerationCalculation(x,y,z,theta,station,start_time,end_time):
+def peakAccelerationCalculation(x,y,z,theta,alpha,station,start_time,end_time):
     # rotation correction
     # First, do coordiate rotation about the y-axis (downtrack). Note the...
     #  Rotate_2D_TimeSeries function has rotation about z, but can put...
     #  z in for y in code
     # input: array_x, array_z, theta
     # output: rotate_array_x, rotate_array_z
-    r = Rotate_2D_TimeSeries(x, z, theta)
+    r = Rotate_3D_TimeSeries(x,y,z,theta,alpha)
     rotate_array_x = r[0]
-    rotate_array_z = r[1]
+    rotate_array_y = r[1]
+    rotate_array_z = r[2]
 
     countToGravity = 4096 # may need to be -4096, counts not g
     new_array_z = subtractGravity(rotate_array_z, countToGravity)
