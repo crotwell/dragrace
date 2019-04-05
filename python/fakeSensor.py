@@ -121,6 +121,9 @@ class FakeSensor:
         return data
 
     def createFakeConstantUp(self, curIdx):
+        # input x,y,z values are x,y,z values of 70 deg counterclockwise (-70 deg)
+        # rotation about y axis for vector of [0,0,4096]
+        # should end with maxacc ~ 0 g's 
         data = []
         for i in range(curIdx, curIdx+self.watermark):
             # data.append(0)
