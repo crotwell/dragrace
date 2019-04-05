@@ -2,6 +2,7 @@ import sys
 import struct
 import array
 import math
+import vpython as vp # pip install vpython
 
 def VectorMagnitude(x,y,z):
     return math.sqrt(x*x+y*y+z*z)
@@ -151,7 +152,16 @@ def CoordinateRotation_3D(x,y,z,theta,alpha):
 # FR = CoordinateRotation_3D(1,0,0,theta=110.0,alpha=180.0)
 # print("FR: {}".format(FR))
 
+def CoordinateRotation_3D(x,y,z,theta,alpha):
+    v1 = vp.vector(x,y,z)
+    # Rotate about y'-axis for x' to x and z' to z
+    theta_radians = math.radians(theta) # theta is radians of measured degrees
+    v_abouty = vp.rotate(v1,angle=theta_radians,axis=vp.vector(0,1,0))
 
+    # Rotate about x-axis for y' to y and z' to z
+    alpha_radians = math.radians(alpha)
+    v_aboutx = vp.rotate(v_abouty,angle=alpha_radians,axis=vp.vector(1,0,0))
+    return v_aboutx
 
 
 
