@@ -125,7 +125,7 @@ class FakeSensor:
         for i in range(curIdx, curIdx+self.watermark):
             data.append(0)
             data.append(0)
-            data.append(4096/math.cos(math.radians(70)))
+            data.append(4096)
         return data
 
     def createFakeXhalfG(self, curIdx):
