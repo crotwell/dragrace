@@ -38,3 +38,15 @@ print('----')
 v = CoordinateRotation_3D(1,0,0,70.0,0)
 print(v)
 print(type(v))
+
+testx = [0,0,0,0,0]
+testy = [2048,2048,2048,2048,2048]
+testz = [4096,4096,4096,4096,4096]
+r = Rotate_3D_TimeSeries(testx,testy,testz,theta=0,alpha=0)
+x = r[0]
+y = r[1]
+z = r[2]
+z_subG = subtractGravity(z,countToGravity=4096)
+vmag = Magnitude_ThreeC_TimeSeries(x,y,z_subG)
+peakAccel = max(vmag)/4096
+print(peakAccel)
