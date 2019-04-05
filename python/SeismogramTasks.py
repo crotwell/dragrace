@@ -150,3 +150,27 @@ def CoordinateRotation_3D(x,y,z,theta,alpha):
 # print("CR: {}".format(CR))
 # FR = CoordinateRotation_3D(1,0,0,theta=110.0,alpha=180.0)
 # print("FR: {}".format(FR))
+
+
+
+
+
+
+def Rotate_3D_TimeSeries(x,y,z,theta,alpha):
+    nptsx=len(x)
+    nptsy=len(y)
+    nptsz=len(z)
+    if nptsx != nptsy:
+        print("Mismatch npts",nptsx,nptsy)
+        return
+    xprime=[]
+    yprime=[]
+    zprime=[]
+    i=0
+    while i < nptsx:
+        [xp, yp, zp]=CoordinateRotation_3D(x[i],y[i],z[i],theta,alpha)
+        xprime.append(xp)
+        yprime.append(yp)
+        zprime.append(zp)
+        i=i+1
+    return [xprime, yprime, zprime]
