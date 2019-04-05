@@ -45,7 +45,7 @@ def peakAccelerationCalculation(x,y,z,theta,alpha,station,start_time,end_time):
     countToGravity = 4096 # may need to be -4096, counts not g
     new_array_z = subtractGravity(rotate_array_z, countToGravity)
 
-    vmag = Magnitude_ThreeC_TimeSeries_jake(rotate_array_x, y, new_array_z)
+    vmag = Magnitude_ThreeC_TimeSeries_jake(rotate_array_x, rotate_array_y, new_array_z)
 
     peakAccel = max(vmag)/countToGravity
     maxAcceljson = {
