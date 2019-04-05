@@ -19,7 +19,7 @@ def recompress(filename, bitShift=False):
                         msr.header.station,
                         msr.header.location,
                         msr.header.channel,
-                        msr.header.samprate,
+                        msr.header.sampleRate,
                         archive=True,
                         encoding=simpleMiniseed.ENC_SHORT)
             if bitShift:
@@ -35,7 +35,7 @@ def recompressDir(topDirName, bitShift=False):
         for dirname, dirnames, filenames in os.walk(topDirName):
             for filename in filenames:
                 recompress(os.path.join(dirname, filename), bitShift=bitShift)
-            
+
 filename = sys.argv[1]
 miniseedBuffers = dict()
 bitShift = False

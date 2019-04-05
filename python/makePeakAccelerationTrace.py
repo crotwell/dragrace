@@ -138,7 +138,7 @@ def CompareHeaders(dlPacket1,dlPacket2):
 def buildPacketKey(ThePacket,RootChan):
     mSeed = simpleMiniseed.unpackMiniseedRecord(ThePacket.data)
     StartTime = mSeed.header.starttime
-    sampleRate = mSeed.header.samprate
+    sampleRate = mSeed.header.sampleRate
     net = mSeed.header.network
     sta = mSeed.header.station
     loc = mSeed.header.location

@@ -57,11 +57,11 @@ def doTest(loop, token):
         channel = "HNZ"
         starttime = simpleDali.utcnowWithTz()
         numsamples = 100
-        samprate=200
+        sampleRate=200
         shortData = array("h") # shorts
         for i in range(numsamples):
             shortData.append(i)
-        msh = simpleMiniseed.MiniseedHeader(network, station, location, channel, starttime, numsamples, samprate)
+        msh = simpleMiniseed.MiniseedHeader(network, station, location, channel, starttime, numsamples, sampleRate)
         msr = simpleMiniseed.MiniseedRecord(msh, shortData)
         print("before writeMSeed")
         sendTask = loop.create_task(dali.writeMSeed(msr))
@@ -72,7 +72,7 @@ def doTest(loop, token):
     loop.run_until_complete(closeTask)
 
 def main():
-    secretKey = '234jkasdf342saf345h6'
+    secretKey = 'lasdfi3234amdfo23csl8u4osldjf324'
     token = simpleDali.encodeAuthToken(username, timedelta(minutes=60), 'XX_.*/MTRIG', secretKey)
     print("token: {}".format(str(token)))
     print("token expires in {}".format(simpleDali.timeUntilExpireToken(token)))
