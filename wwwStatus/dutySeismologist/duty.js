@@ -90,6 +90,9 @@ if (protocol == 'https:') {
   }).then(function(jwtText) {
     jwtToken = jwtText.trim();
     jwtTokenPromise = null;
+    if (jwtToken.length === 0) {
+      throw new Error('jwt token length is zero.');
+    }
     console.log(`got jwt: ${jwtToken}`);
   }).catch(function(error) {
     console.log('There has been a problem with fetch jwt token: ', error.message);
@@ -391,7 +394,7 @@ wp.d3.select("button#peak").on("click", function(d) {
       return dlTriggerConn.awaitDLCommand(`AUTHORIZATION`, jwtToken);
     } else {
       d3.select("div.triggers").append("p").text(`Unable to send trigger, not auth`);
-      throw new Error(`Unable to send trigger, not auth`);
+      throw new Error(`Unable to send trigger, not auth. jwt: ${jwtToken != null} ${jwtToken}`);
     }
   }).then(authResponse => {
     d3.select("div.triggers").append("p").text(`AUTH ack: ${authResponse}`);
