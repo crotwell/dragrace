@@ -20,6 +20,7 @@ local=[]
 #
 # This section creates Local values starting from Global Signals
 #
+print("*** Converting Global signals into Local coordinate system at each Location ***")
 for position in signals:
     for rotation in angles:
        local=Global2Local_Pseudo3D_Rotation(position[0],position[1],position[2],rotation[1],rotation[2])
@@ -32,6 +33,11 @@ for position in signals:
 correctedSignals=[]
 dragsterSignals=[]
 track=[]
+print(' ************* ')
+print(' *** Now use two methods to convert the local signals back to the global system ***')
+print(' *** "Correct" is reproducting these for all Locations: {}'.format(signals))
+print(' ************* ')
+#
 for position in startingSignals:
     for rotation in angles:
        if(position[0] == rotation[0]):
@@ -42,10 +48,10 @@ for position in startingSignals:
            pgtrack=CoordinateRotation_3D(position[1],position[2],position[3],rotation[1],rotation[2])
            print('TJO: [{:05.3f},{:05.3f},{:05.3f}], Python Guys: [{:05.3f},{:05.3f},{:05.3f}], Angle: {}'.format(track[0],track[1],track[2],pgtrack[0],pgtrack[1],pgtrack[2],rotation))
            #print('Angles {}, Start: [{:4.3f},{:4.3f},{:4.3f}],      End: [{:4.3f},{:4.3f},{:4.3f}]'.format(rotation,position[1],position[2],position[3],track[0],track[1],track[2]))
-    correctedSignals.append([local[0],local[1],local[2]])
-    dragsterSignals.append([local[0],local[1],local[2]-1])
+    #correctedSignals.append([local[0],local[1],local[2]])
+    #dragsterSignals.append([local[0],local[1],local[2]-1])
 print('===')
 
-print('=== Original Dragster Signals ===')
-print(dragsters)
-print('===')
+#print('=== Original Dragster Signals ===')
+#print(dragsters)
+#print('===')
