@@ -6,7 +6,7 @@ import random
 import signal
 import time
 from datetime import datetime, timedelta
-from netifaces import interfaces, ifaddresses, AF_INET
+#from netifaces import interfaces, ifaddresses, AF_INET
 import socket
 import traceback
 
@@ -116,44 +116,44 @@ class SendConfig:
                        "PI07": "CT",
                        "PI99": "FK"
                    },
-                   "LocationDetails":{
+                   "LocDetails":{
                        "FL":{
-                          "Orientation": {
+                          "Orient": {
                             "Theta": 70.0,
                             "Alpha": 0.0
                           },
                           "Name": "Far Left Wall"
                        },
                        "NL":{
-                          "Orientation": {
+                          "Orient": {
                             "Theta": 90.0,
                             "Alpha": 0.0
                           },
                           "Name": "Left Starters Area"
                        },
                        "CT":{
-                          "Orientation": {
+                          "Orient": {
                             "Theta": 0.0,
                             "Alpha": 0.0
                           },
                           "Name": "Center Wall End"
                        },
                        "NR":{
-                          "Orientation": {
+                          "Orient": {
                             "Theta": 90.0,
                             "Alpha": 180.0
                           },
                           "Name": "Right Starters Area"
                        },
                        "FR":{
-                          "Orientation": {
+                          "Orient": {
                             "Theta": 70.0,
                             "Alpha": 180.0
                           },
                           "Name": "Far Right Wall"
                        },
                        "FK":{
-                          "Orientation": {
+                          "Orient": {
                             "Theta": 45.0,
                             "Alpha": 0.0
                           },

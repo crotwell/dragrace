@@ -1,6 +1,7 @@
 import argparse
 import json
 import collections
+#import configChecker
 
 def dict_raise_on_duplicates(ordered_pairs):
     """Reject duplicate keys."""
