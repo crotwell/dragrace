@@ -1,12 +1,12 @@
 {
   "Loc":{
-    "PI01":"NO",
+    "PI01":"NL",
     "PI02":"FL",
     "PI03":"NO",
     "PI04":"NR",
     "PI05":"FR",
     "PI06":"NO",
-    "PI07":"NO",
+    "PI07":"CT",
     "PI99":"FK"
   },
   "LocInfo":{

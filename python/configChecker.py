@@ -40,8 +40,8 @@ def configSanityCheck(configFile):
 
 # If parse works, do sanity tests
 
-    piDict = newConfig["Location"]
-    detailsDict = newConfig["LocationDetails"]
+    piDict = newConfig["Loc"]
+    detailsDict = newConfig["LocInfo"]
 
 #**********
 #  Do a series of sanity checks on the filename
@@ -70,6 +70,7 @@ def configSanityCheck(configFile):
         if piDict.get(pi) not in ["NO","FL","NL","CT","NR","FR"]:
             print('{}:  Location of {} is not valid'.format(pi,piDict.get(pi)))
             sanityPass=False
+    return sanityPass
 
 if __name__ == "__main__":
     print("Running from command line")
@@ -80,4 +81,14 @@ if __name__ == "__main__":
                         help="your config file to test")
     args=parser.parse_args()
     print(args.configFile)
-    configSanityCheck(args.configFile)
+    goodConfig=configSanityCheck(args.configFile)
+    print(" ")
+    print(" *** configChecker Output ***")
+
+    if(goodConfig):
+      print("Config File is valid, feel free to run deployConfig!")
+    else:
+      print("Config file {} FAILS, fix and rerun configChecker")
+
+    print (" ")
+    print(" *************** ")
