@@ -49,11 +49,11 @@ def doTest(loop):
     channel = "HNZ"
     starttime = simpleDali.utcnowWithTz()
     numsamples = 100
-    samprate=200
+    sampleRate=200
     shortData = array("h") # shorts
     for i in range(numsamples):
         shortData.append(i)
-    msh = simpleMiniseed.MiniseedHeader(network, station, location, channel, starttime, numsamples, samprate)
+    msh = simpleMiniseed.MiniseedHeader(network, station, location, channel, starttime, numsamples, sampleRate)
     msr = simpleMiniseed.MiniseedRecord(msh, shortData)
 #    print("before writeMSeed")
 #    sendTask = loop.create_task(dali.writeMSeed(msr))

@@ -5,7 +5,7 @@ import simpleMiniseed
 MICRO = 1000000
 
 class DataBuffer:
-    def __init__(self, network, station, location, channel, samprate,
+    def __init__(self, network, station, location, channel, sampleRate,
                  encoding=simpleMiniseed.ENC_INT,
                  byteorder=simpleMiniseed.BIG_ENDIAN,
                  dali=None,
@@ -16,8 +16,8 @@ class DataBuffer:
         self.station = station
         self.location = location
         self.channel = channel
-        self.samprate = samprate
-        self.sampPeriod = timedelta(microseconds = MICRO/samprate)
+        self.sampleRate = sampleRate
+        self.sampPeriod = timedelta(microseconds = MICRO/sampleRate)
         self.encoding = encoding
         self.byteorder = byteorder
         self.continuityFactor = continuityFactor
@@ -136,7 +136,7 @@ class DataBuffer:
                                             self.channel,
                                             self.starttime,
                                             self.numpts,
-                                            self.samprate,
+                                            self.sampleRate,
                                             encoding=self.encoding,
                                             byteorder=self.byteorder)
         msr = simpleMiniseed.MiniseedRecord(msh, self.dataArray)

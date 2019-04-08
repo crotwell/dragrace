@@ -90,6 +90,9 @@ if (protocol == 'https:') {
   }).then(function(jwtText) {
     jwtToken = jwtText.trim();
     jwtTokenPromise = null;
+    if (jwtToken.length === 0) {
+      throw new Error('jwt token length is zero.');
+    }
     console.log(`got jwt: ${jwtToken}`);
   }).catch(function(error) {
     console.log('There has been a problem with fetch jwt token: ', error.message);
@@ -227,7 +230,7 @@ let dlTriggerCallback = function(dlPacket) {
 
 // update equilizer, but only as fast as the browser can handle redraws
 let drawEquilizer = function() {
-  d3.select("div.equalizer").selectAll(`span`).classed('struggling', false).classed('good', false);
+  d3.select("div.piStatus").selectAll(`span`).classed('struggling', false).classed('good', false);
   accelMaxValues.forEach((dlPacket, streamId, map) => {
     // turn all into string
     let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
@@ -255,7 +258,7 @@ let drawEquilizer = function() {
       statpi.select(`span.${maxaccJson.station}`).classed('struggling', true).classed('good', false);
     } else {
       statpi.select(`span.${maxaccJson.station}`).classed('struggling', false).classed('good', false);
-  }
+    }
 
 
   });
@@ -391,7 +394,7 @@ wp.d3.select("button#peak").on("click", function(d) {
       return dlTriggerConn.awaitDLCommand(`AUTHORIZATION`, jwtToken);
     } else {
       d3.select("div.triggers").append("p").text(`Unable to send trigger, not auth`);
-      throw new Error(`Unable to send trigger, not auth`);
+      throw new Error(`Unable to send trigger, not auth. jwt: ${jwtToken != null} ${jwtToken}`);
     }
   }).then(authResponse => {
     d3.select("div.triggers").append("p").text(`AUTH ack: ${authResponse}`);
@@ -520,7 +523,11 @@ function makeString(dataView , offset , length )  {
 }
 
 let errorFn = function(error) {
-  console.log("error: "+error);
+  if (console.error) {
+    console.error(error, error.stack);
+  } else {
+    alert(error.message);
+  }
   d3.select("div.triggers").append("p").text(`Error: ${error}`);
   doDisconnect(true);
 };
@@ -534,13 +541,13 @@ let dlPacketConfigCallback = function(dlPacket) {
     let currConfig = JSON.parse(s);
 
     let statpi = d3.select("div.piStatus");
-    for (let [PIkey,PILoc] of Object.entries(currConfig.Location)) {
+    for (let [PIkey,PILoc] of Object.entries(currConfig.Loc)) {
       if (PILoc !== "NO"){
         let oldTheta = null;
-        if (config && config.LocationDetails[PILoc]) {
-          oldTheta = config.LocationDetails[PILoc].Theta;
+        if (config && config.LocInfo[PILoc]) {
+          oldTheta = config.LocInfo[PILoc].Angles.Theta;
         }
-        let theta = currConfig.LocationDetails[PILoc].Theta;
+        let theta = currConfig.LocInfo[PILoc].Angles.Theta;
         if (oldTheta !== theta) {
           console.log(`config packet, theta change ${PILoc}  ${PIkey} ${theta}`);
           statpi.select("span."+PILoc).attr(`title`,`PI=${PIkey},Theta=${theta}, IP=${ipmap.get(PIkey)}`);
@@ -561,8 +568,8 @@ let dlPacketIPCallback = function(dlPacket) {
         console.log(`ip packet ${ipjson.station}  ${ipjson.ip}`);
         ipmap.set(ipjson.station,ipjson.ip);
         let PIkey = ipjson.station;
-        let PILoc = config.Location[ipjson.station]
-        let theta = config.LocationDetails[PILoc].Theta;
+        let PILoc = config.Loc[ipjson.station]
+        let theta = config.LocInfo[PILoc].Angles.Theta;
         let statpi = d3.select("div.piStatus");
         statpi.select("span."+PILoc).attr(`title`,`PI=${PIkey},Theta=${theta}, IP=${ipmap.get(PIkey)}`);
       }
