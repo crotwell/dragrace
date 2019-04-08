@@ -230,7 +230,7 @@ let dlTriggerCallback = function(dlPacket) {
 
 // update equilizer, but only as fast as the browser can handle redraws
 let drawEquilizer = function() {
-  d3.select("div.equalizer").selectAll(`span`).classed('struggling', false).classed('good', false);
+  d3.select("div.piStatus").selectAll(`span`).classed('struggling', false).classed('good', false);
   accelMaxValues.forEach((dlPacket, streamId, map) => {
     // turn all into string
     let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
@@ -258,7 +258,7 @@ let drawEquilizer = function() {
       statpi.select(`span.${maxaccJson.station}`).classed('struggling', true).classed('good', false);
     } else {
       statpi.select(`span.${maxaccJson.station}`).classed('struggling', false).classed('good', false);
-  }
+    }
 
 
   });
