@@ -58,7 +58,7 @@ class DataLink(ABC):
 
 
     async def writeJSON(self, streamid, hpdatastart, hpdataend, jsonMessage):
-        if self.verbose: print("simpleDali.writeMSeed {} {} {}".format(streamid, hpdatastart, hpdataend))
+        if self.verbose: print("simpleDali.writeJSON {} {} {}".format(streamid, hpdatastart, hpdataend))
         jsonAsByteArray = json.dumps(jsonMessage).encode('UTF-8')
         r = await self.writeAck(streamid, hpdatastart, hpdataend, jsonAsByteArray)
         return r
