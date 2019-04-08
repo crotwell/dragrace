@@ -537,13 +537,13 @@ let dlPacketConfigCallback = function(dlPacket) {
     let currConfig = JSON.parse(s);
 
     let statpi = d3.select("div.piStatus");
-    for (let [PIkey,PILoc] of Object.entries(currConfig.Location)) {
+    for (let [PIkey,PILoc] of Object.entries(currConfig.Loc)) {
       if (PILoc !== "NO"){
         let oldTheta = null;
-        if (config && config.LocationDetails[PILoc]) {
-          oldTheta = config.LocationDetails[PILoc].Theta;
+        if (config && config.LocInfo[PILoc]) {
+          oldTheta = config.LocInfo[PILoc].Angles.Theta;
         }
-        let theta = currConfig.LocationDetails[PILoc].Theta;
+        let theta = currConfig.LocInfo[PILoc].Angles.Theta;
         if (oldTheta !== theta) {
           console.log(`config packet, theta change ${PILoc}  ${PIkey} ${theta}`);
           statpi.select("span."+PILoc).attr(`title`,`PI=${PIkey},Theta=${theta}, IP=${ipmap.get(PIkey)}`);
@@ -564,8 +564,8 @@ let dlPacketIPCallback = function(dlPacket) {
         console.log(`ip packet ${ipjson.station}  ${ipjson.ip}`);
         ipmap.set(ipjson.station,ipjson.ip);
         let PIkey = ipjson.station;
-        let PILoc = config.Location[ipjson.station]
-        let theta = config.LocationDetails[PILoc].Theta;
+        let PILoc = config.Loc[ipjson.station]
+        let theta = config.LocInfo[PILoc].Angles.Theta;
         let statpi = d3.select("div.piStatus");
         statpi.select("span."+PILoc).attr(`title`,`PI=${PIkey},Theta=${theta}, IP=${ipmap.get(PIkey)}`);
       }

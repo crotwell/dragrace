@@ -106,61 +106,62 @@ class SendConfig:
                     self.daliUpload = initTask.result()
                 starttime = simpleDali.utcnowWithTz()
                 jsonMessage = {
-                    "Location":{
-                       "PI01": "NL",
-                       "PI02": "FL",
-                       "PI03": "NO",
-                       "PI04": "NO",
-                       "PI05": "FR",
-                       "PI06": "NO",
-                       "PI07": "CT",
-                       "PI99": "NR"
-                   },
-                   "LocDetails":{
-                       "FL":{
-                          "Orient": {
-                            "Theta": 70.0,
-                            "Alpha": 0.0
-                          },
-                          "Name": "Far Left Wall"
-                       },
-                       "NL":{
-                          "Orient": {
-                            "Theta": 90.0,
-                            "Alpha": 0.0
-                          },
-                          "Name": "Left Starters Area"
-                       },
-                       "CT":{
-                          "Orient": {
-                            "Theta": 0.0,
-                            "Alpha": 0.0
-                          },
-                          "Name": "Center Wall End"
-                       },
-                       "NR":{
-                          "Orient": {
-                            "Theta": 90.0,
-                            "Alpha": 180.0
-                          },
-                          "Name": "Right Starters Area"
-                       },
-                       "FR":{
-                          "Orient": {
-                            "Theta": 70.0,
-                            "Alpha": 180.0
-                          },
-                          "Name": "Far Right Wall"
-                       },
-                       "FK":{
-                          "Orient": {
-                            "Theta": 45.0,
-                            "Alpha": 0.0
-                          },
-                          "Name": "Fake Location for PI99"
-                       }
-                   }
+                  "Loc":{
+                     "PI01": "NL",
+                     "PI02": "FL",
+                     "PI03": "NO",
+                     "PI04": "NO",
+                     "PI05": "FR",
+                     "PI06": "NO",
+                     "PI07": "CT",
+                     "PI99": "NR"
+                  },
+                  "LocInfo":{
+                    "FL":{
+                      "Angles":{
+                         "Theta": 0.0,
+                         "Alpha": 0.0
+                      },
+                      "Name":"Far Left Wall"
+                    },
+                    "NL":{
+                      "Angles": {
+                         "Theta": 0.0,
+                         "Alpha": 0.0
+                      },
+                      "Name":"Left Starters Area"
+                    },
+                    "CT":{
+                      "Angles": {
+                         "Theta": 0.0,
+                         "Alpha": 0.0
+                      },
+                      "Name":"Center Wall End"
+                    },
+                    "NR":{
+                      "Angles": {
+                         "Theta": 0.0,
+                         "Alpha": 0.0
+                      },
+                      "Name":"Right Starters Area"
+                    },
+                    "FR":{
+                      "Angles": {
+                         "Theta": 0.0,
+                         "Alpha": 0.0
+                      },
+                      "Name":"Far Right Wall"
+                    },
+                    "FK":{
+                      "Angles": {
+                         "Theta": 45.0,
+                         "Alpha": 0.0
+                      },
+                      "Name":"Fake Loc, PI99"
+                    }
+                  }
                 }
+
 
                 streamid = "{}.{}/ZMAXCFG".format(self.net, 'ZMAX')
                 hpdatastart = simpleDali.datetimeToHPTime(starttime)
