@@ -2,9 +2,9 @@ import sys
 import struct
 import array
 import math
-# import vpython as vp # pip install vpython
-from vypthon import rotate
-from vpython import vector
+import vpython as vp # pip install vpython
+# from vypthon import rotate
+# from vpython import vector
 
 
 
@@ -113,9 +113,9 @@ def Rotate_2D_TimeSeries(x,y,theta):
         i=i+1
     return [xprime, yprime]
 
-def Global2Local_Pseudo3D_Rotation(x,y,z,theta,alpha):
-    [ylocal,ztmp]=Coordinate_Rotation_2D(y,z,-alpha)
-    [zlocal,xlocal]=Coordinate_Rotation_2D(ztmp,x,-theta)
+def Global2Local_Pseudo3D_Rotation(xglobal,yglobal,zglobal,theta,alpha):
+    [ylocal,ztmp]=Coordinate_Rotation_2D(yglobal,zglobal,-alpha)
+    [zlocal,xlocal]=Coordinate_Rotation_2D(ztmp,xglobal,-theta)
 #
 #  Input: a point in the Global coordinate system
 #  Output:  The same point in the Local coordinate system
@@ -142,9 +142,9 @@ def Global2Local_Pseudo3D_Rotation(x,y,z,theta,alpha):
 #
     return [xlocal,ylocal,zlocal]
 
-def Local2Global_Pseudo3D_Rotation(x,y,z,theta,alpha):
-    [ztmp,xlocal]=Coordinate_Rotation_2D(z,x,theta)
-    [ylocal,zlocal]=Coordinate_Rotation_2D(y,ztmp,alpha)
+def Local2Global_Pseudo3D_Rotation(xlocal,ylocal,zlocal,theta,alpha):
+    [ztmp,xglobal]=Coordinate_Rotation_2D(zlocal,xlocal,theta)
+    [yglobal,zglobal]=Coordinate_Rotation_2D(ylocal,ztmp,alpha)
 #
 #  Input: a point in the Global coordinate system
 #  Output:  The same point in the Local coordinate system
@@ -169,7 +169,7 @@ def Local2Global_Pseudo3D_Rotation(x,y,z,theta,alpha):
 #
 #  See Coordinate_Rotation_2D for why the argument order is the way it is in those calls.
 #
-    return [xlocal,ylocal,zlocal]
+    return [xglobal,yglobal,zglobal]
 
 def Zero_List(m,n):
 #
