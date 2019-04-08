@@ -129,7 +129,7 @@ class SendConfig:
     # OK, archive the old config and post the new once
     #
                        print("New Config File is OK ... making it official and posting to ringserver")
-                       shutil.move(oldfile,oldfile+"_"+str(starttime))
+                       shutil.move(oldfile,oldfile+"_"+starttime.isoformat())
                        shutil.copy2(newfile,oldfile)
                        json_file.seek(0)
                        contents=json_file.read()
