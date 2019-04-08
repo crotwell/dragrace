@@ -83,6 +83,12 @@ def Coordinate_Rotation_2D(x,y,theta):
 # theta is the rotation angle in degrees about the Z-axis
 # Looking clockwise in the positive direction of the Z-axis
 #
+#  This can be used for other rotations, of course:
+#
+#   (x,y) in the call is (x,y) only for a rotation about z.
+#   (x,y) in the call is (z,x) in a rotation about y.
+#   (x,y) in the call is (y,z) in a rotation about x.
+#
     rad_theta=math.radians(theta)
     xprime=math.cos(rad_theta)*x + math.sin(rad_theta)*y
     yprime=-math.sin(rad_theta)*x + math.cos(rad_theta)*y
@@ -103,6 +109,64 @@ def Rotate_2D_TimeSeries(x,y,theta):
         yprime.append(yp)
         i=i+1
     return [xprime, yprime]
+
+def Global2Local_Pseudo3D_Rotation(x,y,z,theta,alpha):
+    [ylocal,ztmp]=Coordinate_Rotation_2D(y,z,-alpha)
+    [zlocal,xlocal]=Coordinate_Rotation_2D(ztmp,x,-theta)
+#
+#  Input: a point in the Global coordinate system
+#  Output:  The same point in the Local coordinate system
+#
+#  The relationship between Global and Local is given by two rotation angles.
+#  This assumes there is at least one axis in common between the Local and Global system
+#     thus, it is only a psuedo-3D rotation.
+#
+#  The angle theta defines a clockwise rotation about the common axis
+#      [looking in the +direction of the local version of that axis]
+#  The theta rotation takes the other two axes from Local to Global
+#
+#  The angles were flushed out assuming you had data in the Local system and wanted it in the Global system
+#
+#  The angle alpha defines a clockwise rotation about one of the initially non-common axes [same convention]
+#  The alpha rotation ensures that the +direction of the common axis is the same in the Local and Global system
+#
+#  The code as written assumes that the common axis is the Y-axis.  It might work in other cases with judicial choice
+#      of the (x,y,z) order in the argument list.  Test first!
+#
+#  In this Global=>Local version, the sign of the angles is reversed and the alpha rotation is done first.
+#
+#  See Coordinate_Rotation_2D for why the argument order is the way it is in those calls
+#
+    return [xlocal,ylocal,zlocal]
+
+def Local2Global_Pseudo3D_Rotation(x,y,z,theta,alpha):
+    [ztmp,xlocal]=Coordinate_Rotation_2D(z,x,theta)
+    [ylocal,zlocal]=Coordinate_Rotation_2D(y,ztmp,alpha)
+#
+#  Input: a point in the Global coordinate system
+#  Output:  The same point in the Local coordinate system
+#
+#  The relationship between Global and Local is given by two rotation angles.
+#  This assumes there is at least one axis in common between the Local and Global system
+#     thus, it is only a psuedo-3D rotation.
+#
+#  The angle theta defines a clockwise rotation about the common axis
+#      [looking in the +direction of the local version of that axis]
+#  The theta rotation takes the other two axes from Local to Global
+#
+#  The angles were flushed out assuming you had data in the Local system and wanted it in the Global system
+#
+#  The angle alpha defines a clockwise rotation about one of the initially non-common axes [same convention]
+#  The alpha rotation ensures that the +direction of the common axis is the same in the Local and Global system
+#
+#  The code as written assumes that the common axis is the Y-axis.  It might work in other cases with judicial choice
+#      of the (x,y,z) order in the argument list.  Test first!
+#
+#  In this Local=>Global version, the theta rotation is done first, then the alpha rotation
+#
+#  See Coordinate_Rotation_2D for why the argument order is the way it is in those calls.
+#
+    return [xlocal,ylocal,zlocal]
 
 def Zero_List(m,n):
 #

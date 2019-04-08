@@ -1,7 +1,7 @@
 import struct
 from array import array
 from collections import namedtuple
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import sys
 
 
@@ -24,12 +24,12 @@ Blockette1000 = namedtuple('Blockette1000', 'blocketteNum, nextOffset, encoding,
 BlocketteUnknown = namedtuple('BlocketteUnknown', 'blocketteNum, nextOffset, rawBytes')
 
 class MiniseedHeader:
-    def __init__(self, network, station, location, channel, starttime, numsamples, samprate,
+    def __init__(self, network, station, location, channel, starttime, numsamples, sampleRate,
         encoding=ENC_INT, byteorder=BIG_ENDIAN, sampRateFactor=0, sampRateMult=0,actFlag=0, ioFlag=0, qualFlag=0,
         numBlockettes=0, timeCorr=0, dataOffset=0, blocketteOffset=0):
         """
         starttime can be datetime or BTime
-        if samprate is zero, will be calculated from sampRateFactor and sampRateMult
+        if sampleRate is zero, will be calculated from sampRateFactor and sampRateMult
         """
         self.sequence_number=0; # SEED record sequence number */
         self.network = network     # Network designation, NULL terminated */
@@ -38,7 +38,7 @@ class MiniseedHeader:
         self.channel=channel      # Channel designation, NULL terminated */
         self.dataquality='D'    # Data quality indicator */
         self.setStartTime(starttime)  # Record start time, corrected (first sample) */
-        self.samprate=samprate          # Nominal sample rate (Hz) */
+        self.sampleRate=sampleRate          # Nominal sample rate (Hz) */
         self.numsamples=numsamples        # Number of samples in record */
         self.encoding=encoding    # Data encoding format */
         self.byteorder=byteorder        # Original/Final byte order of record */
@@ -49,21 +49,21 @@ class MiniseedHeader:
 
         self.sampRateFactor=sampRateFactor
         self.sampRateMult=sampRateMult
-        if samprate==0 and not (sampRateFactor==0 and sampRateMult==0):
-            # calc samprate from sampRateFactor and sampRateMult
+        if sampleRate==0 and not (sampRateFactor==0 and sampRateMult==0):
+            # calc sampleRate from sampRateFactor and sampRateMult
             if sampRateFactor>0:
                 if sampRateMult>0:
-                    self.samprate=1.0*sampRateFactor*sampRateMult
+                    self.sampleRate=1.0*sampRateFactor*sampRateMult
                 else:
-                    self.samprate= -1.0 * sampRateFactor/sampRateMult
+                    self.sampleRate= -1.0 * sampRateFactor/sampRateMult
             else:
                 if sampRateMult>0:
-                    self.samprate=-1.0 * sampRateMult/sampRateFactor
+                    self.sampleRate=-1.0 * sampRateMult/sampRateFactor
                 else:
-                    self.samprate= 1.0/( sampRateFactor*sampRateMult)
-        if (self.samprate ==0):
-            raise Exception("Sample rate cannot be 0: {:f}".format(self.samprate, self.sampRateFactor, self.sampRateMult))
-        self.sampPeriod = timedelta(microseconds = MICRO/self.samprate)  # Nominal sample period (Sec) */
+                    self.sampleRate= 1.0/( sampRateFactor*sampRateMult)
+        if (self.sampleRate ==0):
+            raise Exception("Sample rate cannot be 0: {:f}".format(self.sampleRate, self.sampRateFactor, self.sampRateMult))
+        self.sampPeriod = timedelta(microseconds = MICRO/self.sampleRate)  # Nominal sample period (Sec) */
 
         self.actFlag=actFlag
         self.ioFlag=ioFlag
@@ -91,11 +91,11 @@ class MiniseedHeader:
         tempsampRateMult = self.sampRateMult
         if self.sampRateFactor == 0 and self.sampRateMult == 0:
             # this is wrong if rate not integer Hz or integer sec
-            if self.samprate > 1:
-                tempsampRateFactor=int(self.samprate)
+            if self.sampleRate > 1:
+                tempsampRateFactor=int(self.sampleRate)
                 tempsampRateMult=1
             else:
-                tempsampRateFactor=int(-1.0/self.samprate)
+                tempsampRateFactor=int(-1.0/self.sampleRate)
                 tempsampRateMult=1
         struct.pack_into(self.endianChar+'HHH', header, 30, self.numsamples, tempsampRateFactor, tempsampRateMult);
         return header
@@ -104,13 +104,17 @@ class MiniseedHeader:
         tt = time.timetuple()
         struct.pack_into(self.endianChar+'HHBBBxH', header, 20, tt.tm_year, tt.tm_yday, tt.tm_hour, tt.tm_min, tt.tm_sec, int(time.microsecond/100))
     def setStartTime(self, starttime):
-        self.starttime=starttime
         if type(starttime).__name__ == 'datetime':
-            tt = starttime.timetuple()
+            # make sure timezone aware
+            if not starttime.tzinfo:
+                self.starttime = starttime.replace(tzinfo=timezone.utc)
+            else:
+                self.starttime = starttime.astimezone(timezone.utc)
+            tt = self.starttime.timetuple()
             self.btime = BTime(tt.tm_year, tt.tm_yday, tt.tm_hour, tt.tm_min, tt.tm_sec, int(starttime.microsecond/100))
         elif type(starttime).__name__ == 'BTime':
             self.btime = starttime
-            self.starttime = datetime(self.btime.year, 1, 1, hour=self.btime.hour, minute=self.btime.minute, second=self.btime.second, microsecond=100*self.btime.tenthMilli) \
+            self.starttime = datetime(self.btime.year, 1, 1, hour=self.btime.hour, minute=self.btime.minute, second=self.btime.second, microsecond=100*self.btime.tenthMilli, tzinfo=timezone.utc) \
                 + timedelta(days=self.btime.yday-1)
         else:
             raise Exception("unknown type of starttime {}".format(type(starttime)))
@@ -130,6 +134,9 @@ class MiniseedRecord:
     def endtime(self):
         return self.starttime() + self.header.sampPeriod * (self.header.numsamples-1)
 
+    def clone(self):
+        return unpackMiniseedRecord(self.pack())
+        
     def pack(self):
         recordBytes = bytearray(self.header.recordLength)
         recordBytes[0:48] = self.header.pack()
@@ -204,9 +211,9 @@ def unpackMiniseedHeader(recordBytes, endianChar='>'):
     loc = loc.decode("utf-8").strip()
     chan = chan.decode("utf-8").strip()
     starttime = BTime(year, yday, hour, min, sec, tenthMilli)
-    samprate=0 # recalc in constructor
+    sampleRate=0 # recalc in constructor
     encoding = -1 # reset on read b1000
-    return MiniseedHeader(net, sta, loc, chan, starttime, numsamples, samprate,
+    return MiniseedHeader(net, sta, loc, chan, starttime, numsamples, sampleRate,
         encoding=encoding, byteorder=byteorder,
         sampRateFactor=sampRateFactor, sampRateMult=sampRateMult,
         actFlag=actFlag, ioFlag=ioFlag, qualFlag=qualFlag,

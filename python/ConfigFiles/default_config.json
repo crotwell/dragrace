@@ -1,56 +1,56 @@
 {
-  "Location":{
+  "Loc":{
     "PI01":"NO",
     "PI02":"FL",
     "PI03":"NO",
-    "PI04":"FL",
+    "PI04":"NR",
     "PI05":"FR",
     "PI06":"NO",
     "PI07":"NO",
     "PI99":"FK"
   },
-  "LocationDetails":{
+  "LocInfo":{
     "FL":{
-      "Orientation": {
+      "Angles":{
          "Theta": 0.0,
          "Alpha": 0.0
       },
       "Name":"Far Left Wall"
     },
     "NL":{
-      "Orientation": {
+      "Angles": {
          "Theta": 0.0,
          "Alpha": 0.0
       },
       "Name":"Left Starters Area"
     },
     "CT":{
-      "Orientation": {
+      "Angles": {
          "Theta": 0.0,
          "Alpha": 0.0
       },
       "Name":"Center Wall End"
     },
     "NR":{
-      "Orientation": {
+      "Angles": {
          "Theta": 0.0,
          "Alpha": 0.0
       },
       "Name":"Right Starters Area"
     },
     "FR":{
-      "Orientation": {
+      "Angles": {
          "Theta": 0.0,
          "Alpha": 0.0
       },
       "Name":"Far Right Wall"
     },
     "FK":{
-      "Orientation": {
+      "Angles": {
          "Theta": 45.0,
          "Alpha": 0.0
       },
-      "Name":"Fake Location for PI99"
+      "Name":"Fake Loc, PI99"
     }
   }
 }

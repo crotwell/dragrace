@@ -12,11 +12,11 @@ def doTest():
     channel = "HNZ"
     starttime = simpleDali.utcnowWithTz()
     numsamples = 40
-    samprate=200
-    sampPeriod = timedelta(microseconds = MICRO/samprate)
+    sampleRate=200
+    sampPeriod = timedelta(microseconds = MICRO/sampleRate)
 
     databuffer = DataBuffer(network, station, location, channel,
-             samprate, encoding=simpleMiniseed.ENC_SHORT)
+             sampleRate, encoding=simpleMiniseed.ENC_SHORT)
     for i in range(10):
         shortData = array("h") # shorts
         for i in range(numsamples):
