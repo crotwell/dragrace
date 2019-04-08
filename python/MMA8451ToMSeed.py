@@ -49,7 +49,7 @@ import decimate
 daliHost="129.252.35.36"
 daliPort=15003
 dali=None
-uri = "ws://www.seis.sc.edu/dragracews/datalink"
+daliUri = "wss://www.seis.sc.edu/dragracews/datalink"
 
 pin = 18  # GPIO interrupt
 #MAX_SAMPLES = 2000
@@ -284,11 +284,10 @@ def do_work(now, status, samplesAvail, data):
     return sendResult
 
 def getDali():
-    global daliPort
-    global daliHost
+    global daliUri
     global dali, doDali
     if (doDali and dali is None):
-        dali = initDali(daliHost, daliPort)
+        dali = initDali(daliUri)
     return dali
 
 def sendToFile(now, dataPacket):
@@ -339,10 +338,23 @@ def sendToMseed(last_sample_time, status, samplesAvail, data):
     miniseedBuffers[chanMap["X"]].push(start, xData)
     print("sendToMseed {} {} {}".format(sta, start, len(xData)))
 
-def initDali(host, port):
-    print("Init Dali at {0}:{1:d}".format(host, port))
-    dl = simpleDali.SocketDataLink(host, port)
+def initDali(daliUri):
+    print("Init Dali at {0}:{1:d}".format(daliUri))
+    dl = simpleDali.WebSocketDataLink(daliUri)
     return dl
+
+
+async def authorize(daliUpload, token):
+    global keepGoing
+    if token and daliUpload:
+        authResp = await daliUpload.auth(token)
+        if verbose:
+            print("auth: {}".format(authResp))
+        if authResp.type == 'ERROR':
+            print("AUTHORIZATION failed, quiting...")
+            keepGoing = False
+            raise Exception("AUTHORIZATION failed, {} {}".format(authResp.type, authResp.message))
+
 
 def getLocalHostname():
     if not doFake:
@@ -392,9 +404,7 @@ def busyWaitStdInReader():
 
 async def getConfig():
     # FIX... only gets one packet and then stops listening
-    global daliPort
-    global daliHost
-    configDali = initDali(daliHost, daliPort)
+    configDali = initDali(daliUri)
     await configDali.match("/ZMAXCFG")
     await configDali.positionAfter(simpleDali.utcnowWithTz()-timedelta(seconds=90))
     await configDali.stream()
@@ -426,17 +436,19 @@ if doDali:
         configTask = loop.create_task(getConfig())
         loop.run_until_complete(configTask)
         config = configTask.result()
-        if hostname in config["Location"]:
-            sta = config["Location"][hostname]
+        if hostname in config["Loc"]:
+            sta = config["Loc"][hostname]
             print("set station code from config to {}".format(sta))
         else:
             print("host not in config, keep default name {}".format(sta))
 
         print("try to init dali")
         dali = getDali()
-        print("init DataLink at {0} {1:d}".format(daliHost, daliPort))
+        authTask = loop.create_task(authorize(daliUpload, token))
+        loop.run_until_complete(authTask)
+        print("init DataLink at {0}".format(daliUri))
     except ValueError as err:
-        raise Exception("Unable to init DataLink at {0} {1:d}: {2}".format(daliHost, daliPort, err))
+        raise Exception("Unable to init DataLink at {0}  {2}".format(daliUri, err))
 
 
 miniseedBuffers = dict()
