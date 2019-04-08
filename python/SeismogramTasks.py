@@ -2,7 +2,10 @@ import sys
 import struct
 import array
 import math
-import vpython as vp # pip install vpython
+# import vpython as vp # pip install vpython
+from vypthon import rotate
+from vpython import vector
+
 
 
 def VectorMagnitude(x,y,z):
