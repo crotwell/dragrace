@@ -9,8 +9,13 @@ from datetime import datetime, timedelta
 #from netifaces import interfaces, ifaddresses, AF_INET
 import socket
 import traceback
+import configChecker
+import filecmp
+import shutil
 
 import simpleDali
+
+configDirectory="./ConfigFiles"
 
 class SendConfig:
     def __init__(self, intervalSecs, tokenFile):
@@ -105,97 +110,65 @@ class SendConfig:
                         raise initTask.exception()
                     self.daliUpload = initTask.result()
                 starttime = simpleDali.utcnowWithTz()
-                jsonMessage = {
-                  "Loc":{
-                     "PI01": "NL",
-                     "PI02": "FL",
-                     "PI03": "NO",
-                     "PI04": "NO",
-                     "PI05": "FR",
-                     "PI06": "NO",
-                     "PI07": "CT",
-                     "PI99": "NR"
-                  },
-                  "LocInfo":{
-                    "FL":{
-                      "Angles":{
-                         "Theta": 0.0,
-                         "Alpha": 0.0
-                      },
-                      "Name":"Far Left Wall"
-                    },
-                    "NL":{
-                      "Angles": {
-                         "Theta": 0.0,
-                         "Alpha": 0.0
-                      },
-                      "Name":"Left Starters Area"
-                    },
-                    "CT":{
-                      "Angles": {
-                         "Theta": 0.0,
-                         "Alpha": 0.0
-                      },
-                      "Name":"Center Wall End"
-                    },
-                    "NR":{
-                      "Angles": {
-                         "Theta": 0.0,
-                         "Alpha": 0.0
-                      },
-                      "Name":"Right Starters Area"
-                    },
-                    "FR":{
-                      "Angles": {
-                         "Theta": 0.0,
-                         "Alpha": 0.0
-                      },
-                      "Name":"Far Right Wall"
-                    },
-                    "FK":{
-                      "Angles": {
-                         "Theta": 45.0,
-                         "Alpha": 0.0
-                      },
-                      "Name":"Fake Loc, PI99"
-                    }
-                  }
-                }
 
+                oldfile=configDirectory+"/config_deployed"
+                newfile=configDirectory+"/config_new"
 
-                streamid = "{}.{}/ZMAXCFG".format(self.net, 'ZMAX')
-                hpdatastart = simpleDali.datetimeToHPTime(starttime)
-                hpdataend = simpleDali.datetimeToHPTime(starttime)
-                jsonSendTask = loop.create_task(self.daliUpload.writeJSON(streamid, hpdatastart, hpdataend, jsonMessage))
-                loop.run_until_complete(jsonSendTask)
-                if jsonSendTask.exception() is not None:
-                    self.daliUpload.close()
-                    if self.verbose:
-                        print("Exception sending json: {}".format( jsonSendTask.exception()))
-                    raise jsonSendTask.exception()
+                if(filecmp.cmp(oldfile,newfile)):
+                # Files are the same, no action required
+                   noChange=True
                 else:
-                    response = jsonSendTask.result()
-                    if self.verbose:
-                        print("send config as {} as json, {}".format(streamid, response))
-                    if response.type == 'ERROR' and response.message.startswith(simpleDali.NO_SOUP):
-                        print("AUTHORIZATION failed, quiting...")
-                        self.keepGoing = False
-                    #keepGoing = False
-                if repeatException:
-                    if self.verbose:
-                        print("Recovered from repeat exception")
-                    repeatException = False
+                # Files are different, process the new one
+                   noChange=False
+                   json_file=open(newfile,'r')
+                   goodConfig=configChecker.configSanityCheck(json_file)
+                   if(not goodConfig):
+                      print("Config file fails")
+                   else:
+    #
+    # OK, archive the old config and post the new once
+    #
+                       print("New Config File is OK ... making it official and posting to ringserver")
+                       shutil.move(oldfile,oldfile+"_"+str(starttime))
+                       shutil.copy2(newfile,oldfile)
+                       json_file.seek(0)
+                       contents=json_file.read()
+                       jsonMessage=json.loads(contents)
+
+                       streamid = "{}.{}/ZMAXCFG".format(self.net, 'ZMAX')
+                       hpdatastart = simpleDali.datetimeToHPTime(starttime)
+                       hpdataend = simpleDali.datetimeToHPTime(starttime)
+                       jsonSendTask = loop.create_task(self.daliUpload.writeJSON(streamid, hpdatastart, hpdataend, jsonMessage))
+                       loop.run_until_complete(jsonSendTask)
+                       if jsonSendTask.exception() is not None:
+                           self.daliUpload.close()
+                           if self.verbose:
+                               print("Exception sending json: {}".format( jsonSendTask.exception()))
+                           raise jsonSendTask.exception()
+                       else:
+                           response = jsonSendTask.result()
+                           if self.verbose:
+                               print("send config as {} as json, {}".format(streamid, response))
+                           if response.type == 'ERROR' and response.message.startswith(simpleDali.NO_SOUP):
+                               print("AUTHORIZATION failed, quiting...")
+                               self.keepGoing = False
+                        #keepGoing = False
+                       if repeatException:
+                           if self.verbose:
+                               print("Recovered from repeat exception")
+                           repeatException = False
+
             except Exception:
-                if self.daliUpload is not None:
-                    self.daliUpload.close()
-                if not repeatException:
-                    print(traceback.format_exc())
-                    repeatException = True
+                   if self.daliUpload is not None:
+                       self.daliUpload.close()
+                   if not repeatException:
+                       print(traceback.format_exc())
+                       repeatException = True
             for tempSleep in range(self.interval):
                 # sleep for interval seconds, but check to see if we should
                 # quit once a second
-                if self.keepGoing:
-                    time.sleep(1)
+                   if self.keepGoing:
+                       time.sleep(1)
 
 
         loop.run_until_complete(loop.create_task(self.daliUpload.close()))

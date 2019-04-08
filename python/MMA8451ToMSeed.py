@@ -7,7 +7,7 @@ import json
 import struct
 import queue
 from threading import Thread
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import sys, os, signal
 import socket
 from pathlib import Path
@@ -26,14 +26,19 @@ faulthandler.enable()
 
 # to generate fake data as PI99 set to True
 doFake = False
+doReplay = False
 
-if not doFake:
+if doFake:
+    import fakeSensor
+elif doReplay:
+    import fakeSensor
+    import replaySensor
+else:
+    # real thing
     import board
     import busio
     import RPi.GPIO as GPIO
     import adafruit_mma8451
-else:
-    import fakeSensor
 
 import simpleMiniseed
 import simpleDali
@@ -44,7 +49,7 @@ import decimate
 daliHost="129.252.35.36"
 daliPort=15003
 dali=None
-uri = "ws://www.seis.sc.edu/dragracews/datalink"
+daliUri = "wss://www.seis.sc.edu/dragracews/datalink"
 
 pin = 18  # GPIO interrupt
 #MAX_SAMPLES = 2000
@@ -61,7 +66,7 @@ if doFIR:
 
 quitOnError = True
 
-if not doFake:
+if not doFake and not doReplay:
     # Initialize I2C bus.
     i2c = busio.I2C(board.SCL, board.SDA)
 
@@ -76,7 +81,34 @@ if not doFake:
     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.remove_event_detect(pin)
 else:
-    sensor = fakeSensor.FakeSensor()
+    if doFake:
+        sensor = fakeSensor.FakeSensor()
+    else:
+        ############################################
+        # values to change:
+        dataDir="Track_Data"
+        netGlob = "XX"
+        staGlob = "XB08"
+        locGlob = "00"
+        chanGlob = "HN[XYZ]"
+        # if need seconds add :%S
+        startTime = datetime.strptime("2018-10-14T11:00Z", "%Y-%m-%dT%H:%MZ").replace(tzinfo=timezone.utc)
+        duration = timedelta(hours=2)
+        staRemap = {
+            'XB02': 'PI02',
+            'XB03': 'PI03',
+            'XB05': 'PI05',
+            'XB08': 'PI05',
+            'XB10': 'PI10'
+        }
+        #elf.duration = timedelta(seconds=20)
+        repeat = True
+        # end values to change
+        ############################################
+        replaySta = staRemap[staGlob]
+        sensor = replaySensor.ReplaySensor(dataDir, netGlob, staGlob, locGlob, chanGlob, startTime, staRemap, duration=None)
+        sensor.verbose = True
+        doFIR = False
     adafruit_mma8451 = fakeSensor.FakeAdafruit()
 
 # Optionally change the range from its default of +/-4G:
@@ -252,11 +284,10 @@ def do_work(now, status, samplesAvail, data):
     return sendResult
 
 def getDali():
-    global daliPort
-    global daliHost
+    global daliUri
     global dali, doDali
     if (doDali and dali is None):
-        dali = initDali(daliHost, daliPort)
+        dali = initDali(daliUri)
     return dali
 
 def sendToFile(now, dataPacket):
@@ -305,11 +336,25 @@ def sendToMseed(last_sample_time, status, samplesAvail, data):
     miniseedBuffers[chanMap["Z"]].push(start, zData)
     miniseedBuffers[chanMap["Y"]].push(start, yData)
     miniseedBuffers[chanMap["X"]].push(start, xData)
+    print("sendToMseed {} {} {}".format(sta, start, len(xData)))
 
-def initDali(host, port):
-    print("Init Dali at {0}:{1:d}".format(host, port))
-    dl = simpleDali.SocketDataLink(host, port)
+def initDali(daliUri):
+    print("Init Dali at {0}:{1:d}".format(daliUri))
+    dl = simpleDali.WebSocketDataLink(daliUri)
     return dl
+
+
+async def authorize(daliUpload, token):
+    global keepGoing
+    if token and daliUpload:
+        authResp = await daliUpload.auth(token)
+        if verbose:
+            print("auth: {}".format(authResp))
+        if authResp.type == 'ERROR':
+            print("AUTHORIZATION failed, quiting...")
+            keepGoing = False
+            raise Exception("AUTHORIZATION failed, {} {}".format(authResp.type, authResp.message))
+
 
 def getLocalHostname():
     if not doFake:
@@ -359,9 +404,7 @@ def busyWaitStdInReader():
 
 async def getConfig():
     # FIX... only gets one packet and then stops listening
-    global daliPort
-    global daliHost
-    configDali = initDali(daliHost, daliPort)
+    configDali = initDali(daliUri)
     await configDali.match("/ZMAXCFG")
     await configDali.positionAfter(simpleDali.utcnowWithTz()-timedelta(seconds=90))
     await configDali.stream()
@@ -378,6 +421,8 @@ signal.signal(signal.SIGTERM, handleSignal)
 signal.signal(signal.SIGINT, handleSignal)
 hostname = getLocalHostname()[0:5].upper()
 sta = hostname
+if doReplay:
+    hostname = replaySta
 print("set station code to {}".format(sta))
 
 sps = getSps()
@@ -391,13 +436,19 @@ if doDali:
         configTask = loop.create_task(getConfig())
         loop.run_until_complete(configTask)
         config = configTask.result()
-        sta = config["Location"][hostname]
-        print("set station code from config to {}".format(sta))
+        if hostname in config["Loc"]:
+            sta = config["Loc"][hostname]
+            print("set station code from config to {}".format(sta))
+        else:
+            print("host not in config, keep default name {}".format(sta))
+
         print("try to init dali")
         dali = getDali()
-        print("init DataLink at {0} {1:d}".format(daliHost, daliPort))
+        authTask = loop.create_task(authorize(daliUpload, token))
+        loop.run_until_complete(authTask)
+        print("init DataLink at {0}".format(daliUri))
     except ValueError as err:
-        raise Exception("Unable to init DataLink at {0} {1:d}: {2}".format(daliHost, daliPort, err))
+        raise Exception("Unable to init DataLink at {0}  {2}".format(daliUri, err))
 
 
 miniseedBuffers = dict()
