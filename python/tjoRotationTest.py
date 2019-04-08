@@ -45,8 +45,8 @@ for position in startingSignals:
 # only do this when the location is the same in the local signal and the angle list
 #
            track=Local2Global_Pseudo3D_Rotation(position[1],position[2],position[3],rotation[1],rotation[2])
-           pgtrack=CoordinateRotation_3D(position[1],position[2],position[3],rotation[1],rotation[2])
-           print('TJO: [{:05.3f},{:05.3f},{:05.3f}], Python Guys: [{:05.3f},{:05.3f},{:05.3f}], Angle: {}'.format(track[0],track[1],track[2],pgtrack[0],pgtrack[1],pgtrack[2],rotation))
+           # pgtrack=CoordinateRotation_3D(position[1],position[2],position[3],rotation[1],rotation[2])
+           # print('TJO: [{:05.3f},{:05.3f},{:05.3f}], Python Guys: [{:05.3f},{:05.3f},{:05.3f}], Angle: {}'.format(track[0],track[1],track[2],pgtrack[0],pgtrack[1],pgtrack[2],rotation))
            #print('Angles {}, Start: [{:4.3f},{:4.3f},{:4.3f}],      End: [{:4.3f},{:4.3f},{:4.3f}]'.format(rotation,position[1],position[2],position[3],track[0],track[1],track[2]))
     #correctedSignals.append([local[0],local[1],local[2]])
     #dragsterSignals.append([local[0],local[1],local[2]-1])
@@ -55,3 +55,9 @@ print('===')
 #print('=== Original Dragster Signals ===')
 #print(dragsters)
 #print('===')
+print('===')
+theta = 70.0
+alpha = 0.0
+signal = [3848.98097, 0, 1400.91451]
+rotated_vector = Local2Global_Pseudo3D_Rotation(signal[0],signal[1],signal[2],theta=theta,alpha=alpha)
+print(rotated_vector)
