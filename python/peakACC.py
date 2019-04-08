@@ -91,6 +91,9 @@ def compareSendPeakAccel(establishedJson, freshJson, Dali, maxWindow):
             loop.run_until_complete(sendTask)
             if (sendTask.exception()):
                 raise Exception("Unable to send peak acc") from sendTask.exception()
+            result = sendTask.result()
+            if result.type == 'ERROR':
+                raise Exception("Unable to send peak acc: {}".format(result))
             #print('sending to ringserver')
         else:
             print(json.dumps(establishedJson,indent = 4))

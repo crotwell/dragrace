@@ -188,6 +188,8 @@ gain = 0
 
 def dataCallback(now, status, samplesAvail, data):
     item = now, status, samplesAvail, data
+    if samplesAvail < 28:
+        print("callback {}".format(samplesAvail))
     dataQueue.put(item)
 
 def sending_worker():
@@ -198,11 +200,17 @@ def sending_worker():
         global startACQ
         global dataQueue
         global sps
+        global token
+        global doDali
         my_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(my_loop)
         my_loop.set_debug(True)
+        dali = None
 
-        if dali:
+        if doDali:
+            print("try to init dali")
+            dali = initDali(daliUri)
+            dali.verbose = False
             programname="MMA8451ToMseed"
             username="me"
             processid="0"
@@ -211,6 +219,11 @@ def sending_worker():
             my_loop.run_until_complete(task)
             r = task.result()
             print("id respones {}".format(r))
+            if token:
+                authTask = my_loop.create_task(authorize(dali, token))
+                my_loop.run_until_complete(authTask)
+            for key, chan in chanMap.items():
+                miniseedBuffers[chan].dali = dali
         while keepGoing:
             try:
                 item = dataQueue.get(timeout=2)
@@ -220,7 +233,7 @@ def sending_worker():
                     break
                 now, status, samplesAvail, data = item
                 try:
-                    do_work( now, status, samplesAvail, data)
+                    do_work( now, status, samplesAvail, data, dali)
                     dataQueue.task_done()
                 except Exception as err:
                     # try once more?
@@ -250,11 +263,15 @@ def sending_worker():
         print("send thread fail on {}".format(err), file=sys.stderr)
         traceback.print_exc()
     print("Worker exited")
+
+    if (dali != None):
+        closeTask = loop.create_task(dali.close())
+        loop.run_until_complete(closeTask)
     cleanUp()
     asyncio.get_event_loop().close()
 
 
-def do_work(now, status, samplesAvail, data):
+def do_work(now, status, samplesAvail, data, dali):
     global startACQ
     global totalSamples
     global sentSamples
@@ -272,7 +289,7 @@ def do_work(now, status, samplesAvail, data):
         raise Exception("Not enough samples avail: len={:d}, sampsAvail={:d}".format(len(data), samplesAvail))
     sendResult = None
     if samplesAvail != 0:
-        sendResult =  sendToMseed(now, status, samplesAvail, data)
+        sendResult =  sendToMseed(now, status, samplesAvail, data, dali)
         totalSamples += samplesAvail
         if (MAX_SAMPLES != -1 and totalSamples > MAX_SAMPLES):
             after = time.perf_counter()
@@ -301,7 +318,7 @@ def sendToFile(now, dataPacket):
     curFile.write(dataPacket)
     return "write to {}".format(filename)
 
-def sendToMseed(last_sample_time, status, samplesAvail, data):
+def sendToMseed(last_sample_time, status, samplesAvail, data, dali):
     global staString
     global sta
     global net
@@ -313,6 +330,9 @@ def sendToMseed(last_sample_time, status, samplesAvail, data):
     global alpha
     global sps
     global firDelay
+    if samplesAvail <= 0:
+        # no data???
+        return
     dataIdx = 0
     start = last_sample_time - timedelta(seconds=1.0*(samplesAvail-1)/sps)
     xData, yData, zData = sensor.demux(data)
@@ -331,7 +351,7 @@ def sendToMseed(last_sample_time, status, samplesAvail, data):
             zData = decimateMap["Z"].process(zData)
 
     freshJson = peakAccelerationCalculation(xData,yData,zData,theta,alpha,sta,start,last_sample_time)
-    establishedJson = compareSendPeakAccel(establishedJson, freshJson, getDali(), maxWindow)
+    establishedJson = compareSendPeakAccel(establishedJson, freshJson, dali, maxWindow)
 
     miniseedBuffers[chanMap["Z"]].push(start, zData)
     miniseedBuffers[chanMap["Y"]].push(start, yData)
@@ -339,7 +359,7 @@ def sendToMseed(last_sample_time, status, samplesAvail, data):
     print("sendToMseed {} {} {}".format(sta, start, len(xData)))
 
 def initDali(daliUri):
-    print("Init Dali at {0}:{1:d}".format(daliUri))
+    print("Init Dali at {0}".format(daliUri))
     dl = simpleDali.WebSocketDataLink(daliUri)
     return dl
 
@@ -348,8 +368,7 @@ async def authorize(daliUpload, token):
     global keepGoing
     if token and daliUpload:
         authResp = await daliUpload.auth(token)
-        if verbose:
-            print("auth: {}".format(authResp))
+        print("auth: {}".format(authResp))
         if authResp.type == 'ERROR':
             print("AUTHORIZATION failed, quiting...")
             keepGoing = False
@@ -390,8 +409,6 @@ def cleanUp():
             miniseedBuffers[key].close()
         except Exception as err:
             print(err)
-    if (dali != None):
-        dali.close()
 
 def busyWaitStdInReader():
     global keepGoing
@@ -442,10 +459,9 @@ if doDali:
         else:
             print("host not in config, keep default name {}".format(sta))
 
-        print("try to init dali")
-        dali = getDali()
-        authTask = loop.create_task(authorize(daliUpload, token))
-        loop.run_until_complete(authTask)
+        # load token
+        with open("mseed_token.jwt") as f:
+            token = f.readline().strip()
         print("init DataLink at {0}".format(daliUri))
     except ValueError as err:
         raise Exception("Unable to init DataLink at {0}  {2}".format(daliUri, err))
@@ -456,7 +472,7 @@ for key, chan in chanMap.items():
     miniseedBuffers[chan] = dataBuffer.DataBuffer(net, sta, loc, chan,
              getSps()/decimationFactor, archive=doArchive,
              encoding=simpleMiniseed.ENC_SHORT, dali=dali,
-             continuityFactor=5)
+             continuityFactor=5, verbose=False)
 
 
 stdinThread = Thread(target = busyWaitStdInReader)

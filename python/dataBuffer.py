@@ -67,6 +67,8 @@ class DataBuffer:
             if sendTask.exception():
                 raise Exception("Unable to flush data from buffer to dali") from sendTask.exception()
             result = sendTask.result()
+            if self.verbose:
+                print("flush databuffer: {}".format(result))
         self.numpts = 0
         self.starttime = None
         self.dataArray = None
@@ -116,6 +118,7 @@ class DataBuffer:
     async def miniseedToDali(self, msr):
         r = None
         if self.dali.isClosed():
+            print("dali closed, reconnect...")
             await self.dali.reconnect()
         try:
             r = await self.dali.writeMSeed(msr)
