@@ -523,7 +523,11 @@ function makeString(dataView , offset , length )  {
 }
 
 let errorFn = function(error) {
-  console.log("error: "+error);
+  if (console.error) {
+    console.error(error, error.stack);
+  } else {
+    alert(error.message);
+  }
   d3.select("div.triggers").append("p").text(`Error: ${error}`);
   doDisconnect(true);
 };
