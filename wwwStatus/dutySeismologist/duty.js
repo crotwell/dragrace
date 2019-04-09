@@ -530,6 +530,7 @@ let errorFn = function(error) {
   }
   d3.select("div.triggers").append("p").text(`Error: ${error}`);
   doDisconnect(true);
+  dlConn = null; // force a complete reconnection next time
 };
 
 //go into config file and grab info to place in href html pi status
