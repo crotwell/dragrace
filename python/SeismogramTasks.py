@@ -91,7 +91,8 @@ def Coordinate_Rotation_2D(x,y,theta):
 #   (x,y) in the call is (x,y) only for a rotation about z.
 #   (x,y) in the call is (z,x) in a rotation about y.
 #   (x,y) in the call is (y,z) in a rotation about x.
-#
+#   The sense of +theta is from the first input coordinate TOWARDS the seccond
+#   input coordinate
     rad_theta=math.radians(theta)
     xprime=math.cos(rad_theta)*x + math.sin(rad_theta)*y
     yprime=-math.sin(rad_theta)*x + math.cos(rad_theta)*y
@@ -225,7 +226,7 @@ def Rotate_3D_TimeSeries(x,y,z,theta,alpha):
     zprime=[]
     i=0
     while i < nptsx:
-        [xp, yp, zp]=CoordinateRotation_3D(x[i],y[i],z[i],theta,alpha)
+        [xp, yp, zp]=Local2Global_Pseudo3D_Rotation(x[i],y[i],z[i],theta,alpha)
         xprime.append(xp)
         yprime.append(yp)
         zprime.append(zp)
