@@ -123,7 +123,8 @@ let dlPacketIPCallback = function(dlPacket) {
 
       let PIkey = ipjson.station;
       let ip = ipjson.ip;
-      d3.select("div.ip").insert("p",":first-child").text(`PI=${PIkey}, IP=${ip}, ${moment.utc()}`);
+      let piTime = ipjson.time;
+      d3.select("div.ip").insert("p",":first-child").text(`PI=${PIkey}, IP=${ip}, pitime:${piTime} serverTime: ${moment.utc().toISOString()}`);
     }
 
 
