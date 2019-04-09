@@ -238,7 +238,7 @@ let drawEquilizer = function() {
     let scaleAcc = Math.round(100*maxaccJson.maxacc/2); // 2g = 100px
 
     let now = moment.utc();
-    let packtime = moment.utc(maxaccJson.time);
+    let packtime = moment.utc(maxaccJson.end_time);
       //var duration = moment.duration(now,diff(packtime));
 
     if ( ! prevAccelValue[streamId] || prevAccelValue[streamId] !== scaleAcc) {
@@ -327,23 +327,23 @@ let doDatalinkConnect = function() {
       dlPromise = dlConn.connect();
     }
   }
-  dlPromise.catch(err => {
-    d3.select("div.triggers").append("p").text(`Unable to connect: ${err}`);
-    dlConn.close();
-    return null;
-  }).then(serverId => {
+  dlPromise.then(serverId => {
     d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
     if (staCode){
-    return dlConn.awaitDLCommand("MATCH", `(${staCode}.*(_|\.)HNZ/MSEED)|(.*/MTRIG)|(.*/MAXACC)|(.*/ZMAXCFG)|(.*/IP)`);
-  } else {
-    return dlConn.awaitDLCommand("MATCH", `(.*/MTRIG)|(.*/MAXACC)|(.*/ZMAXCFG)|(.*/IP)`)
-  }
+      return dlConn.awaitDLCommand("MATCH", `(${staCode}.*(_|\.)HNZ/MSEED)|(.*/MTRIG)|(.*/MAXACC)|(.*/ZMAXCFG)|(.*/IP)`);
+    } else {
+      return dlConn.awaitDLCommand("MATCH", `(.*/MTRIG)|(.*/MAXACC)|(.*/ZMAXCFG)|(.*/IP)`)
+    }
   }).then(response => {
     d3.select("div.triggers").append("p").text(`MATCH response: ${response}`);
     return dlConn.awaitDLCommand(`POSITION AFTER ${datalink.momentToHPTime(timeWindow.start)}`);
   }).then(response => {
     d3.select("div.triggers").append("p").text(`POSITION response: ${response}`);
     dlConn.stream();
+  }).catch(err => {
+    d3.select("div.triggers").append("p").text(`Unable to connect: ${err}`);
+    dlConn.close();
+    throw err;
   });
   return dlPromise;
 }
