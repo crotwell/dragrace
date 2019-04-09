@@ -91,7 +91,8 @@ def Coordinate_Rotation_2D(x,y,theta):
 #   (x,y) in the call is (x,y) only for a rotation about z.
 #   (x,y) in the call is (z,x) in a rotation about y.
 #   (x,y) in the call is (y,z) in a rotation about x.
-#
+#   The sense of +theta is from the first input coordinate TOWARDS the seccond
+#   input coordinate
     rad_theta=math.radians(theta)
     xprime=math.cos(rad_theta)*x + math.sin(rad_theta)*y
     yprime=-math.sin(rad_theta)*x + math.cos(rad_theta)*y
