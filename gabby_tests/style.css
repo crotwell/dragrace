@@ -1,8 +1,6 @@
 div.realtime {
   height: 250px;
 }
-body {background-color: #CCCCCC;
-}
 
 svg.seismograph {
   height: 150px;
@@ -21,15 +19,21 @@ path.seispath {
 div.equalizer {
     height:120px;
 }
+div.bar{
+  display: inline-block;
+  width: 20px;
+  height: 75px;
+  background-color: teal;
+}
 
 div.equalizer span div{
   display: inline-block;
-    width:20px;
-    height:2px;
-    background-color:pink;
+  width:20px;
+  height:2px;
+
 }
 div.sidebar {
-  background-color: skyblue;
+
   height: 100%;
   width: 200px;
   z-index:1;

@@ -30,7 +30,7 @@ class SendMyIP:
 
         self.host = "129.252.35.36"
         self.port = 15003
-        self.uri = "ws://www.seis.sc.edu/dragracews/datalink"
+        self.uri = "wss://www.seis.sc.edu/dragracews/datalink"
 
         self.programname="sendMyIP"
         self.username="dragrace"

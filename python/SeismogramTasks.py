@@ -2,7 +2,7 @@ import sys
 import struct
 import array
 import math
-import vpython as vp # pip install vpython
+# import vpython as vp # pip install vpython
 # from vypthon import rotate
 # from vpython import vector
 
@@ -199,20 +199,20 @@ def Convolve_TimeSeries(d,ld,f,lf,o,lo):
     return
 
 
-def CoordinateRotation_3D(x,y,z,theta,alpha):
-    v1 = vp.vector(x,y,z)   # vector in x',y',z' CS
-
-    # Rotate about y'-axis for x' to x and z' to z
-    theta_radians = math.radians(theta) # theta is radians of measured degrees
-    v_abouty = vp.rotate(v1,angle=theta_radians,axis=vp.vector(0,1,0))
-
-    # Rotate about x-axis for y' to y and z' to z
-    alpha_radians = math.radians(alpha)
-    v_aboutx = vp.rotate(v_abouty,angle=alpha_radians,axis=vp.vector(1,0,0))
-    v_x = v_aboutx.x
-    v_y = v_aboutx.y
-    v_z = v_aboutx.z
-    return [v_x,v_y,v_z]
+# def CoordinateRotation_3D(x,y,z,theta,alpha):
+#     v1 = vp.vector(x,y,z)   # vector in x',y',z' CS
+#
+#     # Rotate about y'-axis for x' to x and z' to z
+#     theta_radians = math.radians(theta) # theta is radians of measured degrees
+#     v_abouty = vp.rotate(v1,angle=theta_radians,axis=vp.vector(0,1,0))
+#
+#     # Rotate about x-axis for y' to y and z' to z
+#     alpha_radians = math.radians(alpha)
+#     v_aboutx = vp.rotate(v_abouty,angle=alpha_radians,axis=vp.vector(1,0,0))
+#     v_x = v_aboutx.x
+#     v_y = v_aboutx.y
+#     v_z = v_aboutx.z
+#     return [v_x,v_y,v_z]
 
 def Rotate_3D_TimeSeries(x,y,z,theta,alpha):
     nptsx=len(x)
