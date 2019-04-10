@@ -219,7 +219,11 @@ class SocketDataLink(DataLink):
 
     async def close(self):
         if self.writer is not None:
-            self.writer.close()
+            try:
+                self.writer.close()
+            except:
+                # oh well
+                pass
             self.writer = None
             self.reader = None
 
