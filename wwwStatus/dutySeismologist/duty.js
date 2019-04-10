@@ -342,7 +342,9 @@ let doDatalinkConnect = function() {
     dlConn.stream();
   }).catch(err => {
     d3.select("div.triggers").append("p").text(`Unable to connect: ${err}`);
-    dlConn.close();
+    if (dlConn) {
+      dlConn.close();
+    }
     throw err;
   });
   return dlPromise;
