@@ -59,7 +59,7 @@ let errorFn = function(error) {
   } else {
     alert(error.message);
   }
-  d3.select("div.triggers").append("p").text(`Error: ${error}`);
+  d3.select("div.message").append("p").text(`Error: ${error}`);
   doDisconnect(true);
 };
 
@@ -76,7 +76,7 @@ let doDatalinkConnect = function() {
     try {
       dlConn.endStream();
     }catch(err) {
-        d3.select("div.triggers").append("p").text(`Error endStream ${err}`);
+        d3.select("div.message").append("p").text(`Error endStream ${err}`);
         dlConn = null;
     }
   }
@@ -100,31 +100,55 @@ let doDatalinkConnect = function() {
     }
   }
   dlPromise.catch(err => {
-    d3.select("div.ip").append("p").text(`Unable to connect: ${err}`);
+    d3.select("div.message").append("p").text(`Unable to connect: ${err}`);
     dlConn.close();
     return null;
   }).then(serverId => {
-    d3.select("div.ip").append("p").text(`Connect to ${serverId}`);
+    d3.select("div.message").append("p").text(`Connect to ${serverId}`);
     return dlConn.awaitDLCommand("MATCH", `(.*/IP)`)
 
 
   }).then(response => {
-    d3.select("div.ip").append("p").text(`MATCH response: ${response}`);
+    d3.select("div.message").append("p").text(`MATCH response: ${response}`);
     dlConn.stream();
   });
   return dlPromise;
+}
+
+let ipJsonList = [];
+
+
+
+let drawIP = function(ipJsonList) {
+  let ipParas = d3.select("div.ip").selectAll("p")
+    .data(ipJsonList, function(d) { return d.time; });
+
+  let ipEnter = ipParas.enter()
+    .append("p").text(function(d,i){
+      let PIkey = d.station;
+      let ip = d.ip;
+      let piTime = d.time;
+      return `PI=${PIkey}, IP=${ip}, pitime:${piTime} serverTime: ${moment.utc().toISOString()}`;
+    });
+  let ipMerge = ipParas.merge(ipEnter);
+  let ipExit = ipParas.exit().transition().remove();
 }
 
 let dlPacketIPCallback = function(dlPacket) {
 
       let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
       let ipjson = JSON.parse(s);
+      ipJsonList.unshift(ipjson);// adds to beginning
+      if (ipJsonList.length > 15) {
+        ipJsonList.pop(); //removes last element
+      }
+      drawIP(ipJsonList);
       // only do update if the IP has changed
 
-      let PIkey = ipjson.station;
-      let ip = ipjson.ip;
-      let piTime = ipjson.time;
-      d3.select("div.ip").insert("p",":first-child").text(`PI=${PIkey}, IP=${ip}, pitime:${piTime} serverTime: ${moment.utc().toISOString()}`);
+      // let PIkey = ipjson.station;
+      // let ip = ipjson.ip;
+      // let piTime = ipjson.time;
+      // d3.select("div.ip").insert("p",":first-child").text(`PI=${PIkey}, IP=${ip}, pitime:${piTime} serverTime: ${moment.utc().toISOString()}`);
     }
 
 
