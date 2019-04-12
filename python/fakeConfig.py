@@ -147,7 +147,7 @@ class SendConfig:
                     },
                     "FR":{
                       "Angles": {
-                         "Theta": 110.0,
+                         "Theta": -110.0,
                          "Alpha": 180.0
                       },
                       "Name":"Far Right Wall"
