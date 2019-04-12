@@ -113,7 +113,7 @@ class SendConfig:
                      "PI04": "NO",
                      "PI05": "FR",
                      "PI06": "NO",
-                     "PI07": "CT",
+                     "PI07": "NL",
                      "PI99": "NR"
                   },
                   "LocInfo":{
