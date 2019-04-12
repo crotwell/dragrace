@@ -146,8 +146,8 @@ if doFIR:
         }
 establishedJson = None
 maxWindow = timedelta(seconds=0.25)
-theta = 70.0
-alpha = 0.0
+# theta = 70.0
+# alpha = 0.0
 
 def getSps():
     sps = 1
@@ -455,6 +455,8 @@ if doDali:
         config = configTask.result()
         if hostname in config["Loc"]:
             sta = config["Loc"][hostname]
+            theta = config["LocInfo"][sta]["Angles"]["Theta"]
+            alpha = config["LocInfo"][sta]["Angles"]["Alpha"]
             print("set station code from config to {}".format(sta))
         else:
             print("host not in config, keep default name {}".format(sta))
