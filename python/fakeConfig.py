@@ -119,14 +119,14 @@ class SendConfig:
                   "LocInfo":{
                     "FL":{
                       "Angles":{
-                         "Theta": 0.0,
+                         "Theta": 70.0,
                          "Alpha": 0.0
                       },
                       "Name":"Far Left Wall"
                     },
                     "NL":{
                       "Angles": {
-                         "Theta": 0.0,
+                         "Theta": 90.0,
                          "Alpha": 0.0
                       },
                       "Name":"Left Starters Area"
@@ -140,15 +140,15 @@ class SendConfig:
                     },
                     "NR":{
                       "Angles": {
-                         "Theta": 0.0,
-                         "Alpha": 0.0
+                         "Theta": -90.0,
+                         "Alpha": 180.0
                       },
                       "Name":"Right Starters Area"
                     },
                     "FR":{
                       "Angles": {
-                         "Theta": 0.0,
-                         "Alpha": 0.0
+                         "Theta": 110.0,
+                         "Alpha": 180.0
                       },
                       "Name":"Far Right Wall"
                     },
