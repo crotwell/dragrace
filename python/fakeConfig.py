@@ -107,7 +107,7 @@ class SendConfig:
                 starttime = simpleDali.utcnowWithTz()
                 jsonMessage = {
                   "Loc":{
-                     "PI01": "FL",
+                     "PI01": "NR",
                      "PI02": "FL",
                      "PI03": "NO",
                      "PI04": "NO",
