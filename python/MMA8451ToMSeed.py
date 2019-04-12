@@ -458,6 +458,8 @@ if doDali:
             theta = config["LocInfo"][sta]["Angles"]["Theta"]
             alpha = config["LocInfo"][sta]["Angles"]["Alpha"]
             print("set station code from config to {}".format(sta))
+            print("from config Theta={}".format(theta))
+            print("from config Alpha={}".format(alpha))
         else:
             print("host not in config, keep default name {}".format(sta))
 
