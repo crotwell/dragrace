@@ -6,151 +6,28 @@
 
   </head>
   <body>
-    <div class="title">
-      <h1><strong><font size ="16">Charlotte Motor Speedway Dragrace</font></strong></h1>
-    <p><img src="cocky.jpg" width="100px"><strong>
-    University of South Carolina Geophysics Students</strong><img src="cocky.jpg" width="100px"></p>
-    <p>Follow us on <a
-      href="https://www.facebook.com/MarineScienceSC/?__tn__=%2Cd%2CP-R&eid=ARCLToLDOveO0w8qfc-LQL7bmcB_oWZ0goEtAXvaZB8dBU9E0RgMIHIytLlrCSSO4n_skolxSFGNfIzE" title="USC SEOE Facebook Page" target="_blank">Facebook</a>.</p>
-    <p><img src="zmax.jpg">
-    <span><img src="4-wide.png" width="100px"></span></p>
-    </div>
 
-    <!-- Display the countdown timer in an element -->
+    <div align="center">
+      <p><font size ="5">Charlotte Motor Speedway Dragrace</font></p>
+      <p><img src="cocky.jpg" width="50px">
+      <strong>U of SC Geophysics</strong><img src="cocky.jpg" width="50px"></p>
 
-    <p class="clock" id="demo"></p>
-    <script>
-// Set the date we're counting down to
-var countDownDate = new Date("Apr 26, 2019 08:00:00").getTime();
-
-// Update the count down every 1 second
-var x = setInterval(function() {
-
-  // Get todays date and time
-  var now = new Date().getTime();
-
-  // Find the distance between now and the count down date
-  var distance = countDownDate - now;
-
-  // Time calculations for days, hours, minutes and seconds
-  var days = Math.floor(distance / (1000 * 60 * 60 * 24));
-  var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-  var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-  // Output the result in an element with id="demo"
-  document.getElementById("demo").innerHTML = days + "d " + hours + "h "
-  + minutes + "m " + seconds + "s ";
-
-  // If the count down is over, write some text
-  if (distance < 0) {
-    clearInterval(x);
-    document.getElementById("demo").innerHTML = "EXPIRED";
-  }
-}, 1000);
-</script>
-
-
-
-    <div class="sidebar">Today's Schedule
-
-      <div class="class1">Funny Cars
-        <button class="heatcollapse">Heats</button>
-        <div class="panel">
-          <!--<p>Heat 1</p>
-          <p>Heat 2</p>-->
-          <button class="racecollapse">Heat 1</button>
-            <div class="panel1">
-            <p>Racer A</p>
-            <p>Racer B</p>
-            </div>
-          <p>
-            <button class="racecollapse">Heat 2</button>
-            <div class="panel1">
-              <p>Racer A</p>
-              <p>Racer B</p>
-            </div>
-
-          <div class="panel">
-            <p>Racer A</p>
-            <p>Racer B</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="class2">Class 2
-
-      <button class="heatcollapse">Heats 2</button>
-      <div class="panel">
-        <!--<p>Heat 1</p>
-        <p>Heat 2</p>-->
-        <button class="racecollapse">Heat 1</button>
-          <div class="panel">
-          <p>Racer A</p>
-          <p>Racer B</p>
-          </div>
-        <p>
-          <button class="racecollapse">Heat 2</button>
-          <div class="panel">
-            <p>Racer A</p>
-            <p>Racer B</p>
-          </p>
-        </div>
-      </div>
-      </div>
-
-    <div style="margin-left:25%"></div>
   </div>
 
-
-    <div class="piStatus">
-      <p>Status of Raspberry Pis</p>
-
-    <span class="PI01" href="" title="Loc: A IP: xxx Orient:1 Switch: 4:00"><div></div>Pi 01</span>
-    <span class="PI02" href="" title="Loc: A IP: xxx Orient:1 Switch: 4:00"><div></div>Pi 02</span>
-    <span class="PI03"href="" title="Loc: A IP: xxx Orient:1 Switch: 4:00"><div></div>Pi 03</span>
-    <span class="PI04"href="" title="Loc: A IP: xxx Orient:1 Switch: 4:00"><div></div>Pi 04</span>
-    <span class="PI05"href="" title="Loc: A IP: xxx Orient:1 Switch: 4:00"><div></div>Pi 05</span>
-    <span class="PI06"href="" title="Loc: A IP: xxx Orient:1 Switch: 4:00"><div></div>Pi 06</span>
-    <span class="PI07"href="" title="Loc: A IP: xxx Orient:1 Switch: 4:00"><div></div>Pi 07</span>
-    <span class="PI10"href="" title="Loc: A IP: xxx Orient:1 Switch: 4:00"><div></div>Pi 10</span>
-    <span class="PI11"href="" title="Loc: A IP: xxx Orient:1 Switch: 4:00"><div></div>Pi 11</span>
-    <span class="PI99" href="" title="Loc: A IP: xxx Orient:1 Switch: 4:00"><div></div>Pi 99</span>
-
-    </div>
+<p align="center">Maximum Ground Acceleration!</p>
 
     <div>
-      <select id="stationChoice" name="stationChoice">
-      </select>
+      <select id="stationChoice" name="stationChoice"></select>
       <button id="load">Load</button>
       <button id="pause">Pause</button>
-      <button id="disconnect">Disconnect</button>
-      <button id="trigger">Trigger</button>
-      <button id="peak">Peak</button>
-      <label>Duty Officer</label><input name="dutyofficer" type="text" value="tjotest">
-    </div>
 
     <h3>Realtime</h3>
-    <div class="realtime">
-    </div>
+    <div align="center" class="realtime"></div>
 
-    <div class="equalizer">
-      <span class="scale"><div style="height:120px"></div>2g</span>
-      <span class="PI01"><div ></div>Pi 1</span>
-      <span class="PI03"><div ></div>Pi 3</span>
-      <span class="PI04"><div ></div>Pi 4</span>
-      <span class="PI06"><div ></div>Pi 6</span>
-      <span class="PI07"><div ></div>Pi 7</span>
-      <span class="PI10"><div ></div>Pi 10</span>
-      <span class="PI11"><div ></div>Pi 11</span>
-      <span class="PI99"><div ></div>Pi 99</span>
-    </div>
-
-    <h3>Triggers</h3>
-    <div class="triggers">
-    </div>
+    <p><img src="zmax.jpg"><span><img src="4-wide.png" width="50px"></span></p>
 
     <script src="seisplotjs_2.0.0-alpha.1_standalone.js"></script>
+    <script src="equalizer.js"></script>
     <script src="duty.js"></script>
   </body>
 </html>
