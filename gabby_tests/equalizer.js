@@ -1,11 +1,11 @@
 
 let d3 = seisplotjs.d3
-var dataset = [5,10,15,14,2];
-var w = 500;
+var dataset = [5,15,20,25,5]
+var w = 200;
 var h = 100;
 var barPadding = 1;
 //create a svg element before body taag and assigns a svg with height and width
-var svg = d3.select("body")
+var svg = d3.select("div")
 .append("svg")
 .attr("width",w)
 .attr("height",h);
