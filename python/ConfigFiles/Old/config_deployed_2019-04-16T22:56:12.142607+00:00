@@ -1,0 +1,56 @@
+{
+  "Loc":{
+    "PI01":"NO",
+    "PI02":"NO",
+    "PI03":"NL",
+    "PI04":"NO",
+    "PI05":"FR",
+    "PI06":"NO",
+    "PI07":"CT",
+    "PI99":"FK"
+  },
+  "LocInfo":{
+    "FL":{
+      "Angles":{
+         "Theta": 0.0,
+         "Alpha": 0.0
+      },
+      "Name":"Far Left Wall"
+    },
+    "NL":{
+      "Angles": {
+         "Theta": 0.0,
+         "Alpha": 0.0
+      },
+      "Name":"Left Starters Area"
+    },
+    "CT":{
+      "Angles": {
+         "Theta": 0.0,
+         "Alpha": 0.0
+      },
+      "Name":"Center Wall End"
+    },
+    "NR":{
+      "Angles": {
+         "Theta": 0.0,
+         "Alpha": 0.0
+      },
+      "Name":"Right Starters Area"
+    },
+    "FR":{
+      "Angles": {
+         "Theta": 0.0,
+         "Alpha": 0.0
+      },
+      "Name":"Far Right Wall"
+    },
+    "FK":{
+      "Angles": {
+         "Theta": 45.0,
+         "Alpha": 0.0
+      },
+      "Name":"Fake Loc, PI99"
+    }
+  }
+}

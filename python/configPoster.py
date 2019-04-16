@@ -15,7 +15,18 @@ import shutil
 
 import simpleDali
 
-configDirectory="./ConfigFiles"
+# #For Testing
+# productionDirectory="./ConfigFiles"
+# prepDir=productionDirectory + "/ConfigFileEdit"
+# archiveDir=productionDirectory + "/ConfigFileArchive"
+# deployDir=productionDirectory + "/Run/ConfigFile"
+
+# For Production Run
+
+productionDirectory="/home/geo/Production"
+prepDir=productionDirectory + "/ConfigFileEdit"
+archiveDir=productionDirectory + "/ConfigFileArchive"
+deployDir=productionDirectory + "/Run/ConfigFile"
 
 class SendConfig:
     def __init__(self, intervalSecs, tokenFile):
@@ -86,7 +97,6 @@ class SendConfig:
             print("Connect Upload: {}".format(serverId))
         return self.daliUpload
 
-
     def run(self):
         loop = asyncio.get_event_loop()
         loop.set_exception_handler(self.exceptionHandler)
@@ -111,12 +121,43 @@ class SendConfig:
                     self.daliUpload = initTask.result()
                 starttime = simpleDali.utcnowWithTz()
 
-                oldfile=configDirectory+"/config_deployed"
-                newfile=configDirectory+"/config_new"
+                oldfile=deployDir+"/config_deployed"
+                newfile=prepDir+"/config_new"
+                archivefile=archiveDir+"/config_deployed"
 
                 if(filecmp.cmp(oldfile,newfile)):
                 # Files are the same, no action required
                    noChange=True
+                   print("Config file has not changed, sending anyway")
+
+                   json_file=open(oldfile,'r')
+                   contents=json_file.read()
+                   jsonMessage=json.loads(contents)
+                   json_file.close()
+
+                   streamid = "{}.{}/ZMAXCFG".format(self.net, 'ZMAX')
+                   hpdatastart = simpleDali.datetimeToHPTime(starttime)
+                   hpdataend = simpleDali.datetimeToHPTime(starttime)
+                   jsonSendTask = loop.create_task(self.daliUpload.writeJSON(streamid, hpdatastart, hpdataend, jsonMessage))
+                   loop.run_until_complete(jsonSendTask)
+                   if jsonSendTask.exception() is not None:
+                       self.daliUpload.close()
+                       if self.verbose:
+                           print("Exception sending json: {}".format( jsonSendTask.exception()))
+                       raise jsonSendTask.exception()
+                   else:
+                       response = jsonSendTask.result()
+                       if self.verbose:
+                           print("send config as {} as json, {}".format(streamid, response))
+                       if response.type == 'ERROR' and response.message.startswith(simpleDali.NO_SOUP):
+                           print("AUTHORIZATION failed, quiting...")
+                           self.keepGoing = False
+                    #keepGoing = False
+                   if repeatException:
+                       if self.verbose:
+                           print("Recovered from repeat exception")
+                       repeatException = False
+
                 else:
                 # Files are different, process the new one
                    noChange=False
@@ -129,7 +170,7 @@ class SendConfig:
     # OK, archive the old config and post the new once
     #
                        print("New Config File is OK ... making it official and posting to ringserver")
-                       shutil.move(oldfile,oldfile+"_"+starttime.isoformat())
+                       shutil.move(oldfile,archivefile+"_"+starttime.isoformat())
                        shutil.copy2(newfile,oldfile)
                        json_file.seek(0)
                        contents=json_file.read()
@@ -195,7 +236,7 @@ if __name__ == "__main__":
     parser.add_argument("-i",
                         dest="interval",
                         type=int,
-                        default=10,
+                        default=60,
                         help="send time interval in seconds")
     args = parser.parse_args()
     sender = SendConfig(args.interval, args.tokenFile)
