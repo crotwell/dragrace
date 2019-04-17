@@ -86,8 +86,8 @@ class SendConfig:
     async def initConnections(self, daliUpload):
         if self.daliUpload is None:
             # create a separate upload datalink
-            #self.daliUpload = simpleDali.SocketDataLink(self.host, self.port)
-            self.daliUpload = simpleDali.WebSocketDataLink(self.uri)
+            self.daliUpload = simpleDali.SocketDataLink(self.host, self.port)
+            #self.daliUpload = simpleDali.WebSocketDataLink(self.uri)
         else:
             self.daliUpload.reconnect()
         #daliUpload.verbose = True
