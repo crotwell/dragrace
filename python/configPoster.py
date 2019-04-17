@@ -165,7 +165,37 @@ class SendConfig:
                    json_file=open(newfile,'r')
                    goodConfig=configChecker.configSanityCheck(json_file)
                    if(not goodConfig):
-                      print("Config file fails")
+                      print("Config file fails ... re-posting old file")
+
+                      json_file.close()
+                      json_file=open(oldfile,'r')
+                      contents=json_file.read()
+                      jsonMessage=json.loads(contents)
+                      json_file.close()
+
+                      streamid = "{}.{}/ZMAXCFG".format(self.net, 'ZMAX')
+                      hpdatastart = simpleDali.datetimeToHPTime(starttime)
+                      hpdataend = simpleDali.datetimeToHPTime(starttime)
+                      jsonSendTask = loop.create_task(self.daliUpload.writeJSON(streamid, hpdatastart, hpdataend, jsonMessage))
+                      loop.run_until_complete(jsonSendTask)
+                      if jsonSendTask.exception() is not None:
+                          self.daliUpload.close()
+                          if self.verbose:
+                              print("Exception sending json: {}".format( jsonSendTask.exception()))
+                          raise jsonSendTask.exception()
+                      else:
+                          response = jsonSendTask.result()
+                          if self.verbose:
+                              print("send config as {} as json, {}".format(streamid, response))
+                          if response.type == 'ERROR' and response.message.startswith(simpleDali.NO_SOUP):
+                              print("AUTHORIZATION failed, quiting...")
+                              self.keepGoing = False
+                       #keepGoing = False
+                      if repeatException:
+                          if self.verbose:
+                              print("Recovered from repeat exception")
+                          repeatException = False
+                          
                    else:
     #
     # OK, archive the old config and post the new once
