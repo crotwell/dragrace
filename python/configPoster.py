@@ -195,7 +195,7 @@ class SendConfig:
                           if self.verbose:
                               print("Recovered from repeat exception")
                           repeatException = False
-                          
+
                    else:
     #
     # OK, archive the old config and post the new once
