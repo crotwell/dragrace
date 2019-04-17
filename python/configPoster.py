@@ -12,6 +12,7 @@ import traceback
 import configChecker
 import filecmp
 import shutil
+import sys
 
 import simpleDali
 
@@ -205,6 +206,7 @@ class SendConfig:
                    if not repeatException:
                        print(traceback.format_exc())
                        repeatException = True
+            sys.stdout.flush()
             for tempSleep in range(self.interval):
                 # sleep for interval seconds, but check to see if we should
                 # quit once a second
