@@ -18,7 +18,7 @@ let config = null;
 let ipmap = new Map();
 let timerInProgress = false;
 let clockOffset = 0; // should get from server somehow
-let duration = 300;
+let duration = 60;
 let maxSteps = -1; // max num of ticks of the timer before stopping, for debugin
 let timeWindow = seisplotjs.fdsndataselect.calcStartEndDates(null, null, duration, clockOffset);
 let protocol = 'http:';
@@ -99,6 +99,8 @@ if (protocol == 'https:') {
   });
 }
 
+let equalizer = new Equalizer("div.equalizer");
+
 d3.select('#stationChoice')
   .selectAll("option")
   .data(staList)
@@ -158,9 +160,9 @@ wp.d3.select("button#load").on("click", function(d) {
 
 let packetCount = 0;
 
-let handleMSeed = function(miniseed) {
-  let codes = miniseed.codes();
-  let seismogram = wp.miniseed.createSeismogram([miniseed]);
+let handleMaxAccSeismogram = function(seismogram) {
+  let codes = seismogram.codes();
+  //let seismogram = wp.miniseed.createSeismogram([miniseed]);
   if (allSeisPlots.has(codes)) {
     if (allTraces.has(codes)) {
       const oldTrace = allTraces.get(codes);
@@ -231,10 +233,10 @@ let dlTriggerCallback = function(dlPacket) {
 // update equilizer, but only as fast as the browser can handle redraws
 let drawEquilizer = function() {
   d3.select("div.piStatus").selectAll(`span`).classed('struggling', false).classed('good', false);
-  accelMaxValues.forEach((dlPacket, streamId, map) => {
+  accelMaxValues.forEach((maxaccJson, streamId, map) => {
     // turn all into string
-    let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
-    let maxaccJson = JSON.parse(s);
+    //let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
+    //let maxaccJson = JSON.parse(s);
     let scaleAcc = Math.round(100*maxaccJson.maxacc/2); // 2g = 100px
 
     let now = moment.utc();
@@ -244,7 +246,7 @@ let drawEquilizer = function() {
     if ( ! prevAccelValue[streamId] || prevAccelValue[streamId] !== scaleAcc) {
       // only update if the value changed
       prevAccelValue[streamId] = scaleAcc;
-      let staSpan = d3.select("div.equalizer").select(`span.${maxaccJson.station}`);
+      staSpan = d3.select("div.oldEqualizer").select(`span.${maxaccJson.station}`);
       staSpan.select("div").transition().style("height", `${scaleAcc}px`);
     }
 
@@ -269,15 +271,35 @@ let drawEquilizer = function() {
 window.requestAnimationFrame(drawEquilizer);
 
 let dlMaxAccelerationCallback = function(dlPacket) {
-    accelMaxValues.set(dlPacket.streamId, dlPacket);
+
+    let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
+    let maxaccJson = JSON.parse(s);
+
+    let seismogram = makeSeismogram(maxaccJson);
+    let trace = allTraces.get(seismogram.codes());
+    if(trace){
+      let oldSeis = trace.segments[trace.segments.length-1];
+      let delta = moment.duration(1/4, 'seconds');
+      if (seismogram.start.isAfter(oldSeis.end) && seismogram.start.subtract(delta).before(oldSeis.end)){
+        oldSeis.y.push(maxaccJson.maxacc);
+      }else{
+        trace.append(seismogram);
+      }
+      allSeisPlots.get(seismogram.codes()).draw();
+    }else{
+    handleMaxAccSeismogram(seismogram);
+    }
+    accelMaxValues.set(dlPacket.streamId, maxaccJson);
+    equalizer.updateEqualizer(accelMaxValues);
 }
+
 
 let dlPacketPeakCallback = function(dlPacket) {
     // turn all into string
     let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
     let maxacc = JSON.parse(s);
     let scaleAcc = Math.round(100*maxacc.maxacc/2); // 2g = 100px
-    let staSpan = d3.selectAll("div.equalizer").selectAll(`span.${maxacc.station}`);
+    let staSpan = d3.selectAll("div.oldEqualizer").selectAll(`span.${maxacc.station}`);
     staSpan.selectAll("div").transition().style("height", `${scaleAcc}px`).style("background-color", "yellow");
     //console.log(`maxacc: ${maxacc.station}  ${maxacc.maxacc}  ${scaleAcc}`)
 }
