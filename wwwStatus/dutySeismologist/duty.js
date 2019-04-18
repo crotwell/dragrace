@@ -18,7 +18,7 @@ let config = null;
 let ipmap = new Map();
 let timerInProgress = false;
 let clockOffset = 0; // should get from server somehow
-let duration = 60;
+let duration = 300;
 let maxSteps = -1; // max num of ticks of the timer before stopping, for debugin
 let timeWindow = seisplotjs.fdsndataselect.calcStartEndDates(null, null, duration, clockOffset);
 let protocol = 'http:';
@@ -118,6 +118,7 @@ let allTraces = new Map();
 let markers = [];
 let svgParent = wp.d3.select('div.realtime');
 let margin = {top: 20, right: 20, bottom: 50, left: 60};
+let needsRedraw = new Set();
 
 let paused = false;
 let stopped = false;
@@ -279,15 +280,21 @@ let dlMaxAccelerationCallback = function(dlPacket) {
     let trace = allTraces.get(seismogram.codes());
     if(trace){
       let oldSeis = trace.segments[trace.segments.length-1];
-      let delta = moment.duration(1/4, 'seconds');
+      let delta = moment.duration(.375, 'seconds');
       if (seismogram.start.isAfter(oldSeis.end) && seismogram.start.subtract(delta).before(oldSeis.end)){
         oldSeis.y.push(maxaccJson.maxacc);
       }else{
         trace.append(seismogram);
       }
-      allSeisPlots.get(seismogram.codes()).draw();
+      // if we are not paused, let timer animationLoop redraw
+      // so we don't have to redraw for every packet
+      // if paused, then schedule a redraw the next time is comes
+      // around on the guitar
+      if (paused) {
+        needsRedraw.add(allSeisPlots.get(seismogram.codes()));
+      }
     }else{
-    handleMaxAccSeismogram(seismogram);
+      handleMaxAccSeismogram(seismogram);
     }
     accelMaxValues.set(dlPacket.streamId, maxaccJson);
     equalizer.updateEqualizer(accelMaxValues);
@@ -601,6 +608,15 @@ let dlPacketIPCallback = function(dlPacket) {
     }
   }
 }
+
+let animationCallback = function() {
+  needsRedraw.forEach(sp => {
+    sp.draw();
+  });
+
+  window.requestAnimationFrame(animationCallback);
+}
+window.requestAnimationFrame(animationCallback);
 //
 let staCode = null
 doDatalinkConnect()
