@@ -150,14 +150,6 @@ wp.d3.select("div.class2 button.heatcollapse").on("click", function(d) {
 });
 
 //end trying to make heat buttons work
-wp.d3.select("button#load").on("click", function(d) {
-  let selectEl = document.getElementById("stationChoice");
-  let selectedIndex = selectEl.selectedIndex;
-  staCode = selectEl.options[selectedIndex].value;
-
-  console.log("Load..."+staCode);
-  doplot(staCode);
-});
 
 let packetCount = 0;
 
@@ -402,46 +394,6 @@ doplot = function(sta) {
   doPause(false);
 };
 
-wp.d3.select("button#peak").on("click", function(d) {
-  let trigtime = moment.utc()
-  let dutyOfficer = document.getElementsByName('dutyofficer')[0].value;
-  dutyOfficer = dutyOfficer.replace(/\W/, '');
-  dutyOfficer = dutyOfficer.replace(/_/, '');
-  dutyOfficer = dutyOfficer.toUpperCase();
-  let trigger = {
-        "type": "manual",
-        "dutyOfficer": dutyOfficer,
-        "time": trigtime.toISOString(),
-        "creation": trigtime.toISOString(),
-        "override": {
-            "modtime": trigtime.toISOString(),
-            "value": "enable"
-        }
-    };
-  let dlTriggerConn = new datalink.DataLinkConnection(writeDatalinkUrl, dlTriggerCallback, errorFn);
-  dlTriggerConn.connect().then(serverId => {
-    d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
-    if (jwtTokenPromise === null && jwtToken) {
-      return dlTriggerConn.awaitDLCommand(`AUTHORIZATION`, jwtToken);
-    } else {
-      d3.select("div.triggers").append("p").text(`Unable to send trigger, not auth`);
-      throw new Error(`Unable to send trigger, not auth. jwt: ${jwtToken != null} ${jwtToken}`);
-    }
-  }).then(authResponse => {
-    d3.select("div.triggers").append("p").text(`AUTH ack: ${authResponse}`);
-    if ( ! authResponse.startsWith("OK")) {
-      throw new Error(`AUTH ack: ${authResponse}`);
-    }
-    d3.select("div.triggers").append("p").text(`Send Trigger: ${JSON.stringify(trigger)}`);
-    return dlTriggerConn.writeAck(`XX_MANUAL_TRIG_${dutyOfficer}/MTRIG`,
-      trigtime,
-      trigtime,
-      datalink.stringToUnit8Array(JSON.stringify(trigger)));
-  }).then(ack => {
-    dlTriggerConn.close();
-    d3.select("div.triggers").append("p").text(`Send trigger ack: ${ack}`);
-  });
-});
 
 wp.d3.select("button#trigger").on("click", function(d) {
   let trigtime = moment.utc()
