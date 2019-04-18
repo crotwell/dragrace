@@ -13,5 +13,6 @@ let seismogram = new seisplotjs.model.Seismogram([maxacc.maxacc,maxacc.maxacc],s
 return seismogram;
 
 
+
 //allSeisPlots.get(seismogram.codes()).append(seismogram);
 }
