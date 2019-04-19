@@ -210,10 +210,10 @@ let dlTriggerCallback = function(dlPacket) {
   d3.select("div.triggers").append("p").text(`Trigger: ${s}`);
   let trig = JSON.parse(s)
   displayName = trig.dutyOfficer ? trig.dutyOfficer : "AutoTrigger";
-  let startMark = { markertype: 'predicted', name: "Start"+displayName, time: moment.utc(trig.time).subtract(15, 'seconds') };
+  let startMark = { markertype: 'predicted', name: "Start"+displayName, time: moment.utc(trig.startTime) };
   markers.push(startMark);
   //Gabby & Emma tried to make two trigger flags appear at 3 seconds apart
-  let endMark = { markertype: 'predicted', name: displayName, time:  moment.utc(trig.time).add(15, 'seconds') };
+  let endMark = { markertype: 'predicted', name: displayName, time:  moment.utc(trig.endTime) };
   markers.push(endMark);
   for (let sp of allSeisPlots.values()) {
     sp.appendMarkers( [ startMark,endMark ]);
@@ -404,6 +404,8 @@ wp.d3.select("button#trigger").on("click", function(d) {
         "type": "manual",
         "dutyOfficer": dutyOfficer,
         "time": trigtime.toISOString(),
+        "startTime":moment.utc(trig.time).subtract(15, 'seconds').
+        "endTime":moment.utc(trig.time).add(15, 'seconds'),
         "creation": trigtime.toISOString(),
         "override": {
             "modtime": trigtime.toISOString(),
