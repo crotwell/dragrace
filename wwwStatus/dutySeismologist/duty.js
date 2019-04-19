@@ -404,8 +404,8 @@ wp.d3.select("button#trigger").on("click", function(d) {
         "type": "manual",
         "dutyOfficer": dutyOfficer,
         "time": trigtime.toISOString(),
-        "startTime":moment.utc(trig.time).subtract(15, 'seconds').
-        "endTime":moment.utc(trig.time).add(15, 'seconds'),
+        "startTime":moment.utc(trig.time).subtract(15, 'seconds').toISOString(),
+        "endTime":moment.utc(trig.time).add(15, 'seconds').toISOString(),
         "creation": trigtime.toISOString(),
         "override": {
             "modtime": trigtime.toISOString(),
