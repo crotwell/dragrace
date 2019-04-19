@@ -100,7 +100,6 @@ if (protocol == 'https:') {
 }
 
 let equalizer = new Equalizer("div.equalizer");
-
 d3.select('#stationChoice')
   .selectAll("option")
   .data(staList)
@@ -214,7 +213,7 @@ let dlTriggerCallback = function(dlPacket) {
   let startMark = { markertype: 'predicted', name: "Start"+displayName, time: moment.utc(trig.time).subtract(15, 'seconds') };
   markers.push(startMark);
   //Gabby & Emma tried to make two trigger flags appear at 3 seconds apart
-  let endMark = { markertype: 'predicted', name: displayName, time: moment.utc(trig.time) };
+  let endMark = { markertype: 'predicted', name: displayName, time:  moment.utc(trig.time).add(15, 'seconds') };
   markers.push(endMark);
   for (let sp of allSeisPlots.values()) {
     sp.appendMarkers( [ startMark,endMark ]);

@@ -6,14 +6,26 @@ class Equalizer{
     this.d3 = seisplotjs.d3
     this.margin = 30;
     this.w = 330;
-    this.h = 200;
-    this.yScale = d3.scaleLinear().domain([0,2]).range([0,this.h]);
+    this.h = 200; //px
+    this.yScale = d3.scaleLinear()
+    .domain([0,2])
+    .range([0,this.h]);
+    console.log(`yscaletest ${this.yScale(1)}`)
     this.yAxis = d3.axisLeft(this.yScale);
     this.yAxis.ticks(10);
     this.barPadding = 1;
 
     this.createEqualizer(selector);
+    this.updateEqualizer(this.createZeros());
   }
+createZeros(){
+  let dataset=new Map();
+  dataset.set("FL",{'station':'FL','maxacc':.10 });
+  dataset.set("NL",{'station':'NL','maxacc':.5 });
+  dataset.set("NR",{'station':'NR','maxacc':.3 });
+  dataset.set("FR",{'station':'FR','maxacc':.1 });
+  return dataset;
+}
 
 createEqualizer(selector){
   let svg = d3.select(selector)
@@ -31,23 +43,31 @@ createEqualizer(selector){
 }
 
 updateEqualizer(maxaccJson){
-  let dataset = maxaccJson.values();
-  console.log(`${dataset} this is the data`);
+  let dataset = new Array();
+  for (let x of maxaccJson.values()){
+    dataset.push(x);
+
+  }
+  console.log(`dataset len: ${dataset.length}`)
+  //console.log(`${dataset} this is the data`);
   //create a svg element before body taag and assigns a svg with height and width
 
-let svg = d3.select("div.equalizer").select("svg");
+let svg = d3.select(this.selector).select("svg");
 let bars = svg.select("g.bars");
-
-  bars.selectAll("rect")//select in the page and correspond to data
-  .data(dataset);
-  bars.enter()
+let that = this;
+svg.selectAll("rect")//select in the page and correspond to data
+  .data(dataset, function(d){
+    return d.station;
+  })
+  .enter()
   .append("rect")
   //define NL... as numbers
 
   .attr("x",function(d){
     let i = -1;
+
     if (d.station === "FL") {
-      i = 0
+      i = 0;
     }else if (d.station === "NL") {
       i = 1;
     }else if (d.station === "NR") {
@@ -57,18 +77,20 @@ let bars = svg.select("g.bars");
     }else {
          console.log(`no station found ${d.station}`);
     }
-
-    return i * (this.w / 4);
+console.log(`xxxxx ${d.station} maxacc= ${d.maxacc} i=${i}`)
+    return i * (that.w / 4);
   })
   .attr("y", function(d){
-    return this.h - d; //height minus data value
+    return that.h - that.yScale(d.maxacc); //height minus data value
   })
-  .attr("width", this.w / dataset.length-this.barPadding)
+  .attr("width", that.w / dataset.length-that.barPadding)
   .attr("height",function(d){
-    return this.yScale(d.maxacc); // 2g = 100px according to yScale
+    console.log(`height ${d.maxacc} ${that.yScale(d.maxacc)}`)
+    return that.yScale(d.maxacc); // 2g = 100px according to yScale
+
     })
   .attr("fill",function(d){
-    return "rgb( " + (d * 10) + " , 0, 0 )";
+    return "rgb( " + (d.maxacc * 255/2) + " , 0, 0 )";
   });
   }
 }
