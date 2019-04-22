@@ -29,7 +29,11 @@ class IpTimeArchive:
         self.outFilename = "mseed/www/iptime.txt"
         self.gapFilename = "mseed/www/ipgaps.txt"
         self.lastFlushTime = None
-        self.flushInterval = timedelta(seconds=300)
+        self.flushInterval = timedelta(seconds=60)
+        self.flushAll()
+        with open(self.gapFilename, 'a') as f:
+            now = datetime.utcnow().replace(tzinfo=timezone.utc)
+            f.write('# Flush ip gaps at {}'.format(now.isoformat()))
 
     def recordIPTime(self, sendIpJson):
         jsonTime = dateutil.parser.parse(sendIpJson['time']).replace(tzinfo=timezone.utc)
@@ -56,7 +60,9 @@ class IpTimeArchive:
             f.write('{} {} {}\n'.format(station, self.ipTime[station].start.isoformat(), self.ipTime[station].end.isoformat()))
 
     def flushAll(self):
+        now = datetime.utcnow().replace(tzinfo=timezone.utc)
         with open(self.outFilename, 'w') as f:
+            f.write('# Flush ip at {}'.format(now.isoformat()))
             for station, v in self.ipTime.items():
                 f.write('{} {} {}\n'.format(station, v['start'].isoformat(), v['end'].isoformat()))
         self.lastFlushTime = datetime.utcnow().replace(tzinfo=timezone.utc)
@@ -112,6 +118,6 @@ if __name__ == "__main__":
     signal.signal(signal.SIGTERM, handleSignal)
 
     loop = asyncio.get_event_loop()
-    loop.set_debug(True)
+    #loop.set_debug(True)
     loop.run_until_complete(archiver.doLoop())
     loop.close()
