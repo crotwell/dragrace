@@ -7,6 +7,7 @@ import sys
 import json
 from datetime import datetime, timedelta, date
 from array import array
+import os
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -27,6 +28,9 @@ keepGoing = True
 # create global variables for maxAccPacket list and Trigger Holding Pin
 maxAccPacket_list = []
 trig_HoldingPin = []
+
+productionDirectory="/home/geo/Production"
+LiveStreamDirectory = productionDirectory + "/Run/mseed/www/LiveStream"
 
 def handleSignal(sigNum, stackFrame):
     print("############ handleSignal {} ############".format(sigNum))
@@ -81,6 +85,7 @@ async def doTest(loop):
 
         # here we will make directories production/run/mseed/www/LiveStream/Class/Heat/....
 
+        os.makedirs
         # here we will send the write the json to the file
 
     dali.close()
@@ -176,6 +181,12 @@ def HandleTriggerPacket(packet):
 
         trig_HoldingPin = tooYoungTriggers
         return ResultsJson
+
+def SendResultsJson(ResultsJson):
+    productionDirectory="/home/geo/Production"
+    LiveStreamDirectory = productionDirectory + "/Run/mseed/www/LiveStream"
+    
+
 
 
 
