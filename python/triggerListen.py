@@ -177,10 +177,18 @@ def SendResultsJson(ResultsJson):
     day = ResultsJson["Day_Name"]
     classType = ResultsJson["trig"]["class"] # need to see updated trig with info!
     heat = ResultsJson["trig"]["heat"] # need to see updated trig with info!
-    resultsPath = "Production/Run/mseed/www/results/{}/{}/{}/results.json".format(day,classType,heat)
-    classNamesPath = "Production/Run/mseed/www/results/{}/classnames.json".format(day)
-    heatNamesPath = "Production/Run/mseed/www/results/{}/{}/heatnames.json".format(day,classType)
 
+    # Define directories to put jsons into
+    resultsPath = "Production/Run/mseed/www/results/{}/{}/{}".format(day,classType,heat)
+    classNamesPath = "Production/Run/mseed/www/results/{}".format(day)
+    heatNamesPath = "Production/Run/mseed/www/results/{}/{}".format(day,classType)
+
+    # Define file paths for jsons to send
+    resultsFile = "Production/Run/mseed/www/results/{}/{}/{}/results.json".format(day,classType,heat)
+    classNamesFile = "Production/Run/mseed/www/results/{}/classnames.json".format(day)
+    heatNamesFile = "Production/Run/mseed/www/results/{}/{}/heatnames.json".format(day,classType)
+
+    # Create directories baased on directory PATHS defined 181-184
     os.mkdir(resultsPath)
     os.mkdir(classNamesPath)
     os.mkdir(heatNamesPath)
@@ -188,30 +196,37 @@ def SendResultsJson(ResultsJson):
     # need to be checked with updated trigger from gabby
 
     # send ResultsJson to directory
-    with open(resultsPath,"w") as f:
-        json.dumps(ResultsJson,f)
+    with open(resultsFile,"w") as f:
+        if f is not None:
+            json.dumps(ResultsJson,f)
 
     # read in classnames.json
-    with open(classNamesPath,'r') as f:
-        classNames = json.loads(f)
-        # if class (ie top fuel) is not in classnames.json, add the class
-        # to the classnames.json, then send this updated classnames.json to directory
-        # else, pass
+    with open(classNamesFile,'r') as f:
+        if f is not None:
+            classNames = json.loads(f)
+            # if class (ie top fuel) is not in classnames.json, add the class
+            # to the classnames.json, then send this updated classnames.json to directory
+            # else, pass
+        else:
+            pass
         if classType is not in classNames:
             classNames.append(classType)
-            with open(classNamesPath,'w') as f:
+            with open(classNamesFile,'w') as f:
                 json.dumps(classNames,f)
         else:
             pass
     # read in classnames.json
-    with open(heatNamesPath,'r') as f:
-        heatNames = json.loads(f)
-        # if heat (ie heat 2) is not in heatnames.json, add the heat
-        # to the heatnames.json, then send this updated heatnames.json to directory
-        # else, pass
+    with open(heatNamesFile,'r') as f:
+        if f is not None:
+            heatNames = json.loads(f)
+            # if heat (ie heat 2) is not in heatnames.json, add the heat
+            # to the heatnames.json, then send this updated heatnames.json to directory
+            # else, pass
+        else:
+            pass
         if heat is not in heatNames:
             heatNames.append(heat)
-            with open(heatNamesPath,'w') as f:
+            with open(heatNamesFile,'w') as f:
                 json.dumps(heatNames,f)
         else:
             pass
