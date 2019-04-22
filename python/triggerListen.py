@@ -145,8 +145,13 @@ async def doTest(loop):
         # print("got a packet: {}".format(peakPacket.streamId,))
         # if  peakPacket.streamId.endswith("ZMAXCFG"):
         #     config = json.loads(peakPacket.data.decode("'UTF-8'"))
-        if packet.streamId
-        # Question: how to parse out maxAccPacket and triggers
+        if packet.streamId.endswith("MAXACC")
+            maxAccPacket = json.loads(packet.data.decode("'UTF-8'"))
+
+        if packet.streamId.endswith("MTRIG")
+            trig = json.loads(packet.data.decode("'UTF-8'"))
+        # Question: what does maxacc and trigger's streamId end with?
+
 
         if maxAccPacket:
             maxAccPacket_list.append(maxAccPacket)
