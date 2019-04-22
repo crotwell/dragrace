@@ -174,10 +174,15 @@ def HandleTriggerPacket(packet):
         return ResultsJson
 
 def SendResultsJson(ResultsJson):
+    day = ResultsJson["Day_Name"]
+    classType = ResultsJson["trig"]["class"] # need to see updated trig with info!
+    heat = ResultsJson["trig"]["heat"] # need to see updated trig with info!
     productionDirectory="/home/geo/Production"
-    LiveStreamDirectory = productionDirectory + "/Run/mseed/www/LiveStream"
-    os.mkdirs(LiveStreamDirectory)
-    return
+    filename = "Production/Run/mseed/www/results/{}/{}/{}/results.json".format(day,classType,heat)
+    # os.mkdirs(filename)
+    with open(filename,"w") as f:
+        json.dumps(ResultsJson,f)
+    return print('I succesffuly sent results to results directory!')
 
 
 
