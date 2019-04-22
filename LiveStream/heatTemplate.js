@@ -46,4 +46,3 @@ fetch(`http://www.seis.sc.edu/dragrace/www/results/data/${day}/classnames.json`)
         });
       }
     });
-})
