@@ -26,7 +26,7 @@ class IpTimeArchive:
         self.keepGoing = True
         self.ipTime = {}
         self.maxGap = timedelta(seconds=15)
-        self.outFilename = "iptime.txt"
+        self.outFilename = "mseed/www/iptime.txt"
         self.lastFlushTime = None
         self.flushInterval = timedelta(seconds=300)
 
