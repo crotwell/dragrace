@@ -17,7 +17,8 @@ path.seispath {
   stroke-width: 1px;
 }
 div.equalizer {
-    height:120px;
+    height:300px;
+    width:400px;
 }
 div.bar{
   display: inline-block;

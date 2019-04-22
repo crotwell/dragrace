@@ -99,6 +99,7 @@ if (protocol == 'https:') {
   });
 }
 
+let equalizer = new Equalizer("div.equalizer");
 d3.select('#stationChoice')
   .selectAll("option")
   .data(staList)
@@ -116,6 +117,7 @@ let allTraces = new Map();
 let markers = [];
 let svgParent = wp.d3.select('div.realtime');
 let margin = {top: 20, right: 20, bottom: 50, left: 60};
+let needsRedraw = new Set();
 
 let paused = false;
 let stopped = false;
@@ -147,20 +149,12 @@ wp.d3.select("div.class2 button.heatcollapse").on("click", function(d) {
 });
 
 //end trying to make heat buttons work
-wp.d3.select("button#load").on("click", function(d) {
-  let selectEl = document.getElementById("stationChoice");
-  let selectedIndex = selectEl.selectedIndex;
-  staCode = selectEl.options[selectedIndex].value;
-
-  console.log("Load..."+staCode);
-  doplot(staCode);
-});
 
 let packetCount = 0;
 
-let handleMSeed = function(miniseed) {
-  let codes = miniseed.codes();
-  let seismogram = wp.miniseed.createSeismogram([miniseed]);
+let handleMaxAccSeismogram = function(seismogram) {
+  let codes = seismogram.codes();
+  //let seismogram = wp.miniseed.createSeismogram([miniseed]);
   if (allSeisPlots.has(codes)) {
     if (allTraces.has(codes)) {
       const oldTrace = allTraces.get(codes);
@@ -216,10 +210,10 @@ let dlTriggerCallback = function(dlPacket) {
   d3.select("div.triggers").append("p").text(`Trigger: ${s}`);
   let trig = JSON.parse(s)
   displayName = trig.dutyOfficer ? trig.dutyOfficer : "AutoTrigger";
-  let startMark = { markertype: 'predicted', name: "Start"+displayName, time: moment.utc(trig.time).subtract(15, 'seconds') };
+  let startMark = { markertype: 'predicted', name: "Start"+displayName, time: moment.utc(trig.startTime) };
   markers.push(startMark);
   //Gabby & Emma tried to make two trigger flags appear at 3 seconds apart
-  let endMark = { markertype: 'predicted', name: displayName, time: moment.utc(trig.time) };
+  let endMark = { markertype: 'predicted', name: displayName, time:  moment.utc(trig.endTime) };
   markers.push(endMark);
   for (let sp of allSeisPlots.values()) {
     sp.appendMarkers( [ startMark,endMark ]);
@@ -231,10 +225,10 @@ let dlTriggerCallback = function(dlPacket) {
 // update equilizer, but only as fast as the browser can handle redraws
 let drawEquilizer = function() {
   d3.select("div.piStatus").selectAll(`span`).classed('struggling', false).classed('good', false);
-  accelMaxValues.forEach((dlPacket, streamId, map) => {
+  accelMaxValues.forEach((maxaccJson, streamId, map) => {
     // turn all into string
-    let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
-    let maxaccJson = JSON.parse(s);
+    //let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
+    //let maxaccJson = JSON.parse(s);
     let scaleAcc = Math.round(100*maxaccJson.maxacc/2); // 2g = 100px
 
     let now = moment.utc();
@@ -244,7 +238,7 @@ let drawEquilizer = function() {
     if ( ! prevAccelValue[streamId] || prevAccelValue[streamId] !== scaleAcc) {
       // only update if the value changed
       prevAccelValue[streamId] = scaleAcc;
-      let staSpan = d3.select("div.equalizer").select(`span.${maxaccJson.station}`);
+      staSpan = d3.select("div.oldEqualizer").select(`span.${maxaccJson.station}`);
       staSpan.select("div").transition().style("height", `${scaleAcc}px`);
     }
 
@@ -269,15 +263,41 @@ let drawEquilizer = function() {
 window.requestAnimationFrame(drawEquilizer);
 
 let dlMaxAccelerationCallback = function(dlPacket) {
-    accelMaxValues.set(dlPacket.streamId, dlPacket);
+
+    let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
+    let maxaccJson = JSON.parse(s);
+
+    let seismogram = makeSeismogram(maxaccJson);
+    let trace = allTraces.get(seismogram.codes());
+    if(trace){
+      let oldSeis = trace.segments[trace.segments.length-1];
+      let delta = moment.duration(.375, 'seconds');
+      if (seismogram.start.isAfter(oldSeis.end) && seismogram.start.subtract(delta).before(oldSeis.end)){
+        oldSeis.y.push(maxaccJson.maxacc);
+      }else{
+        trace.append(seismogram);
+      }
+      // if we are not paused, let timer animationLoop redraw
+      // so we don't have to redraw for every packet
+      // if paused, then schedule a redraw the next time is comes
+      // around on the guitar
+      if (paused) {
+        needsRedraw.add(allSeisPlots.get(seismogram.codes()));
+      }
+    }else{
+      handleMaxAccSeismogram(seismogram);
+    }
+    accelMaxValues.set(dlPacket.streamId, maxaccJson);
+    equalizer.updateEqualizer(accelMaxValues);
 }
+
 
 let dlPacketPeakCallback = function(dlPacket) {
     // turn all into string
     let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
     let maxacc = JSON.parse(s);
     let scaleAcc = Math.round(100*maxacc.maxacc/2); // 2g = 100px
-    let staSpan = d3.selectAll("div.equalizer").selectAll(`span.${maxacc.station}`);
+    let staSpan = d3.selectAll("div.oldEqualizer").selectAll(`span.${maxacc.station}`);
     staSpan.selectAll("div").transition().style("height", `${scaleAcc}px`).style("background-color", "yellow");
     //console.log(`maxacc: ${maxacc.station}  ${maxacc.maxacc}  ${scaleAcc}`)
 }
@@ -373,46 +393,6 @@ doplot = function(sta) {
   doPause(false);
 };
 
-wp.d3.select("button#peak").on("click", function(d) {
-  let trigtime = moment.utc()
-  let dutyOfficer = document.getElementsByName('dutyofficer')[0].value;
-  dutyOfficer = dutyOfficer.replace(/\W/, '');
-  dutyOfficer = dutyOfficer.replace(/_/, '');
-  dutyOfficer = dutyOfficer.toUpperCase();
-  let trigger = {
-        "type": "manual",
-        "dutyOfficer": dutyOfficer,
-        "time": trigtime.toISOString(),
-        "creation": trigtime.toISOString(),
-        "override": {
-            "modtime": trigtime.toISOString(),
-            "value": "enable"
-        }
-    };
-  let dlTriggerConn = new datalink.DataLinkConnection(writeDatalinkUrl, dlTriggerCallback, errorFn);
-  dlTriggerConn.connect().then(serverId => {
-    d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
-    if (jwtTokenPromise === null && jwtToken) {
-      return dlTriggerConn.awaitDLCommand(`AUTHORIZATION`, jwtToken);
-    } else {
-      d3.select("div.triggers").append("p").text(`Unable to send trigger, not auth`);
-      throw new Error(`Unable to send trigger, not auth. jwt: ${jwtToken != null} ${jwtToken}`);
-    }
-  }).then(authResponse => {
-    d3.select("div.triggers").append("p").text(`AUTH ack: ${authResponse}`);
-    if ( ! authResponse.startsWith("OK")) {
-      throw new Error(`AUTH ack: ${authResponse}`);
-    }
-    d3.select("div.triggers").append("p").text(`Send Trigger: ${JSON.stringify(trigger)}`);
-    return dlTriggerConn.writeAck(`XX_MANUAL_TRIG_${dutyOfficer}/MTRIG`,
-      trigtime,
-      trigtime,
-      datalink.stringToUnit8Array(JSON.stringify(trigger)));
-  }).then(ack => {
-    dlTriggerConn.close();
-    d3.select("div.triggers").append("p").text(`Send trigger ack: ${ack}`);
-  });
-});
 
 wp.d3.select("button#trigger").on("click", function(d) {
   let trigtime = moment.utc()
@@ -424,6 +404,8 @@ wp.d3.select("button#trigger").on("click", function(d) {
         "type": "manual",
         "dutyOfficer": dutyOfficer,
         "time": trigtime.toISOString(),
+        "startTime":moment.utc(trig.time).subtract(15, 'seconds').toISOString(),
+        "endTime":moment.utc(trig.time).add(15, 'seconds').toISOString(),
         "creation": trigtime.toISOString(),
         "override": {
             "modtime": trigtime.toISOString(),
@@ -572,13 +554,25 @@ let dlPacketIPCallback = function(dlPacket) {
         ipmap.set(ipjson.station,ipjson.ip);
         let PIkey = ipjson.station;
         let PILoc = config.Loc[ipjson.station]
-        let theta = config.LocInfo[PILoc].Angles.Theta;
+        let theta = 0;
+        if (PILoc !== "NO"){
+          theta = config.LocInfo[PILoc].Angles.Theta;
+        }
         let statpi = d3.select("div.piStatus");
         statpi.select("span."+PILoc).attr(`title`,`PI=${PIkey},Theta=${theta}, IP=${ipmap.get(PIkey)}`);
       }
     }
   }
 }
+
+let animationCallback = function() {
+  needsRedraw.forEach(sp => {
+    sp.draw();
+  });
+
+  window.requestAnimationFrame(animationCallback);
+}
+window.requestAnimationFrame(animationCallback);
 //
 let staCode = null
 doDatalinkConnect()
