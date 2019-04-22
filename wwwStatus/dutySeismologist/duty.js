@@ -554,7 +554,10 @@ let dlPacketIPCallback = function(dlPacket) {
         ipmap.set(ipjson.station,ipjson.ip);
         let PIkey = ipjson.station;
         let PILoc = config.Loc[ipjson.station]
-        let theta = config.LocInfo[PILoc].Angles.Theta;
+        let theta = 0;
+        if (PILoc !== "NO"){
+          theta = config.LocInfo[PILoc].Angles.Theta;
+        }
         let statpi = d3.select("div.piStatus");
         statpi.select("span."+PILoc).attr(`title`,`PI=${PIkey},Theta=${theta}, IP=${ipmap.get(PIkey)}`);
       }
