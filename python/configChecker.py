@@ -1,7 +1,6 @@
 import argparse
 import json
 import collections
-#import configChecker
 
 def dict_raise_on_duplicates(ordered_pairs):
     """Reject duplicate keys."""
@@ -17,9 +16,6 @@ def configSanityCheck(configFile):
 
     sanityPass=True
     data=configFile.read()
-
-#with open(configFile, 'r') as myfile:
-#    data=myfile.read()
 
 # parse file
     try:
@@ -67,7 +63,7 @@ def configSanityCheck(configFile):
 # Make sure known Pis are in known locations
 #    This will find unknown location codes
 #
-        if piDict.get(pi) not in ["NO","FL","NL","CT","NR","FR"]:
+        if piDict.get(pi) not in ["NO","FL","NL","CT","NR","FR","XX","ZZ"]:
             print('{}:  Location of {} is not valid'.format(pi,piDict.get(pi)))
             sanityPass=False
     return sanityPass

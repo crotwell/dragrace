@@ -100,7 +100,9 @@ processid=0
 architecture="python"
 
 keepGoing = True
-
+# create global variables for maxAccPacket list and Trigger Holding Pin
+maxAccPacket_list = []
+trig_HoldingPin = []
 
 def handleSignal(sigNum, stackFrame):
     print("############ handleSignal {} ############".format(sigNum))
@@ -133,10 +135,10 @@ async def doTest(loop):
     # else:
     #     print("positionAfter() Resonse m={}".format(r.message))
     r = await dali.stream()
-    maxAccPacket_list = []
-    trig_HoldingPin = []
+
     while(keepGoing):
         packet = await dali.parseResponse()
+        print("got a packet: {}".format(packet.streamId))
         # maxAccPacket = await dali.parseResponse()
         # trig = await dali.parseResponse()
 
@@ -145,21 +147,23 @@ async def doTest(loop):
         # print("got a packet: {}".format(peakPacket.streamId,))
         # if  peakPacket.streamId.endswith("ZMAXCFG"):
         #     config = json.loads(peakPacket.data.decode("'UTF-8'"))
-        if packet.streamId
-        # Question: how to parse out maxAccPacket and triggers
+        if packet.streamId.endswith("MAXACC"):
+            HandleMaxACC_Packet()
+            # HandleMaxACC_Packet function
+        if packet.streamId.endswith("MTRIG"):
+            HandleTriggerPacket()
+        else:
+            print("Packet is not a MaxACC or a Trigger")
+            continue
 
-        if maxAccPacket:
-            maxAccPacket_list.append(maxAccPacket)
 
-        if trig:
-            trig_HoldingPin.append(trig)
 
-        tooYoungTriggers = []
 # loop thru the trig_HoldingPin
         for trig in trig_HoldingPin:
             # convert incoming isoformat objects into datetime objects
             # *** check to verify correct method to do this ***
             trig["startTime"] = datetime.fromisoformat(trig["startTime"])
+            date = datetime.fromisoformat
             trig["endTime"] = datetime.fromisoformat(trig["endTime"])
 
             if trig["endTime"] < simpleDali.utcnowWithTz():
@@ -192,12 +196,16 @@ async def doTest(loop):
                 ResultsJson = {
                     # "trigger_startTime": trig["startTime"].isoformat(),
                     # "trigger_endTime": trig["endTime"].isoformat(),
-                    "Trigger": trig,
+                    "Trigger_Info": trig,
+                    # Trigger info is a json that contains Duty Officer, Starttime, Endtime
                     "peakACC_FL": max(FL_acc),
                     "peakACC_NL": max(NL_acc),
                     # "peakACC_CT": max(CT_acc),
                     "peakACC_NR": max(NR_acc),
-                    "peakACC_FR": max(FR_acc)
+                    "peakACC_FR": max(FR_acc),
+                    # add day: Friday Saturday Sunday as part of json
+                    # add duty office (from trigger)
+                    # add class name
                 }
                 # dump ResultsJson into a directory, index html
             else:
@@ -213,6 +221,80 @@ async def doTest(loop):
             print("Trigger: {}  {}".format(trig, json.dumps(json.loads(trig.data), indent=4)))
 
     dali.close()
+
+def HandleMaxACC_Packet():
+    maxAccPacket = json.loads(packet.data.decode("'UTF-8'"))
+    maxAccPacket_list.append(maxAccPacket)
+    if length(maxAccPacket_list) > 2000: # number subject to change
+        maxAccPacket_list = maxAccPacket_list[1:]
+
+    else:
+        pass
+
+    return maxAccPacket_list
+
+
+def HandleTriggerPacket():
+    trig = json.loads(packet.data.decode("'UTF-8'"))
+    trig_HoldingPin.append(trig)
+    tooYoungTriggers = []
+    for trig in trig_HoldingPin:
+        # convert incoming isoformat objects into datetime objects
+        # *** check to verify correct method to do this ***
+        trig["startTime"] = datetime.fromisoformat(trig["startTime"])
+        trig["endTime"] = datetime.fromisoformat(trig["endTime"])
+
+        if trig["endTime"] < simpleDali.utcnowWithTz():
+        # process the trigger: look trough maxAccPacket_list, find the maxacc
+        # for each location
+            FL_acc = []
+            NL_acc = []
+            # CT_acc = []
+            NR_acc = []
+            FR_acc = []
+
+            for maxAccJson in maxAccPacket_list:
+                # while maxcc's starttime > trig starttime AND maxacc's endtime < trigs endtime create a new results json
+                # this loop calls upon the keys of each individual json object as it loop through the big max acc packet list
+                if maxAccJson["start_time"] > trig["startTime"] and maxAccJson["end_time"] < trig["endTime"]:
+
+
+                    if maxAccJson["station"] == "FL"
+                        FL_acc.append(maxAccJson["maxacc"])
+                    if maxAccJson["station"] == "NL"
+                        NL_acc.append(maxAccJson["maxacc"])
+                    # if maxAccJson["station"] == "CT"
+                    #     CT_acc.append(maxAccJson["maxacc"])
+                    if maxAccJson["station"] == "NR"
+                        NR_acc.append(maxAccJson["maxacc"])
+                    if maxAccJson["station"] == "FR"
+                        FR_acc.append(maxAccJson["maxacc"])
+
+            ResultsJson = {
+                # "trigger_startTime": trig["startTime"].isoformat(),
+                # "trigger_endTime": trig["endTime"].isoformat(),
+                "Trigger_Info": trig,
+                # Trigger info is a json that contains Duty Officer, Starttime, Endtime
+                "peakACC_FL": max(FL_acc),
+                "peakACC_NL": max(NL_acc),
+                # "peakACC_CT": max(CT_acc),
+                "peakACC_NR": max(NR_acc),
+                "peakACC_FR": max(FR_acc),
+                # add day: Friday Saturday Sunday as part of json
+                # add duty office (from trigger)
+                # add class name
+            }
+            # dump ResultsJson into a directory, index html
+        else:
+            tooYoungTriggers.append(trig)
+            # else: keep looping...
+
+
+        trig_HoldingPin = tooYoungTriggers    
+
+
+
+
 
 
 loop = asyncio.get_event_loop()
