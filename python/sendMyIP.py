@@ -148,6 +148,13 @@ class SendMyIP:
                 if not repeatException:
                     print(traceback.format_exc())
                     repeatException = True
+            except:
+                # bail out
+                if self.daliUpload is not None:
+                    self.daliUpload.close()
+                self.keepGoing = False
+                print(traceback.format_exc())
+                raise
             for tempSleep in range(self.interval):
                 # sleep for interval seconds, but check to see if we should
                 # quit once a second
