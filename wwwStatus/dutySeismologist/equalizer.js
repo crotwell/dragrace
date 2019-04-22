@@ -14,6 +14,7 @@ class Equalizer{
     this.yAxis = d3.axisLeft(this.yScale);
     this.yAxis.ticks(10);
     this.barPadding = 1;
+    //test
 
     this.createEqualizer(selector);
     this.updateEqualizer(this.createZeros());
@@ -55,12 +56,13 @@ updateEqualizer(maxaccJson){
 let svg = d3.select(this.selector).select("svg");
 let bars = svg.select("g.bars");
 let that = this;
+
 svg.selectAll("rect")//select in the page and correspond to data
   .data(dataset, function(d){
     return d.station;
   })
-  .enter()
-  .append("rect")
+  .join("rect")
+  //.append("rect")
   //define NL... as numbers
 
   .attr("x",function(d){
@@ -72,25 +74,27 @@ svg.selectAll("rect")//select in the page and correspond to data
       i = 1;
     }else if (d.station === "NR") {
       i = 2;
+    }else if (d.station === "CT") {
+        i = 4;
     }else if (d.station === "FR") {
       i = 3;
     }else {
          console.log(`no station found ${d.station}`);
     }
 console.log(`xxxxx ${d.station} maxacc= ${d.maxacc} i=${i}`)
-    return i * (that.w / 4);
+    return i * (that.w / 5);
   })
   .attr("y", function(d){
     return that.h - that.yScale(d.maxacc); //height minus data value
   })
-  .attr("width", that.w / dataset.length-that.barPadding)
+  .attr("width", that.w / 5-that.barPadding)
   .attr("height",function(d){
     console.log(`height ${d.maxacc} ${that.yScale(d.maxacc)}`)
     return that.yScale(d.maxacc); // 2g = 100px according to yScale
 
     })
   .attr("fill",function(d){
-    return "rgb( " + (d.maxacc * 255/2) + " , 0, 0 )";
+    return "rgb( " + (Math.round(d.maxacc * 255/2)) + " , 0, 0 )";
   });
   }
 }
