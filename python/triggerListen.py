@@ -63,8 +63,7 @@ async def doTest(loop):
     while(keepGoing):
         packet = await dali.parseResponse()
         print("got a packet: {}".format(packet.streamId))
-        # maxAccPacket = await dali.parseResponse()
-        # trig = await dali.parseResponse()
+
 
         # from MMA8451ToMseed.py lines 430-435
         # peakPacket = await configDali.parseResponse()
@@ -79,71 +78,10 @@ async def doTest(loop):
         else:
             print("Packet is not a MaxACC or a Trigger")
             continue
-            
 
+        # here we will make directories production/run/mseed/www/LiveStream/Class/Heat/....
 
-#
-# # loop thru the trig_HoldingPin
-#         for trig in trig_HoldingPin:
-#             # convert incoming isoformat objects into datetime objects
-#             # *** check to verify correct method to do this ***
-#             trig["startTime"] = datetime.fromisoformat(trig["startTime"])
-#             date = datetime.fromisoformat
-#             trig["endTime"] = datetime.fromisoformat(trig["endTime"])
-#
-#             if trig["endTime"] < simpleDali.utcnowWithTz():
-#                 #
-#             # process the trigger: look trough maxAccPacket_list, find the maxacc
-#             # for each location
-#                 FL_acc = []
-#                 NL_acc = []
-#                 # CT_acc = []
-#                 NR_acc = []
-#                 FR_acc = []
-#                 for maxAccJson in maxAccPacket_list:
-#                     # while maxcc's starttime > trig starttime AND maxacc's endtime < trigs endtime create a new results json
-#                     # this loop calls upon the keys of each individual json object as it loop through the big max acc packet list
-#                     if maxAccJson["start_time"] > trig["startTime"] and maxAccJson["end_time"] < trig["endTime"]:
-#
-#                         if maxAccJson["station"] == "FL"
-#                             FL_acc.append(maxAccJson["maxacc"])
-#                         if maxAccJson["station"] == "NL"
-#                             NL_acc.append(maxAccJson["maxacc"])
-#                         # if maxAccJson["station"] == "CT"
-#                         #     CT_acc.append(maxAccJson["maxacc"])
-#                         if maxAccJson["station"] == "NR"
-#                             NR_acc.append(maxAccJson["maxacc"])
-#                         if maxAccJson["station"] == "FR"
-#                             FR_acc.append(maxAccJson["maxacc"])
-#
-#                 # build a json with maxACC's for each station within time range of trigger
-#                 # convert the start times and endtimes from datetime objects back into isoformat objects
-#                 ResultsJson = {
-#                     # "trigger_startTime": trig["startTime"].isoformat(),
-#                     # "trigger_endTime": trig["endTime"].isoformat(),
-#                     "Trigger_Info": trig,
-#                     # Trigger info is a json that contains Duty Officer, Starttime, Endtime
-#                     "peakACC_FL": max(FL_acc),
-#                     "peakACC_NL": max(NL_acc),
-#                     # "peakACC_CT": max(CT_acc),
-#                     "peakACC_NR": max(NR_acc),
-#                     "peakACC_FR": max(FR_acc),
-#                     # add day: Friday Saturday Sunday as part of json
-#                     # add duty office (from trigger)
-#                     # add class name
-#                 }
-#                 # dump ResultsJson into a directory, index html
-#             else:
-#                 tooYoungTriggers.append(trig)
-#                 # else: keep looping...
-#
-#
-#         trig_HoldingPin = tooYoungTriggers
-#         if not trig.type == "PACKET":
-#             # might get an OK very first after stream
-#             print("parseResponse not a PACKET {} ".format(trig))
-#         else:
-#             print("Trigger: {}  {}".format(trig, json.dumps(json.loads(trig.data), indent=4)))
+        # here we will send the write the json to the file
 
     dali.close()
 
