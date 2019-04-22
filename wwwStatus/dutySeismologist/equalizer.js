@@ -14,6 +14,7 @@ class Equalizer{
     this.yAxis = d3.axisLeft(this.yScale);
     this.yAxis.ticks(10);
     this.barPadding = 1;
+    //test
 
     this.createEqualizer(selector);
     this.updateEqualizer(this.createZeros());
