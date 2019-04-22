@@ -27,6 +27,7 @@ class IpTimeArchive:
         self.ipTime = {}
         self.maxGap = timedelta(seconds=15)
         self.outFilename = "mseed/www/iptime.txt"
+        self.gapFilename = "mseed/www/ipgaps.txt"
         self.lastFlushTime = None
         self.flushInterval = timedelta(seconds=300)
 
@@ -51,11 +52,11 @@ class IpTimeArchive:
             self.flushAll()
 
     def writeToFile(self, station):
-        with open(self.outFilename, 'a') as f:
+        with open(self.gapFilename, 'a') as f:
             f.write('{} {} {}\n'.format(station, self.ipTime[station].start.isoformat(), self.ipTime[station].end.isoformat()))
 
     def flushAll(self):
-        with open(self.outFilename, 'a') as f:
+        with open(self.outFilename, 'w') as f:
             for station, v in self.ipTime.items():
                 f.write('{} {} {}\n'.format(station, v['start'].isoformat(), v['end'].isoformat()))
         self.lastFlushTime = datetime.utcnow().replace(tzinfo=timezone.utc)
