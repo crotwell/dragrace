@@ -186,6 +186,8 @@ let handleMaxAccSeismogram = function(seismogram) {
     plotDiv.style("height", "150px");
     let trace = new seisplotjs.model.Trace(seismogram);
     let seisPlotConfig = new wp.SeismographConfig();
+    seisPlotConfig.connectSegments = true;
+    seisPlotConfig.lineWidth = 5;
     seisPlotConfig.xSublabel = codes;
     seisPlotConfig.margin = margin ;
     seisPlotConfig.maxHeight = 200 ;
@@ -223,44 +225,30 @@ let dlTriggerCallback = function(dlPacket) {
 
 
 // update equilizer, but only as fast as the browser can handle redraws
-let drawEquilizer = function() {
-  d3.select("div.piStatus").selectAll(`span`).classed('struggling', false).classed('good', false);
-  accelMaxValues.forEach((maxaccJson, streamId, map) => {
-    // turn all into string
-    //let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
-    //let maxaccJson = JSON.parse(s);
-    let scaleAcc = Math.round(100*maxaccJson.maxacc/2); // 2g = 100px
+let animationDrawLoop = function() {
+  if ( ! paused) {
+    equalizer.updateEqualizer(accelMaxValues);
 
-    let now = moment.utc();
-    let packtime = moment.utc(maxaccJson.end_time);
-      //var duration = moment.duration(now,diff(packtime));
+    d3.select("div.piStatus").selectAll(`span`).classed('struggling', false).classed('good', false);
+    accelMaxValues.forEach((maxaccJson, streamId, map) => {
+      let now = moment.utc();
+      let packtime = moment.utc(maxaccJson.end_time);
+      let statpi = d3.select("div.piStatus");
 
-    if ( ! prevAccelValue[streamId] || prevAccelValue[streamId] !== scaleAcc) {
-      // only update if the value changed
-      prevAccelValue[streamId] = scaleAcc;
-      staSpan = d3.select("div.oldEqualizer").select(`span.${maxaccJson.station}`);
-      staSpan.select("div").transition().style("height", `${scaleAcc}px`);
-    }
-
-//determine time intervals and associate class names
-
-    let statpi = d3.select("div.piStatus");
-
-    if(now.subtract(StrugDur).isBefore(packtime)){
-      statpi.select(`span.${maxaccJson.station}`).classed('struggling', false).classed('good', true);
-    } else if(now.subtract(DeadDur).isBefore(packtime)){
-      statpi.select(`span.${maxaccJson.station}`).classed('struggling', true).classed('good', false);
-    } else {
-      statpi.select(`span.${maxaccJson.station}`).classed('struggling', false).classed('good', false);
-    }
-
-
-  });
+      if(now.subtract(StrugDur).isBefore(packtime)){
+        statpi.select(`span.${maxaccJson.station}`).classed('struggling', false).classed('good', true);
+      } else if(now.subtract(DeadDur).isBefore(packtime)){
+        statpi.select(`span.${maxaccJson.station}`).classed('struggling', true).classed('good', false);
+      } else {
+        statpi.select(`span.${maxaccJson.station}`).classed('struggling', false).classed('good', false);
+      }
+    });
+  }
   // lather, rinse, repeat...
-  window.requestAnimationFrame(drawEquilizer);
+  window.requestAnimationFrame(animationDrawLoop);
 };
 // start drawing:
-window.requestAnimationFrame(drawEquilizer);
+window.requestAnimationFrame(animationDrawLoop);
 
 let dlMaxAccelerationCallback = function(dlPacket) {
 
@@ -288,7 +276,6 @@ let dlMaxAccelerationCallback = function(dlPacket) {
       handleMaxAccSeismogram(seismogram);
     }
     accelMaxValues.set(dlPacket.streamId, maxaccJson);
-    equalizer.updateEqualizer(accelMaxValues);
 }
 
 
