@@ -7,6 +7,7 @@ import sys
 import json
 from datetime import datetime, timedelta, date
 from array import array
+import os
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -78,10 +79,8 @@ async def doTest(loop):
         else:
             print("Packet is not a MaxACC or a Trigger")
             continue
-
-        # here we will make directories production/run/mseed/www/LiveStream/Class/Heat/....
-
-        # here we will send the write the json to the file
+        # sends ResultsJson to directories
+        SendResultsJson(ResultsJson)
 
     dali.close()
 
@@ -121,7 +120,6 @@ def HandleTriggerPacket(packet):
                 # this loop calls upon the keys of each individual json object as it loop through the big max acc packet list
                 if maxAccJson["start_time"] > trig["startTime"] and maxAccJson["end_time"] < trig["endTime"]:
 
-
                     if maxAccJson["station"] == "FL":
                         FL_acc.append(maxAccJson["maxacc"])
                     if maxAccJson["station"] == "NL":
@@ -134,8 +132,6 @@ def HandleTriggerPacket(packet):
                         FR_acc.append(maxAccJson["maxacc"])
                     else:
                         print("maxACC Packet doesn't contain a station")
-
-
 
             today = date.today()
             weekday = date.isoweekday(today)
@@ -176,6 +172,14 @@ def HandleTriggerPacket(packet):
 
         trig_HoldingPin = tooYoungTriggers
         return ResultsJson
+
+def SendResultsJson(ResultsJson):
+    productionDirectory="/home/geo/Production"
+    LiveStreamDirectory = productionDirectory + "/Run/mseed/www/LiveStream"
+    os.mkdirs(LiveStreamDirectory)
+    return
+
+
 
 
 
