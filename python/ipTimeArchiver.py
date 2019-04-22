@@ -33,7 +33,7 @@ class IpTimeArchive:
         self.flushAll()
         with open(self.gapFilename, 'a') as f:
             now = datetime.utcnow().replace(tzinfo=timezone.utc)
-            f.write('# Flush ip gaps at {}'.format(now.isoformat()))
+            f.write('# Flush ip gaps at {}\n'.format(now.isoformat()))
 
     def recordIPTime(self, sendIpJson):
         jsonTime = dateutil.parser.parse(sendIpJson['time']).replace(tzinfo=timezone.utc)
@@ -62,7 +62,7 @@ class IpTimeArchive:
     def flushAll(self):
         now = datetime.utcnow().replace(tzinfo=timezone.utc)
         with open(self.outFilename, 'w') as f:
-            f.write('# Flush ip at {}'.format(now.isoformat()))
+            f.write('# Flush ip at {}\n'.format(now.isoformat()))
             for station, v in self.ipTime.items():
                 f.write('{} {} {}\n'.format(station, v['start'].isoformat(), v['end'].isoformat()))
         self.lastFlushTime = datetime.utcnow().replace(tzinfo=timezone.utc)
