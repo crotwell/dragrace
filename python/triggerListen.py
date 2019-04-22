@@ -148,18 +148,16 @@ async def doTest(loop):
         # if  peakPacket.streamId.endswith("ZMAXCFG"):
         #     config = json.loads(peakPacket.data.decode("'UTF-8'"))
         if packet.streamId.endswith("MAXACC"):
-
+            HandleMaxACC_Packet()
             # HandleMaxACC_Packet function
         if packet.streamId.endswith("MTRIG"):
-            trig = json.loads(packet.data.decode("'UTF-8'"))
-            trig_HoldingPin.append(trig)
-            # HandleTriggerPacket function
+            HandleTriggerPacket()
         else:
             print("Packet is not a MaxACC or a Trigger")
             continue
 
 
-        tooYoungTriggers = []
+
 # loop thru the trig_HoldingPin
         for trig in trig_HoldingPin:
             # convert incoming isoformat objects into datetime objects
@@ -235,9 +233,27 @@ def HandleMaxACC_Packet():
 
     return maxAccPacket_list
 
-    
-def HandleTriggerPacket():
 
+def HandleTriggerPacket():
+    trig = json.loads(packet.data.decode("'UTF-8'"))
+    trig_HoldingPin.append(trig)
+    tooYoungTriggers = []
+    for trig in trig_HoldingPin:
+        # convert incoming isoformat objects into datetime objects
+        # *** check to verify correct method to do this ***
+        trig["startTime"] = datetime.fromisoformat(trig["startTime"])
+        date = datetime.fromisoformat
+        trig["endTime"] = datetime.fromisoformat(trig["endTime"])
+
+        if trig["endTime"] < simpleDali.utcnowWithTz():
+            #
+        # process the trigger: look trough maxAccPacket_list, find the maxacc
+        # for each location
+            FL_acc = []
+            NL_acc = []
+            # CT_acc = []
+            NR_acc = []
+            FR_acc = []
 
 
 
