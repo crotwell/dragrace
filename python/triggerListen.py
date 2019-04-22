@@ -242,11 +242,9 @@ def HandleTriggerPacket():
         # convert incoming isoformat objects into datetime objects
         # *** check to verify correct method to do this ***
         trig["startTime"] = datetime.fromisoformat(trig["startTime"])
-        date = datetime.fromisoformat
         trig["endTime"] = datetime.fromisoformat(trig["endTime"])
 
         if trig["endTime"] < simpleDali.utcnowWithTz():
-            #
         # process the trigger: look trough maxAccPacket_list, find the maxacc
         # for each location
             FL_acc = []
@@ -254,6 +252,45 @@ def HandleTriggerPacket():
             # CT_acc = []
             NR_acc = []
             FR_acc = []
+
+            for maxAccJson in maxAccPacket_list:
+                # while maxcc's starttime > trig starttime AND maxacc's endtime < trigs endtime create a new results json
+                # this loop calls upon the keys of each individual json object as it loop through the big max acc packet list
+                if maxAccJson["start_time"] > trig["startTime"] and maxAccJson["end_time"] < trig["endTime"]:
+
+
+                    if maxAccJson["station"] == "FL"
+                        FL_acc.append(maxAccJson["maxacc"])
+                    if maxAccJson["station"] == "NL"
+                        NL_acc.append(maxAccJson["maxacc"])
+                    # if maxAccJson["station"] == "CT"
+                    #     CT_acc.append(maxAccJson["maxacc"])
+                    if maxAccJson["station"] == "NR"
+                        NR_acc.append(maxAccJson["maxacc"])
+                    if maxAccJson["station"] == "FR"
+                        FR_acc.append(maxAccJson["maxacc"])
+
+            ResultsJson = {
+                # "trigger_startTime": trig["startTime"].isoformat(),
+                # "trigger_endTime": trig["endTime"].isoformat(),
+                "Trigger_Info": trig,
+                # Trigger info is a json that contains Duty Officer, Starttime, Endtime
+                "peakACC_FL": max(FL_acc),
+                "peakACC_NL": max(NL_acc),
+                # "peakACC_CT": max(CT_acc),
+                "peakACC_NR": max(NR_acc),
+                "peakACC_FR": max(FR_acc),
+                # add day: Friday Saturday Sunday as part of json
+                # add duty office (from trigger)
+                # add class name
+            }
+            # dump ResultsJson into a directory, index html
+        else:
+            tooYoungTriggers.append(trig)
+            # else: keep looping...
+
+
+        trig_HoldingPin = tooYoungTriggers    
 
 
 
