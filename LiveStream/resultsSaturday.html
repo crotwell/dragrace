@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<title>Ground Motion Experiment Live Stream</title>
+<title>Saturday Results</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
@@ -23,10 +23,10 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 <div class="w3-top">
   <div class="w3-bar w3-theme w3-top w3-left-align w3-large">
     <a class="w3-bar-item w3-button w3-right w3-hide-large w3-hover-white w3-large w3-theme-l1" href="javascript:void(0)" onclick="w3_open()"><i class="fa fa-bars"></i></a>
-    <a href="#" class="https://www.seis.sc.edu/dragrace/www/results/LiveStream.html">Live Stream</a>
-    <a href="https://www.seis.sc.edu/dragrace/www/results/resultsAbout.html" class="w3-bar-item w3-button w3-theme-l1">Results</a>
+    <a href="https://www.seis.sc.edu/dragrace/www/results/resultsAbout.html" class="https://www.seis.sc.edu/dragrace/www/results/results.html">Results</a>
+    <a href="#" class="w3-bar-item w3-button w3-theme-l1">Live Stream</a>
     <a href="https://www.seis.sc.edu/dragrace/www/results/resultsAbout.html" class="w3-bar-item w3-button w3-hide-small w3-hover-white">About</a>
-      <a href="#" class="w3-bar-item w3-button w3-hide-small w3-hide-medium w3-hover-white">Contact</a>
+    <a href="#" class="w3-bar-item w3-button w3-hide-small w3-hide-medium w3-hover-white">Contact</a>
     <a href="https://sc.edu/study/colleges_schools/artsandsciences/earth_ocean_and_environment/" class="w3-bar-item w3-button w3-hide-small w3-hide-medium w3-hover-white">U of SC Website</a>
   </div>
 </div>
@@ -52,18 +52,16 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 
   <div class="w3-row w3-padding-64">
     <div class="w3-twothird w3-container">
-      <h1 class="w3-text-teal">NHRA 4-Wide Nationals Ground Motion Experiment at zMAX Dragway</h1>
-      <p>Can you feel the ground shaking as the dragrace cars zoom by? We are measuring the ground shaking of dragrace cars at the zMAX Dragway with seismic devices!  Students and faculty from the
-      University of South Carolina have created four devices to do the job!  They are deployed on all four lanes.  The ground shaking is measured in "g's" (gees) which is a percent of gravitational acceleration.
-    For reference, 1 g is what it takes to lift up an object off the ground!</p>
+      <h1 class="w3-text-teal">Saturday</h1>
+      <p>Saturday's best races for ground accleration!</p>
     </div>
 
 
   <div class="w3-row">
-    <div class="w3-twothird w3-container currentRace">
+    <div class="w3-twothird w3-container">
 
-      <h1 class="w3-text-teal">Live Stream</h1>
-      <p>Live Results of the ground Acceleration!</p>
+      <h1 class="w3-text-teal">Current Race</h1>
+      <p>Results from the most recent race.</p>
 
       <div align="left" class="w3-twothird w3-container">Equalizer
       <div class="equalizer">Equalizer goes here</div>
@@ -78,6 +76,22 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 
   </div>
 
+  <div class="w3-row w3-padding-64">
+    <div class="w3-twothird w3-container">
+      <h1 class="w3-text-teal">Previous Race</h1>
+      <p>Results from the previous race.</p>
+      <div align="left" class="w3-twothird w3-container">Equalizer
+      <div class="equalizer">Equalizer goes here</div>
+      </div>
+      <div class="race_class">Class</div>
+      <div class="race_heat">Heat</div>
+      <div class="maxacc">Ground Acceleration</div>
+      <div class="dutyOfficer">Duty Officer</div>
+      <div class="start_time">Start Time</div>
+      <div class="end_time">End Time</div>
+
+
+</div>
   </div>
 
   <!-- Pagination -->
@@ -134,6 +148,6 @@ function w3_close() {
     <script src="seisplotjs_2.0.0-alpha.1_standalone.js"></script>
     <script src="maxAccSeismogram.js"></script>
     <script src="equalizer.js"></script>
-    <script src="heatTemplate.js"></script>
+    <script src="duty.js"></script>
   </body>
 </html>
