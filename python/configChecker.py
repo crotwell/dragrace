@@ -63,7 +63,7 @@ def configSanityCheck(configFile):
 # Make sure known Pis are in known locations
 #    This will find unknown location codes
 #
-        if piDict.get(pi) not in ["NO","FL","NL","CT","NR","FR","XX","ZZ"]:
+        if piDict.get(pi) not in ["NO","FL","NL","CT","NR","FR"]:
             print('{}:  Location of {} is not valid'.format(pi,piDict.get(pi)))
             sanityPass=False
     return sanityPass
