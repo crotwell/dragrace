@@ -1,4 +1,4 @@
-let datalink = seisplotjs.datalink
+//let datalink = seisplotjs.datalink
 
 
 //let wp = require('seisplotjs-waveformplot');
