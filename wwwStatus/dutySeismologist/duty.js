@@ -116,7 +116,7 @@ let allSeisPlots = new Map();
 let allTraces = new Map();
 let markers = [];
 let svgParent = wp.d3.select('div.realtime');
-let margin = {top: 20, right: 20, bottom: 50, left: 60};
+let margin = {top: 5, right: 20, bottom: 40, left: 60};
 let needsRedraw = new Set();
 
 let paused = false;
@@ -174,6 +174,7 @@ let handleMaxAccSeismogram = function(seismogram) {
     } else {
       let newTrace = new seisplotjs.model.Trace(seismogram);
       allSeisPlots.get(codes).append(newTrace);
+      needsRedraw.add(allSeisPlots.get(codes))
     }
 //      allSeisPlots.get(codes).trim(timeWindow);
   } else {
@@ -187,10 +188,13 @@ let handleMaxAccSeismogram = function(seismogram) {
     let trace = new seisplotjs.model.Trace(seismogram);
     let seisPlotConfig = new wp.SeismographConfig();
     seisPlotConfig.connectSegments = true;
-    seisPlotConfig.lineWidth = 5;
-    seisPlotConfig.xSublabel = codes;
+    seisPlotConfig.lineWidth = 2;
+    seisPlotConfig.xLabel = codes;
     seisPlotConfig.margin = margin ;
     seisPlotConfig.maxHeight = 200 ;
+    seisPlotConfig.doRMean = false ;
+    seisPlotConfig.fixedYScale = [-.1, .5] ;
+    seisPlotConfig.yScaleFormat = ".1f";
     let seisPlot = new wp.CanvasSeismograph(plotDiv, seisPlotConfig, [trace], timeWindow.start, timeWindow.end);
     seisPlot.svg.classed('realtimePlot', true).classed('overlayPlot', false)
     seisPlot.disableWheelZoom();
@@ -224,7 +228,7 @@ let dlTriggerCallback = function(dlPacket) {
 };
 
 
-// update equilizer, but only as fast as the browser can handle redraws
+// update equilizer and seis plots, but only as fast as the browser can handle redraws
 let animationDrawLoop = function() {
   if ( ! paused) {
     equalizer.updateEqualizer(accelMaxValues);
@@ -243,6 +247,11 @@ let animationDrawLoop = function() {
         statpi.select(`span.${maxaccJson.station}`).classed('struggling', false).classed('good', false);
       }
     });
+
+    needsRedraw.forEach(sp => {
+      sp.draw();
+    });
+    needsRedraw.clear();
   }
   // lather, rinse, repeat...
   window.requestAnimationFrame(animationDrawLoop);
@@ -259,11 +268,19 @@ let dlMaxAccelerationCallback = function(dlPacket) {
     let trace = allTraces.get(seismogram.codes());
     if(trace){
       let oldSeis = trace.segments[trace.segments.length-1];
-      let delta = moment.duration(.375, 'seconds');
-      if (seismogram.start.isAfter(oldSeis.end) && seismogram.start.subtract(delta).before(oldSeis.end)){
+      let delta = moment.duration(.5, 'seconds');
+      if (seismogram.start.isAfter(oldSeis.end) && seismogram.start.subtract(delta).isBefore(oldSeis.end)){
         oldSeis.y.push(maxaccJson.maxacc);
       }else{
         trace.append(seismogram);
+        const littleBitLarger = {'start': moment.utc(timeWindow.start).subtract(60, 'second'),
+                                'end': moment.utc(timeWindow.end).add(180, 'second')};
+        const newTrace = trace.trim(littleBitLarger);
+        if (! newTrace) {
+          console.log(`trace trim returned null`);
+        }
+        allTraces.set(seismogram.codes(), newTrace);
+        allSeisPlots.get(seismogram.codes()).replace(trace, newTrace);
       }
       // if we are not paused, let timer animationLoop redraw
       // so we don't have to redraw for every packet
@@ -552,14 +569,6 @@ let dlPacketIPCallback = function(dlPacket) {
   }
 }
 
-let animationCallback = function() {
-  needsRedraw.forEach(sp => {
-    sp.draw();
-  });
-
-  window.requestAnimationFrame(animationCallback);
-}
-window.requestAnimationFrame(animationCallback);
 //
 let staCode = null
 doDatalinkConnect()

@@ -8,7 +8,7 @@ class Equalizer{
     this.w = 330;
     this.h = 200; //px
     this.yScale = d3.scaleLinear()
-    .domain([0,2])
+    .domain([0,.5])
     .range([0,this.h]);
     console.log(`yscaletest ${this.yScale(1)}`)
     this.yAxis = d3.axisLeft(this.yScale);
@@ -49,8 +49,6 @@ updateEqualizer(allmaxaccJson){
     dataset.push(x);
 
   }
-  console.log(`dataset len: ${dataset.length}`)
-  //console.log(`${dataset} this is the data`);
   //create a svg element before body taag and assigns a svg with height and width
 
 let svg = d3.select(this.selector).select("svg");
@@ -81,7 +79,6 @@ svg.selectAll("rect")//select in the page and correspond to data
     }else {
          console.log(`no station found ${d.station}`);
     }
-console.log(`xxxxx ${d.station} maxacc= ${d.maxacc} i=${i}`)
     return i * (that.w / 5);
   })
   .attr("y", function(d){
@@ -89,7 +86,6 @@ console.log(`xxxxx ${d.station} maxacc= ${d.maxacc} i=${i}`)
   })
   .attr("width", that.w / 5-that.barPadding)
   .attr("height",function(d){
-    console.log(`height ${d.maxacc} ${that.yScale(d.maxacc)}`)
     return that.yScale(d.maxacc); // 2g = 100px according to yScale
 
     })
