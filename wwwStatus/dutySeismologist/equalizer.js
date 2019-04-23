@@ -43,9 +43,9 @@ createEqualizer(selector){
   .attr("transform","translate(30,0)");
 }
 
-updateEqualizer(maxaccJson){
+updateEqualizer(allmaxaccJson){
   let dataset = new Array();
-  for (let x of maxaccJson.values()){
+  for (let x of allmaxaccJson.values()){
     dataset.push(x);
 
   }

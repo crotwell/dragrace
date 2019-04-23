@@ -43,10 +43,10 @@ class IpTimeArchive:
                 'end':jsonTime
             }
         else:
-            if self.ipTime[sendIpJson['station']]['end'] - jsonTime < self.maxGap:
+            if jsonTime - self.ipTime[sendIpJson['station']]['end']  < self.maxGap:
                 self.ipTime[sendIpJson['station']]['end'] = jsonTime
             else:
-                self.writeToFile()
+                self.writeToFile(sendIpJson['station'])
                 self.ipTime[sendIpJson['station']] = {
                     'start':jsonTime,
                     'end':jsonTime
@@ -57,15 +57,37 @@ class IpTimeArchive:
 
     def writeToFile(self, station):
         with open(self.gapFilename, 'a') as f:
-            f.write('{} {} {}\n'.format(station, self.ipTime[station].start.isoformat(), self.ipTime[station].end.isoformat()))
+            s = self.ipTime[station]['start']
+            e = self.ipTime[station]['end']
+            now = datetime.utcnow().replace(tzinfo=timezone.utc)
+            nowDelta = now - e
+            upInterval = e - s
+            f.write('{} {} {} {} {}\n'.format(station, self.strfdelta(upInterval), s.strftime("%Y/%m/%dT%H:%M:%S"), e.strftime("%Y/%m/%dT%H:%M:%S"), self.strfdelta(nowDelta)))
 
     def flushAll(self):
         now = datetime.utcnow().replace(tzinfo=timezone.utc)
         with open(self.outFilename, 'w') as f:
             f.write('# Flush ip at {}\n'.format(now.isoformat()))
             for station, v in self.ipTime.items():
-                f.write('{} {} {}\n'.format(station, v['start'].isoformat(), v['end'].isoformat()))
+                s = self.ipTime[station]['start']
+                e = self.ipTime[station]['end']
+                now = datetime.utcnow().replace(tzinfo=timezone.utc)
+                nowDelta = now - e
+                upInterval = e - s
+                f.write('{} {} {} {} {}\n'.format(station, self.strfdelta(upInterval), s.strftime("%Y/%m/%dT%H:%M:%S"), e.strftime("%Y/%m/%dT%H:%M:%S"), self.strfdelta(nowDelta)))
         self.lastFlushTime = datetime.utcnow().replace(tzinfo=timezone.utc)
+
+    def strfdelta(self, tdelta):
+        hours, rem = divmod(tdelta.seconds, 3600)
+        minutes, seconds = divmod(rem, 60)
+        hours = hours + tdelta.days*24
+        hoursZero = ''
+        minutesZero = ''
+        if hours < 10:
+            hoursZero = '0'
+        if minutes < 10:
+            minutesZero = '0'
+        return "{}{}:{}{}".format(hoursZero, hours, minutesZero, minutes)
 
     async def doLoop(self):
         dali = simpleDali.SocketDataLink(self.host, self.port)
