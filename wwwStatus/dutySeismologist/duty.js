@@ -406,8 +406,14 @@ wp.d3.select("button#trigger").on("click", function(d) {
   dutyOfficer = dutyOfficer.replace(/\W/, '');
   dutyOfficer = dutyOfficer.replace(/_/, '');
   dutyOfficer = dutyOfficer.toUpperCase();
-  let classE = document.getElementsByName('class')[0].value;
-  let heatE = document.getElementsByName('heat')[0].value;
+  let classE = document.getElementsByName('classE')[0].value;
+  classE = classE.replace(/\W/, '');
+  classE = classE.replace(/_/, '');
+  classE = classE.toUpperCase();
+  let heatE = document.getElementsByName('heatE')[0].value;
+  heatE = heatE.replace(/\W/, '');
+  heatE = heatE.replace(/_/, '');
+  heatE = heatE.toUpperCase();
   let trigger = {
         "type": "manual",
         "dutyOfficer": dutyOfficer,
