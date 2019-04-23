@@ -162,12 +162,14 @@ class SendConfig:
                 else:
                 # Files are different, process the new one
                    noChange=False
+
                    json_file=open(newfile,'r')
                    goodConfig=configChecker.configSanityCheck(json_file)
+                   json_file.close()
+
                    if(not goodConfig):
                       print("Config file fails ... re-posting old file")
 
-                      json_file.close()
                       json_file=open(oldfile,'r')
                       contents=json_file.read()
                       jsonMessage=json.loads(contents)
@@ -203,9 +205,11 @@ class SendConfig:
                        print("New Config File is OK ... making it official and posting to ringserver")
                        shutil.move(oldfile,archivefile+"_"+starttime.isoformat())
                        shutil.copy2(newfile,oldfile)
-                       json_file.seek(0)
+
+                       json_file=open(newfile,'r')
                        contents=json_file.read()
                        jsonMessage=json.loads(contents)
+                       json_file.close()
 
                        streamid = "{}.{}/ZMAXCFG".format(self.net, 'ZMAX')
                        hpdatastart = simpleDali.datetimeToHPTime(starttime)
