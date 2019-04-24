@@ -102,6 +102,7 @@ def HandleTriggerPacket(packet):
     global maxAccPacket_list
     global trig_HoldingPin
     trig = json.loads(packet.data.decode("'UTF-8'"))
+    print("trig start {}".format(trig["startTime"]))
     trig["startTime"] = datetime.fromisoformat(trig["startTime"])
     trig["endTime"] = datetime.fromisoformat(trig["endTime"])
     trig_HoldingPin.append(trig)
