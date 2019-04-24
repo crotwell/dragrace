@@ -46,7 +46,7 @@ async def doTest(loop):
     global maxAccPacket_list
     global trig_HoldingPin
     dali = simpleDali.WebSocketDataLink(uri)
-    dali.verbose = True
+    # dali.verbose = True
     serverId = await dali.id(programname, username, processid, architecture)
     print("Resp: {}".format(serverId))
     serverInfo = await dali.info("STATUS")
