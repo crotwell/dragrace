@@ -131,7 +131,7 @@ def HandleTriggerPacket(packet):
             NR_acc = []
             FR_acc = []
             m = maxAccPacket_list[0]
-            print("maxAccPacket_list {} {}".format(m["start_time"], m["end_time"]))
+            print("maxAccPacket_list {} {} {}".format(m["start_time"], m["end_time"],m["station"]))
             print("trig  {} {}".format(trig["startTime"], trig["endTime"]))
 
             for maxAccJson in maxAccPacket_list:
