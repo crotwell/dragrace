@@ -90,7 +90,7 @@ def HandleMaxACC_Packet(packet):
     global trig_HoldingPin
     maxAccPacket = json.loads(packet.data.decode("'UTF-8'"))
 
-    maxAccPacket["start_time"] = dateutil.parser.parse(maxAccPacket["start_time"])
+    maxAccPacket["start_time"] = dateutil.parser.parse(maxAccPacket["start_time"]+"Z")
     maxAccPacket["start_time"].replace(tzinfo = timezone.utc)
     maxAccPacket["end_time"] = dateutil.parser.parse(maxAccPacket["end_time"])
     maxAccPacket["end_time"].replace(tzinfo = timezone.utc)
@@ -109,6 +109,7 @@ def HandleTriggerPacket(packet):
     global trig_HoldingPin
     trig = json.loads(packet.data.decode("'UTF-8'"))
     print("trig start {}".format(trig["startTime"]))
+    print("trig end {}".format(trig["endTime"]))
 
     trig["startTime"] = dateutil.parser.parse(trig["startTime"])
     trig["startTime"].replace(tzinfo = timezone.utc)
