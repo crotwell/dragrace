@@ -76,7 +76,7 @@ async def doTest(loop):
         if packet.streamId.endswith("MAXACC"):
             maxAccPacket_list = HandleMaxACC_Packet(packet)
 
-        if packet.streamId.endswith("MTRIG"):
+        elif packet.streamId.endswith("MTRIG"):
             ResultsJson = HandleTriggerPacket(packet)
         else:
             print("Packet is not a MaxACC or a Trigger")
@@ -104,13 +104,14 @@ def HandleTriggerPacket(packet):
     global maxAccPacket_list
     global trig_HoldingPin
     trig = json.loads(packet.data.decode("'UTF-8'"))
+    trig["startTime"] = datetime.fromisoformat(trig["startTime"])
+    trig["endTime"] = datetime.fromisoformat(trig["endTime"])
     trig_HoldingPin.append(trig)
     tooYoungTriggers = []
     for trig in trig_HoldingPin:
         # convert incoming isoformat objects into datetime objects
         # *** check to verify correct method to do this ***
-        trig["startTime"] = datetime.fromisoformat(trig["startTime"])
-        trig["endTime"] = datetime.fromisoformat(trig["endTime"])
+
 
         if trig["endTime"] < simpleDali.utcnowWithTz():
         # process the trigger: look trough maxAccPacket_list, find the maxacc
@@ -155,9 +156,9 @@ def HandleTriggerPacket(packet):
                 dayName = "Saturday"
             if weekday == 7:
                 dayName = "Sunday"
+            trig["startTime"] = trig["startTime"].isoformat()
+            trig["endTime"] = trig["endTime"].isoformat()
             ResultsJson = {
-                # "trigger_startTime": trig["startTime"].isoformat(),
-                # "trigger_endTime": trig["endTime"].isoformat(),
                 "Day_Name": dayName,
                 "Trigger_Info": trig,
                 # Trigger info is a json that contains Duty Officer, Starttime, Endtime
