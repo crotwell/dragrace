@@ -231,7 +231,7 @@ let dlTriggerCallback = function(dlPacket) {
   let startMark = { markertype: 'predicted', name: "Start"+displayName, time: moment.utc(trig.startTime) };
   markers.push(startMark);
   //Gabby & Emma tried to make two trigger flags appear at 3 seconds apart
-  let endMark = { markertype: 'predicted', name: displayclass+displayHeat, time:  moment.utc(trig.endTime) };
+  let endMark = { markertype: 'predicted', name: displayClass+displayHeat, time:  moment.utc(trig.endTime) };
   markers.push(endMark);
   for (let sp of allSeisPlots.values()) {
     sp.appendMarkers( [ startMark,endMark ]);
