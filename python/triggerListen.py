@@ -75,10 +75,10 @@ async def doTest(loop):
         # if  peakPacket.streamId.endswith("ZMAXCFG"):
         #     config = json.loads(peakPacket.data.decode("'UTF-8'"))
         if packet.streamId.endswith("MAXACC"):
-            maxAccPacket_list = HandleMaxACC_Packet(packet)
+            HandleMaxACC_Packet(packet)
 
         elif packet.streamId.endswith("MTRIG"):
-            ResultsJson = HandleTriggerPacket(packet)
+            HandleTriggerPacket(packet)
         else:
             print("Packet is not a MaxACC or a Trigger")
             continue
@@ -96,7 +96,7 @@ def HandleMaxACC_Packet(packet):
     else:
         pass
 
-    return maxAccPacket_list
+
 
 
 def HandleTriggerPacket(packet):
@@ -178,10 +178,8 @@ def HandleTriggerPacket(packet):
         else:
             tooYoungTriggers.append(trig)
             # else: keep looping...
-
-
         trig_HoldingPin = tooYoungTriggers
-        return ResultsJson
+
 
 def SendResultsJson(ResultsJson):
     day = ResultsJson["Day_Name"]
@@ -258,7 +256,7 @@ def SendResultsJson(ResultsJson):
         with open(heatNamesFile,'w') as f:
             json.dumps(heatNames,f)
 
-    return print('I succesffuly sent results to results directory!')
+    print('I succesffuly sent results to results directory!')
 
 
 
