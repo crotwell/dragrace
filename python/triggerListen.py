@@ -151,7 +151,8 @@ def HandleTriggerPacket(packet):
                         FR_acc.append(maxAccJson["maxacc"])
                     else:
                         print("maxACC Packet doesn't contain a station")
-
+                else:
+                    print("maxacc packet too old {}".format(maxAccJson["start_time"]))
             today = date.today()
             weekday = date.isoweekday(today)
             if weekday == 1:
