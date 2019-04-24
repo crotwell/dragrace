@@ -28,6 +28,7 @@ let today = moment()
   }else if(today.weekday() === 7){
     classList=['SUNDAY','Nitro-Eliminations','Pro-Stock-Motorcycle-Eliminations','Pro-Mod-Eliminations','Mountain-Motor-Pro-Stock','Factory-Stock-Showdown','Competition-Eliminator','Sportsman-Eliminations','Top-Alcohol-Eliminations','Factory-Stock-Showdown','Competition-Eliminator','Sportsman-Eliminations','Nitro-Eliminations','Pro-Stock-Motorcycle-Eliminations','Pro-Mod-Eliminations','Mountain-Motor-Pro-Stock','Sportsman-Eliminations','Competition-Eliminator','Factory-Stock-Showdown','Top-Alcohol-Eliminations','Parade-of-Champions','Mountain-Motor-Pro-Stock','Pro-Mod-Eliminations','Pro-Stock-Motorcycle-Eliminations','Nitro-Eliminations'];
   }else{
+  classList=['UNKNOWN','Test1','test-2'];
   console.log("we have wrong dates")
 }
 
