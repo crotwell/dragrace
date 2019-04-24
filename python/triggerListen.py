@@ -124,7 +124,6 @@ def ProcessHoldingPin():
 
     global maxAccPacket_list
     global trig_HoldingPin
-    print("ProcessHoldingPin {}".format(len(trig_HoldingPin)))
     tooYoungTriggers = []
     for trig in trig_HoldingPin:
         # convert incoming isoformat objects into datetime objects
@@ -204,7 +203,6 @@ def ProcessHoldingPin():
             tooYoungTriggers.append(trig)
             # else: keep looping...
         trig_HoldingPin = tooYoungTriggers
-        time.sleep(1)
 
 def SendResultsJson(ResultsJson):
     day = ResultsJson["Day_Name"]
@@ -289,6 +287,7 @@ def SendResultsJson(ResultsJson):
 def loopHoldingPen():
     while True:
         ProcessHoldingPin()
+        time.sleep(1)
 
 sendThread = Thread(target = loopHoldingPen)
 sendThread.daemon=True
