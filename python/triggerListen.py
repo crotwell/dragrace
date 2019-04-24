@@ -5,11 +5,12 @@ import logging
 import signal
 import sys
 import json
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from array import array
 import os
+import dateutil.parser
 
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 
 host = "129.252.35.36"
@@ -42,15 +43,17 @@ signal.signal(signal.SIGTERM, handleSignal)
 
 async def doTest(loop):
     #dali = simpleDali.SocketDataLink(host, port)
+    global maxAccPacket_list
+    global trig_HoldingPin
     dali = simpleDali.WebSocketDataLink(uri)
-    dali.verbose = True
+    # dali.verbose = True
     serverId = await dali.id(programname, username, processid, architecture)
     print("Resp: {}".format(serverId))
     serverInfo = await dali.info("STATUS")
     print("Info: {} ".format(serverInfo.message))
     #serverInfo = yield from dali.info("STREAMS")
     #print("Info: {} ".format(serverInfo.message))
-    r = await dali.match(".*/(MAXACC|MTRIG) ")
+    r = await dali.match(".*/(MAXACC|MTRIG)")
     print("match() Resonse {}".format(r))
 
     # begintime = simpleDali.utcnowWithTz() - timedelta(minutes=5)
@@ -63,7 +66,7 @@ async def doTest(loop):
 
     while(keepGoing):
         packet = await dali.parseResponse()
-        print("got a packet: {}".format(packet.streamId))
+        # print("got a packet: {}".format(packet.streamId))
 
 
         # from MMA8451ToMseed.py lines 430-435
@@ -72,39 +75,52 @@ async def doTest(loop):
         # if  peakPacket.streamId.endswith("ZMAXCFG"):
         #     config = json.loads(peakPacket.data.decode("'UTF-8'"))
         if packet.streamId.endswith("MAXACC"):
-            maxAccPacket_list = HandleMaxACC_Packet(packet)
+            HandleMaxACC_Packet(packet)
 
-        if packet.streamId.endswith("MTRIG"):
-            ResultsJson = HandleTriggerPacket(packet)
+        elif packet.streamId.endswith("MTRIG"):
+            HandleTriggerPacket(packet)
         else:
             print("Packet is not a MaxACC or a Trigger")
             continue
-        # sends ResultsJson to directories
-        SendResultsJson(ResultsJson)
 
     dali.close()
 
 def HandleMaxACC_Packet(packet):
+    global maxAccPacket_list
+    global trig_HoldingPin
     maxAccPacket = json.loads(packet.data.decode("'UTF-8'"))
+
+    maxAccPacket["start_time"] = dateutil.parser.parse(maxAccPacket["start_time"]+"Z")
+    maxAccPacket["start_time"].replace(tzinfo = timezone.utc)
+    maxAccPacket["end_time"] = dateutil.parser.parse(maxAccPacket["end_time"]+"Z")
+    maxAccPacket["end_time"].replace(tzinfo = timezone.utc)
     maxAccPacket_list.append(maxAccPacket)
-    if length(maxAccPacket_list) > 2000: # number subject to change
+    if len(maxAccPacket_list) > 2000: # number subject to change
         maxAccPacket_list = maxAccPacket_list[1:]
 
     else:
         pass
 
-    return maxAccPacket_list
+
 
 
 def HandleTriggerPacket(packet):
+    global maxAccPacket_list
+    global trig_HoldingPin
     trig = json.loads(packet.data.decode("'UTF-8'"))
+    print("trig start {}".format(trig["startTime"]))
+    print("trig end {}".format(trig["endTime"]))
+
+    trig["startTime"] = dateutil.parser.parse(trig["startTime"])
+    trig["startTime"].replace(tzinfo = timezone.utc)
+    trig["endTime"] = dateutil.parser.parse(trig["endTime"])
+    trig["endTime"].replace(tzinfo = timezone.utc)
     trig_HoldingPin.append(trig)
     tooYoungTriggers = []
     for trig in trig_HoldingPin:
         # convert incoming isoformat objects into datetime objects
         # *** check to verify correct method to do this ***
-        trig["startTime"] = datetime.fromisoformat(trig["startTime"])
-        trig["endTime"] = datetime.fromisoformat(trig["endTime"])
+
 
         if trig["endTime"] < simpleDali.utcnowWithTz():
         # process the trigger: look trough maxAccPacket_list, find the maxacc
@@ -114,6 +130,9 @@ def HandleTriggerPacket(packet):
             # CT_acc = []
             NR_acc = []
             FR_acc = []
+            m = maxAccPacket_list[0]
+            print("maxAccPacket_list {} {}".format(m["start_time"], m["end_time"]))
+            print("trig  {} {}".format(trig["startTime"], trig["endTime"]))
 
             for maxAccJson in maxAccPacket_list:
                 # while maxcc's starttime > trig starttime AND maxacc's endtime < trigs endtime create a new results json
@@ -149,9 +168,9 @@ def HandleTriggerPacket(packet):
                 dayName = "Saturday"
             if weekday == 7:
                 dayName = "Sunday"
+            trig["startTime"] = trig["startTime"].strftime("%Y-%m-%dT%H:%M%SZ")
+            trig["endTime"] = trig["endTime"].strftime("%Y-%m-%dT%H:%M%SZ")
             ResultsJson = {
-                # "trigger_startTime": trig["startTime"].isoformat(),
-                # "trigger_endTime": trig["endTime"].isoformat(),
                 "Day_Name": dayName,
                 "Trigger_Info": trig,
                 # Trigger info is a json that contains Duty Officer, Starttime, Endtime
@@ -165,13 +184,13 @@ def HandleTriggerPacket(packet):
                 # add class name
             }
             # dump ResultsJson into a directory, index html
+            # sends ResultsJson to directories
+            SendResultsJson(ResultsJson)
         else:
             tooYoungTriggers.append(trig)
             # else: keep looping...
-
-
         trig_HoldingPin = tooYoungTriggers
-        return ResultsJson
+
 
 def SendResultsJson(ResultsJson):
     day = ResultsJson["Day_Name"]
@@ -179,14 +198,14 @@ def SendResultsJson(ResultsJson):
     heat = ResultsJson["trig"]["heat"] # need to see updated trig with info!
 
     # Define directories to put jsons into
-    resultsPath = "Production/Run/mseed/www/results/{}/{}/{}".format(day,classType,heat)
-    classNamesPath = "Production/Run/mseed/www/results/{}".format(day)
-    heatNamesPath = "Production/Run/mseed/www/results/{}/{}".format(day,classType)
+    resultsPath = "mseed/www/results/{}/{}/{}".format(day,classType,heat)
+    classNamesPath = "mseed/www/results/{}".format(day)
+    heatNamesPath = "mseed/www/results/{}/{}".format(day,classType)
 
     # Define file paths for jsons to send
-    resultsFile = "Production/Run/mseed/www/results/{}/{}/{}/results.json".format(day,classType,heat)
-    classNamesFile = "Production/Run/mseed/www/results/{}/classnames.json".format(day)
-    heatNamesFile = "Production/Run/mseed/www/results/{}/{}/heatnames.json".format(day,classType)
+    resultsFile = "mseed/www/results/{}/{}/{}/results.json".format(day,classType,heat)
+    classNamesFile = "mseed/www/results/{}/classnames.json".format(day)
+    heatNamesFile = "mseed/www/results/{}/{}/heatnames.json".format(day,classType)
 
     # Create directories baased on directory PATHS defined 181-184
     os.mkdir(resultsPath)
@@ -196,46 +215,59 @@ def SendResultsJson(ResultsJson):
     # need to be checked with updated trigger from gabby
 
     # send ResultsJson to directory
+
     with open(resultsFile,"w") as f:
         if f is not None:
             json.dumps(ResultsJson,f)
 
     # read in classnames.json
-    with open(classNamesFile,'r') as f:
-        if f is not None:
-            classNames = json.loads(f)
-            # if class (ie top fuel) is not in classnames.json, add the class
-            # to the classnames.json, then send this updated classnames.json to directory
-            # else, pass
-        else:
-            pass
-        if classType is not in classNames:
-            classNames.append(classType)
-            with open(classNamesFile,'w') as f:
-                json.dumps(classNames,f)
-        else:
-            pass
-    # read in classnames.json
-    with open(heatNamesFile,'r') as f:
-        if f is not None:
-            heatNames = json.loads(f)
-            # if heat (ie heat 2) is not in heatnames.json, add the heat
-            # to the heatnames.json, then send this updated heatnames.json to directory
-            # else, pass
-        else:
-            pass
-        if heat is not in heatNames:
-            heatNames.append(heat)
-            with open(heatNamesFile,'w') as f:
-                json.dumps(heatNames,f)
-        else:
-            pass
 
-    return print('I succesffuly sent results to results directory!')
+    try:
+        with open(classNamesFile,'r') as f:
+            if f is not None:
+                classNames = json.loads(f)
+                # if class (ie top fuel) is not in classnames.json, add the class
+                # to the classnames.json, then send this updated classnames.json to directory
+                # else, pass
+            else:
+                pass
+            if classNames.count(classType) == 0:
+                classNames.append(classType)
+                with open(classNamesFile,'w') as f:
+                    json.dumps(classNames,f)
+            else:
+                pass
+# first iteration through, create a classNames array
+    except FileNotFoundError:
+        classNames = [classType]
+        with open(classNamesFile,'w') as f:
+            json.dumps(classNames,f)
 
 
 
+    # read in heatNames.json
+    try:
+        with open(heatNamesFile,'r') as f:
+            if f is not None:
+                heatNames = json.loads(f)
+                # if heat (ie heat 2) is not in heatnames.json, add the heat
+                # to the heatnames.json, then send this updated heatnames.json to directory
+                # else, pass
+            else:
+                pass
+            if heatNames.count(heat) == 0:
+                heatNames.append(heat)
+                with open(heatNamesFile,'w') as f:
+                    json.dumps(heatNames,f)
+            else:
+                pass
+# first iteration through, create a heat array
+    except FileNotFoundError:
+        heatNames = [heat]
+        with open(heatNamesFile,'w') as f:
+            json.dumps(heatNames,f)
 
+    print('I succesffuly sent results to results directory!')
 
 
 

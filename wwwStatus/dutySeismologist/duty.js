@@ -14,12 +14,29 @@ const doReplay = false
 let net = 'CO';
 //let staList = ['PI01', 'PI02', 'PI03', 'PI04', 'PI05', 'PI06', 'PI07', 'PI99'];
 let staList = ['FL', 'NL', 'CT', 'NR', 'FR'];
+//monday = 1
+//friday = 5
+//saturday = 6
+//sunday = 7
+let classList = [];
+
+let today = moment()
+  if(today.weekday() === 5){
+    classList = ['FRIDAY','Sportsman-Qualifying','Competition-Eliminator-Qualifying Sessions','Midway-Open','Top-Alcohol-Qualifying-Session','Factory-Stock-Showdown-Qualifying','Mountain-Motor-Pro-Stock-Qualifying-Session','Pro-Mod-Qualifying-Session','Pro-Stock-Motorcycle-Qualifying-Session','Nitro-Qualifying-Session','Top-Alcohol-Qualifying-Session','Factory-Stock-Showdown-Qualifying','Mountain-Motor-Pro-Stock-Qualifying-Session','Pro-Mod-Qualifying-Session','Pro-Stock-Motorcycle-Qualifying Session','Nitro-Qualifying-Session','Secure-Track'];
+  }else if(today.weekday() === 6){
+    classList=['SATURDAY','Sportsman-Eliminations','Midway-Open','Competition-Eliminator','Top-Alcohol-Qualifying-Session','Factory-Stock-Showdown-Qualifying','Mountain-Motor-Pro-Stock-Qualifying-Session','Pro-Mod-Qualifying-Session','Pro-Stock-Motorcycle-Qualifying-Session','Nitro-Qualifying-Session','Top-Alcohol-Eliminations','Factory-Stock-Showdown','Pro-Mod-Qualifying-Session','Pro-Stock-Motorcycle-Qualifying-Session','Nitro-Qualifying-Session','Mountain Motor-Pro-Stock-Qualifying-////Session','Top-Alcohol-Eliminations','Secure-Track'];
+  }else if(today.weekday() === 7){
+    classList=['SUNDAY','Nitro-Eliminations','Pro-Stock-Motorcycle-Eliminations','Pro-Mod-Eliminations','Mountain-Motor-Pro-Stock','Factory-Stock-Showdown','Competition-Eliminator','Sportsman-Eliminations','Top-Alcohol-Eliminations','Factory-Stock-Showdown','Competition-Eliminator','Sportsman-Eliminations','Nitro-Eliminations','Pro-Stock-Motorcycle-Eliminations','Pro-Mod-Eliminations','Mountain-Motor-Pro-Stock','Sportsman-Eliminations','Competition-Eliminator','Factory-Stock-Showdown','Top-Alcohol-Eliminations','Parade-of-Champions','Mountain-Motor-Pro-Stock','Pro-Mod-Eliminations','Pro-Stock-Motorcycle-Eliminations','Nitro-Eliminations'];
+  }else{
+  console.log("we have wrong dates")
+}
+
 let config = null;
 let ipmap = new Map();
 let timerInProgress = false;
 let clockOffset = 0; // should get from server somehow
 let duration = 300;
-let maxSteps = -1; // max num of ticks of the timer before stopping, for debugin
+let maxSteps = -1; // max num of ticks of the timer before stopping, for debuging
 let timeWindow = seisplotjs.fdsndataselect.calcStartEndDates(null, null, duration, clockOffset);
 let protocol = 'http:';
 if ("https:" == document.location.protocol) {
@@ -100,12 +117,23 @@ if (protocol == 'https:') {
 }
 
 let equalizer = new Equalizer("div.equalizer");
+
+
 d3.select('#stationChoice')
   .selectAll("option")
   .data(staList)
   .enter()
     .append("option")
     .text(function(d) {return d;});
+
+d3.select('#classChoice')
+  .selectAll("option")
+  .data(classList)
+  .enter()
+    .append("option")
+    .text(function(d) {return d;});
+
+
 
 d3.selectAll('.textHost').text(host);
 
@@ -216,12 +244,11 @@ let dlTriggerCallback = function(dlPacket) {
   d3.select("div.triggers").append("p").text(`Trigger: ${s}`);
   let trig = JSON.parse(s)
   displayName = trig.dutyOfficer ? trig.dutyOfficer : "AutoTrigger";
-  displayClass = trig.classE ? trig.classE : "AutoTrigger";
-  displayHeat = trig.heatE ? trig.heatE : "AutoTrigger";
+  displayHeat = trig.heat ? trig.heat : "AutoTrigger";
   let startMark = { markertype: 'predicted', name: "Start"+displayName, time: moment.utc(trig.startTime) };
   markers.push(startMark);
   //Gabby & Emma tried to make two trigger flags appear at 3 seconds apart
-  let endMark = { markertype: 'predicted', name: displayclass+displayHeat, time:  moment.utc(trig.endTime) };
+  let endMark = { markertype: 'predicted', name: displayHeat, time:  moment.utc(trig.endTime) };
   markers.push(endMark);
   for (let sp of allSeisPlots.values()) {
     sp.appendMarkers( [ startMark,endMark ]);
@@ -358,7 +385,7 @@ let doDatalinkConnect = function() {
     if (staCode){
       return dlConn.awaitDLCommand("MATCH", `(${staCode}.*(_|\.)HNZ/MSEED)|(.*/MTRIG)|(.*/MAXACC)|(.*/ZMAXCFG)|(.*/IP)`);
     } else {
-      return dlConn.awaitDLCommand("MATCH", `(.*/MTRIG)|(.*/MAXACC)|(.*/ZMAXCFG)|(.*/IP)`)
+      return dlConn.awaitDLCommand("MATCH", `(.*/MTRIG)|(.*/MxxxAXACC)|(.*/ZMAXCFG)|(.*/IP)`)
     }
   }).then(response => {
     d3.select("div.triggers").append("p").text(`MATCH response: ${response}`);
@@ -406,19 +433,17 @@ wp.d3.select("button#trigger").on("click", function(d) {
   dutyOfficer = dutyOfficer.replace(/\W/, '');
   dutyOfficer = dutyOfficer.replace(/_/, '');
   dutyOfficer = dutyOfficer.toUpperCase();
-  let classE = document.getElementsByName('classE')[0].value;
-  classE = classE.replace(/\W/, '');
-  classE = classE.replace(/_/, '');
-  classE = classE.toUpperCase();
   let heatE = document.getElementsByName('heatE')[0].value;
   heatE = heatE.replace(/\W/, '');
   heatE = heatE.replace(/_/, '');
   heatE = heatE.toUpperCase();
+  let classChoiceE = document.getElementById('classChoice');
+  let classChoice = classChoiceE.options[classChoiceE.selectedIndex].text;
   let trigger = {
         "type": "manual",
         "dutyOfficer": dutyOfficer,
-        "class":classE,
         "heat":heatE,
+        "class":classChoice,
         "time": trigtime.toISOString(),
         "startTime":moment.utc(trigtime).subtract(15, 'seconds').toISOString(),
         "endTime":moment.utc(trigtime).add(15, 'seconds').toISOString(),
