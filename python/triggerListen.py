@@ -141,13 +141,13 @@ def HandleTriggerPacket(packet):
 
                     if maxAccJson["station"] == "FL":
                         FL_acc.append(maxAccJson["maxacc"])
-                    if maxAccJson["station"] == "NL":
+                    elif maxAccJson["station"] == "NL":
                         NL_acc.append(maxAccJson["maxacc"])
                     # if maxAccJson["station"] == "CT"
                     #     CT_acc.append(maxAccJson["maxacc"])
-                    if maxAccJson["station"] == "NR":
+                    elif maxAccJson["station"] == "NR":
                         NR_acc.append(maxAccJson["maxacc"])
-                    if maxAccJson["station"] == "FR":
+                    elif maxAccJson["station"] == "FR":
                         FR_acc.append(maxAccJson["maxacc"])
                     else:
                         print("maxACC Packet doesn't contain a station")
