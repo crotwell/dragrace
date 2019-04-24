@@ -125,11 +125,11 @@ def HandleTriggerPacket(packet):
         if trig["endTime"] < simpleDali.utcnowWithTz():
         # process the trigger: look trough maxAccPacket_list, find the maxacc
         # for each location
-            FL_acc = []
-            NL_acc = []
+            FL_acc = [0]
+            NL_acc = [0]
             # CT_acc = []
-            NR_acc = []
-            FR_acc = []
+            NR_acc = [0]
+            FR_acc = [0]
             m = maxAccPacket_list[0]
             print("maxAccPacket_list {} {} {}".format(m["start_time"], m["end_time"],m["station"]))
             print("trig  {} {}".format(trig["startTime"], trig["endTime"]))
@@ -156,7 +156,7 @@ def HandleTriggerPacket(packet):
                 else:
                     print("maxacc packet too old {}".format(maxAccJson["start_time"]))
             print("count {} {}".format(count, len(maxAccPacket_list)))
-            
+
             today = date.today()
             weekday = date.isoweekday(today)
             if weekday == 1:
