@@ -81,8 +81,6 @@ async def doTest(loop):
         else:
             print("Packet is not a MaxACC or a Trigger")
             continue
-        # sends ResultsJson to directories
-        SendResultsJson(ResultsJson)
 
     dali.close()
 
@@ -172,6 +170,8 @@ def HandleTriggerPacket(packet):
                 # add class name
             }
             # dump ResultsJson into a directory, index html
+            # sends ResultsJson to directories
+            SendResultsJson(ResultsJson)
         else:
             tooYoungTriggers.append(trig)
             # else: keep looping...
