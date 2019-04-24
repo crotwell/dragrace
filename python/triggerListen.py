@@ -168,8 +168,8 @@ def HandleTriggerPacket(packet):
                 dayName = "Saturday"
             if weekday == 7:
                 dayName = "Sunday"
-            trig["startTime"] = trig["startTime"].strftime("%Y-%m-%dT%H:%M%SZ")
-            trig["endTime"] = trig["endTime"].strftime("%Y-%m-%dT%H:%M%SZ")
+            trig["startTime"] = trig["startTime"].strftime("%Y-%m-%dT%H:%M:%SZ")
+            trig["endTime"] = trig["endTime"].strftime("%Y-%m-%dT%H:%M:%SZ")
             ResultsJson = {
                 "Day_Name": dayName,
                 "Trigger_Info": trig,
