@@ -10,7 +10,7 @@ from array import array
 import os
 import dateutil.parser
 from threading import Thread
-import time 
+import time
 
 # logging.basicConfig(level=logging.DEBUG)
 
@@ -121,6 +121,7 @@ def HandleTriggerPacket(packet):
     trig_HoldingPin.append(trig)
 
 def ProcessHoldingPin():
+    print("ProcessHoldingPin {}".format(len(trig_HoldingPin)))
     global maxAccPacket_list
     global trig_HoldingPin
     tooYoungTriggers = []
