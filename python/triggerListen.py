@@ -227,7 +227,7 @@ def SendResultsJson(ResultsJson):
 
     with open(resultsFile,"w") as f:
         if f is not None:
-            json.dumps(ResultsJson,f)
+            json.dump(ResultsJson,f)
 
     # read in classnames.json
 
@@ -243,14 +243,14 @@ def SendResultsJson(ResultsJson):
             if classNames.count(classType) == 0:
                 classNames.append(classType)
                 with open(classNamesFile,'w') as f:
-                    json.dumps(classNames,f)
+                    json.dump(classNames,f)
             else:
                 pass
 # first iteration through, create a classNames array
     except FileNotFoundError:
         classNames = [classType]
         with open(classNamesFile,'w') as f:
-            json.dumps(classNames,f)
+            json.dump(classNames,f)
 
 
 
@@ -267,14 +267,14 @@ def SendResultsJson(ResultsJson):
             if heatNames.count(heat) == 0:
                 heatNames.append(heat)
                 with open(heatNamesFile,'w') as f:
-                    json.dumps(heatNames,f)
+                    json.dump(heatNames,f)
             else:
                 pass
 # first iteration through, create a heat array
     except FileNotFoundError:
         heatNames = [heat]
         with open(heatNamesFile,'w') as f:
-            json.dumps(heatNames,f)
+            json.dump(heatNames,f)
 
     print('I succesffuly sent results to results directory!')
 
