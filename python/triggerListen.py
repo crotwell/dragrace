@@ -196,40 +196,57 @@ def SendResultsJson(ResultsJson):
     # need to be checked with updated trigger from gabby
 
     # send ResultsJson to directory
+
     with open(resultsFile,"w") as f:
         if f is not None:
             json.dumps(ResultsJson,f)
 
     # read in classnames.json
-    with open(classNamesFile,'r') as f:
-        if f is not None:
-            classNames = json.loads(f)
-            # if class (ie top fuel) is not in classnames.json, add the class
-            # to the classnames.json, then send this updated classnames.json to directory
-            # else, pass
-        else:
-            pass
-        if classType is not in classNames:
-            classNames.append(classType)
-            with open(classNamesFile,'w') as f:
-                json.dumps(classNames,f)
-        else:
-            pass
-    # read in classnames.json
-    with open(heatNamesFile,'r') as f:
-        if f is not None:
-            heatNames = json.loads(f)
-            # if heat (ie heat 2) is not in heatnames.json, add the heat
-            # to the heatnames.json, then send this updated heatnames.json to directory
-            # else, pass
-        else:
-            pass
-        if heat is not in heatNames:
-            heatNames.append(heat)
-            with open(heatNamesFile,'w') as f:
-                json.dumps(heatNames,f)
-        else:
-            pass
+
+    try:
+        with open(classNamesFile,'r') as f:
+            if f is not None:
+                classNames = json.loads(f)
+                # if class (ie top fuel) is not in classnames.json, add the class
+                # to the classnames.json, then send this updated classnames.json to directory
+                # else, pass
+            else:
+                pass
+            if classType is not in classNames:
+                classNames.append(classType)
+                with open(classNamesFile,'w') as f:
+                    json.dumps(classNames,f)
+            else:
+                pass
+# first iteration through, create a classNames array
+    except FileNotFoundError:
+        classNames = [classType]
+        with open(classNamesFile,'w') as f:
+            json.dumps(classNames,f)
+
+
+
+    # read in heatNames.json
+    try:
+        with open(heatNamesFile,'r') as f:
+            if f is not None:
+                heatNames = json.loads(f)
+                # if heat (ie heat 2) is not in heatnames.json, add the heat
+                # to the heatnames.json, then send this updated heatnames.json to directory
+                # else, pass
+            else:
+                pass
+            if heat is not in heatNames:
+                heatNames.append(heat)
+                with open(heatNamesFile,'w') as f:
+                    json.dumps(heatNames,f)
+            else:
+                pass
+# first iteration through, create a heat array
+    except FileNotFoundError:
+        heatNames = [heat]
+        with open(heatNamesFile,'w') as f:
+            json.dumps(heatNames,f)
 
     return print('I succesffuly sent results to results directory!')
 
