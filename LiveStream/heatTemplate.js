@@ -41,7 +41,7 @@ fetch(`http://www.seis.sc.edu/dragrace/www/results/${day}/classnames.json`)
               d3.select("div.currentRace").select("div.race_heat").text(`Heat = ${result.Trigger_Info.heat}`);
               d3.select("div.currentRace").select("div.dutyOfficer").text(`Duty Officer = ${result.Trigger_Info.dutyOfficer}`);
               let datasetNow = [result.peakACC_FL,result.peakACC_NL,result.peakACC_NR,result.peakACC_FR];
-              d3.select("div.currentRace").select("div.maxacc").text(`Ground Acceleration = ${datasetNow[1]}`);
+              d3.select("div.currentRace").select("div.maxacc").text(`Ground Acceleration = ${Math.max(...datasetNow)}`);
               let equalizer = new Equalizer("div.equalizer");
               let eqMap = createEqualizerMap(result)
               equalizer.updateEqualizer(eqMap);
