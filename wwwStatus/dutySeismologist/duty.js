@@ -437,10 +437,13 @@ wp.d3.select("button#trigger").on("click", function(d) {
   heatE = heatE.replace(/\W/, '');
   heatE = heatE.replace(/_/, '');
   heatE = heatE.toUpperCase();
+  let classChoiceE = document.getElementById('classChoice');
+  let classChoice = classChoiceE.options[classChoiceE.selectedIndex].text;
   let trigger = {
         "type": "manual",
         "dutyOfficer": dutyOfficer,
         "heat":heatE,
+        "class":classChoice,
         "time": trigtime.toISOString(),
         "startTime":moment.utc(trigtime).subtract(15, 'seconds').toISOString(),
         "endTime":moment.utc(trigtime).add(15, 'seconds').toISOString(),
