@@ -89,6 +89,9 @@ def HandleMaxACC_Packet(packet):
     global maxAccPacket_list
     global trig_HoldingPin
     maxAccPacket = json.loads(packet.data.decode("'UTF-8'"))
+
+    maxAccPacket["start_time"] = dateutil.parser.parse(maxAccPacket["start_time"])
+    maxAccPacket["end_time"] = dateutil.parser.parse(maxAccPacket["end_time"])
     maxAccPacket_list.append(maxAccPacket)
     if len(maxAccPacket_list) > 2000: # number subject to change
         maxAccPacket_list = maxAccPacket_list[1:]
