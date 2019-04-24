@@ -121,9 +121,10 @@ def HandleTriggerPacket(packet):
     trig_HoldingPin.append(trig)
 
 def ProcessHoldingPin():
-    print("ProcessHoldingPin {}".format(len(trig_HoldingPin)))
+
     global maxAccPacket_list
     global trig_HoldingPin
+    print("ProcessHoldingPin {}".format(len(trig_HoldingPin)))
     tooYoungTriggers = []
     for trig in trig_HoldingPin:
         # convert incoming isoformat objects into datetime objects
