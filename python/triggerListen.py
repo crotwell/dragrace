@@ -42,6 +42,8 @@ signal.signal(signal.SIGTERM, handleSignal)
 
 async def doTest(loop):
     #dali = simpleDali.SocketDataLink(host, port)
+    global maxAccPacket_list
+    global trig_HoldingPin
     dali = simpleDali.WebSocketDataLink(uri)
     dali.verbose = True
     serverId = await dali.id(programname, username, processid, architecture)
@@ -85,6 +87,8 @@ async def doTest(loop):
     dali.close()
 
 def HandleMaxACC_Packet(packet):
+    global maxAccPacket_list
+    global trig_HoldingPin
     maxAccPacket = json.loads(packet.data.decode("'UTF-8'"))
     maxAccPacket_list.append(maxAccPacket)
     if length(maxAccPacket_list) > 2000: # number subject to change
@@ -97,6 +101,8 @@ def HandleMaxACC_Packet(packet):
 
 
 def HandleTriggerPacket(packet):
+    global maxAccPacket_list
+    global trig_HoldingPin
     trig = json.loads(packet.data.decode("'UTF-8'"))
     trig_HoldingPin.append(trig)
     tooYoungTriggers = []
