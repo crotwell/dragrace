@@ -116,8 +116,9 @@ def HandleTriggerPacket(packet):
     trig["endTime"] = dateutil.parser.parse(trig["endTime"])
     trig["endTime"].replace(tzinfo = timezone.utc)
     trig_HoldingPin.append(trig)
-    tooYoungTriggers = []
 
+def ProcessHoldingPin(trig_HoldingPin):
+    tooYoungTriggers = []
     for trig in trig_HoldingPin:
         # convert incoming isoformat objects into datetime objects
         # *** check to verify correct method to do this ***
@@ -196,7 +197,7 @@ def HandleTriggerPacket(packet):
             tooYoungTriggers.append(trig)
             # else: keep looping...
         trig_HoldingPin = tooYoungTriggers
-
+        time.sleep(1)
 
 def SendResultsJson(ResultsJson):
     day = ResultsJson["Day_Name"]
