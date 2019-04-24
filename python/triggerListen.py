@@ -118,7 +118,7 @@ def HandleTriggerPacket(packet):
     trig_HoldingPin.append(trig)
     tooYoungTriggers = []
     while True:
-        
+
         for trig in trig_HoldingPin:
             # convert incoming isoformat objects into datetime objects
             # *** check to verify correct method to do this ***
@@ -237,7 +237,7 @@ def SendResultsJson(ResultsJson):
     try:
         with open(classNamesFile,'r') as f:
             if f is not None:
-                classNames = json.loads(f)
+                classNames = json.load(f)
                 # if class (ie top fuel) is not in classnames.json, add the class
                 # to the classnames.json, then send this updated classnames.json to directory
                 # else, pass
@@ -261,7 +261,7 @@ def SendResultsJson(ResultsJson):
     try:
         with open(heatNamesFile,'r') as f:
             if f is not None:
-                heatNames = json.loads(f)
+                heatNames = json.load(f)
                 # if heat (ie heat 2) is not in heatnames.json, add the heat
                 # to the heatnames.json, then send this updated heatnames.json to directory
                 # else, pass
