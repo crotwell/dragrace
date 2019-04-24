@@ -66,7 +66,7 @@ async def doTest(loop):
 
     while(keepGoing):
         packet = await dali.parseResponse()
-        print("got a packet: {}".format(packet.streamId))
+        # print("got a packet: {}".format(packet.streamId))
 
 
         # from MMA8451ToMseed.py lines 430-435
