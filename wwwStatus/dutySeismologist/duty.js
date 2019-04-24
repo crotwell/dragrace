@@ -362,7 +362,7 @@ let doDatalinkConnect = function() {
     }
   }).then(response => {
     d3.select("div.triggers").append("p").text(`MATCH response: ${response}`);
-    return dlConn.awaitDLCommand(`POSITION AFTER ${datalink.momentToHPTime(timeWindow.start)}`);
+    return dlConn.awaitDLCommand(`POSITION AFTER ${datalink.momentToHPTime(timeWindow.end.subtract(60, 'second'))}`);
   }).then(response => {
     d3.select("div.triggers").append("p").text(`POSITION response: ${response}`);
     dlConn.stream();
