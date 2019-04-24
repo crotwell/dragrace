@@ -131,8 +131,8 @@ def HandleTriggerPacket(packet):
             NR_acc = [0]
             FR_acc = [0]
             m = maxAccPacket_list[0]
-            print("maxAccPacket_list {} {} {}".format(m["start_time"], m["end_time"],m["station"]))
-            print("trig  {} {}".format(trig["startTime"], trig["endTime"]))
+            # print("maxAccPacket_list {} {} {}".format(m["start_time"], m["end_time"],m["station"]))
+            # print("trig  {} {}".format(trig["startTime"], trig["endTime"]))
 
             count = 0
 
@@ -153,9 +153,9 @@ def HandleTriggerPacket(packet):
                         FR_acc.append(maxAccJson["maxacc"])
                     else:
                         print("maxACC Packet doesn't contain a station")
-                else:
-                    print("maxacc packet too old {}".format(maxAccJson["start_time"]))
-            print("count {} {}".format(count, len(maxAccPacket_list)))
+                # else:
+            #         print("maxacc packet too old {}".format(maxAccJson["start_time"]))
+            # print("count {} {}".format(count, len(maxAccPacket_list)))
 
             today = date.today()
             weekday = date.isoweekday(today)
@@ -213,9 +213,13 @@ def SendResultsJson(ResultsJson):
     heatNamesFile = "mseed/www/results/{}/{}/heatnames.json".format(day,classType)
 
     # Create directories baased on directory PATHS defined 181-184
-    os.mkdir(resultsPath)
-    os.mkdir(classNamesPath)
-    os.mkdir(heatNamesPath)
+    if not os.path.exists(resultsPath):
+        os.makedirs(resultsPath)
+    if not os.path.exists(classNamesPath):
+        os.makedirs(classNamesPath)
+    if not os.path.exists(heatNamesPath):
+        os.makedirs(heatNamesPath)
+
     # NOTE: classType, heat, resultsPath, classNamesPath, heatNamesPath ALL
     # need to be checked with updated trigger from gabby
 
