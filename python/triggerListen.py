@@ -179,14 +179,14 @@ def SendResultsJson(ResultsJson):
     heat = ResultsJson["trig"]["heat"] # need to see updated trig with info!
 
     # Define directories to put jsons into
-    resultsPath = "Production/Run/mseed/www/results/{}/{}/{}".format(day,classType,heat)
-    classNamesPath = "Production/Run/mseed/www/results/{}".format(day)
-    heatNamesPath = "Production/Run/mseed/www/results/{}/{}".format(day,classType)
+    resultsPath = "mseed/www/results/{}/{}/{}".format(day,classType,heat)
+    classNamesPath = "mseed/www/results/{}".format(day)
+    heatNamesPath = "mseed/www/results/{}/{}".format(day,classType)
 
     # Define file paths for jsons to send
-    resultsFile = "Production/Run/mseed/www/results/{}/{}/{}/results.json".format(day,classType,heat)
-    classNamesFile = "Production/Run/mseed/www/results/{}/classnames.json".format(day)
-    heatNamesFile = "Production/Run/mseed/www/results/{}/{}/heatnames.json".format(day,classType)
+    resultsFile = "mseed/www/results/{}/{}/{}/results.json".format(day,classType,heat)
+    classNamesFile = "mseed/www/results/{}/classnames.json".format(day)
+    heatNamesFile = "mseed/www/results/{}/{}/heatnames.json".format(day,classType)
 
     # Create directories baased on directory PATHS defined 181-184
     os.mkdir(resultsPath)
@@ -212,7 +212,7 @@ def SendResultsJson(ResultsJson):
                 # else, pass
             else:
                 pass
-            if classType is not in classNames:
+            if classNames.count(classType) == 0:
                 classNames.append(classType)
                 with open(classNamesFile,'w') as f:
                     json.dumps(classNames,f)
@@ -236,7 +236,7 @@ def SendResultsJson(ResultsJson):
                 # else, pass
             else:
                 pass
-            if heat is not in heatNames:
+            if heatNames.count(heat) == 0:
                 heatNames.append(heat)
                 with open(heatNamesFile,'w') as f:
                     json.dumps(heatNames,f)
@@ -249,10 +249,6 @@ def SendResultsJson(ResultsJson):
             json.dumps(heatNames,f)
 
     return print('I succesffuly sent results to results directory!')
-
-
-
-
 
 
 
