@@ -134,11 +134,13 @@ def HandleTriggerPacket(packet):
             print("maxAccPacket_list {} {} {}".format(m["start_time"], m["end_time"],m["station"]))
             print("trig  {} {}".format(trig["startTime"], trig["endTime"]))
 
+            count = 0
+
             for maxAccJson in maxAccPacket_list:
                 # while maxcc's starttime > trig starttime AND maxacc's endtime < trigs endtime create a new results json
                 # this loop calls upon the keys of each individual json object as it loop through the big max acc packet list
                 if maxAccJson["start_time"] > trig["startTime"] and maxAccJson["end_time"] < trig["endTime"]:
-
+                    count = count + 1
                     if maxAccJson["station"] == "FL":
                         FL_acc.append(maxAccJson["maxacc"])
                     elif maxAccJson["station"] == "NL":
@@ -153,6 +155,8 @@ def HandleTriggerPacket(packet):
                         print("maxACC Packet doesn't contain a station")
                 else:
                     print("maxacc packet too old {}".format(maxAccJson["start_time"]))
+            print("count {}".format(count))
+            
             today = date.today()
             weekday = date.isoweekday(today)
             if weekday == 1:
