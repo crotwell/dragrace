@@ -202,8 +202,8 @@ def ProcessHoldingPen():
             # sends ResultsJson to directories
             SendResultsJson(ResultsJson)
             MostRecentResult = {
-                "class": trig.class,
-                "heat": trig.heat,
+                "class": trig["class"],
+                "heat": trig["heat"],
                 "day": dayName
             }
             with open("mseed/www/results/MostRecentResult.json","w") as f:
