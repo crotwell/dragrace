@@ -30,7 +30,7 @@ architecture="python"
 keepGoing = True
 # create global variables for maxAccPacket list and Trigger Holding Pin
 maxAccPacket_list = []
-trig_HoldingPin = []
+trig_HoldingPen = []
 
 def handleSignal(sigNum, stackFrame):
     print("############ handleSignal {} ############".format(sigNum))
@@ -46,7 +46,7 @@ signal.signal(signal.SIGTERM, handleSignal)
 async def doTest(loop):
     #dali = simpleDali.SocketDataLink(host, port)
     global maxAccPacket_list
-    global trig_HoldingPin
+    global trig_HoldingPen
     dali = simpleDali.WebSocketDataLink(uri)
     # dali.verbose = True
     serverId = await dali.id(programname, username, processid, architecture)
@@ -81,7 +81,7 @@ async def doTest(loop):
 
         elif packet.streamId.endswith("MTRIG"):
             HandleTriggerPacket(packet)
-            ProcessHoldingPin()
+            ProcessHoldingPen()
         else:
             print("Packet is not a MaxACC or a Trigger")
             continue
@@ -90,7 +90,7 @@ async def doTest(loop):
 
 def HandleMaxACC_Packet(packet):
     global maxAccPacket_list
-    global trig_HoldingPin
+    global trig_HoldingPen
     maxAccPacket = json.loads(packet.data.decode("'UTF-8'"))
     if maxAccPacket["maxacc"] > 1.0:
         print('ACC too Large: {}'.format(1.0))
@@ -111,7 +111,7 @@ def HandleMaxACC_Packet(packet):
 
 def HandleTriggerPacket(packet):
     global maxAccPacket_list
-    global trig_HoldingPin
+    global trig_HoldingPen
     trig = json.loads(packet.data.decode("'UTF-8'"))
     print("trig start {}".format(trig["startTime"]))
     print("trig end {}".format(trig["endTime"]))
@@ -120,14 +120,14 @@ def HandleTriggerPacket(packet):
     trig["startTime"].replace(tzinfo = timezone.utc)
     trig["endTime"] = dateutil.parser.parse(trig["endTime"])
     trig["endTime"].replace(tzinfo = timezone.utc)
-    trig_HoldingPin.append(trig)
+    trig_HoldingPen.append(trig)
 
-def ProcessHoldingPin():
+def ProcessHoldingPen():
 
     global maxAccPacket_list
-    global trig_HoldingPin
+    global trig_HoldingPen
     tooYoungTriggers = []
-    for trig in trig_HoldingPin:
+    for trig in trig_HoldingPen:
         # convert incoming isoformat objects into datetime objects
         # *** check to verify correct method to do this ***
 
@@ -204,7 +204,7 @@ def ProcessHoldingPin():
         else:
             tooYoungTriggers.append(trig)
             # else: keep looping...
-        trig_HoldingPin = tooYoungTriggers
+        trig_HoldingPen = tooYoungTriggers
 
 def SendResultsJson(ResultsJson):
     day = ResultsJson["Day_Name"]
@@ -288,7 +288,7 @@ def SendResultsJson(ResultsJson):
     print('I succesffuly sent results to results directory!')
 def loopHoldingPen():
     while True:
-        ProcessHoldingPin()
+        ProcessHoldingPen()
         time.sleep(1)
 
 sendThread = Thread(target = loopHoldingPen)
