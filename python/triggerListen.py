@@ -194,8 +194,8 @@ def HandleTriggerPacket(packet):
 
 def SendResultsJson(ResultsJson):
     day = ResultsJson["Day_Name"]
-    classType = ResultsJson["trig"]["class"] # need to see updated trig with info!
-    heat = ResultsJson["trig"]["heat"] # need to see updated trig with info!
+    classType = ResultsJson["Trigger_Info"]["class"] # need to see updated trig with info!
+    heat = ResultsJson["Trigger_Info"]["heat"] # need to see updated trig with info!
 
     # Define directories to put jsons into
     resultsPath = "mseed/www/results/{}/{}/{}".format(day,classType,heat)
