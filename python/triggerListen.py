@@ -91,7 +91,7 @@ def HandleMaxACC_Packet(packet):
     global trig_HoldingPin
     maxAccPacket = json.loads(packet.data.decode("'UTF-8'"))
     maxAccPacket_list.append(maxAccPacket)
-    if length(maxAccPacket_list) > 2000: # number subject to change
+    if len(maxAccPacket_list) > 2000: # number subject to change
         maxAccPacket_list = maxAccPacket_list[1:]
 
     else:
