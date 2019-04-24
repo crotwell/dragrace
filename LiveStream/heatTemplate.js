@@ -1,3 +1,7 @@
+//function and call on a refresh button
+
+
+
 //let datalink = seisplotjs.datalink
 
 
@@ -16,7 +20,7 @@ let trig = {
   "officer":"Gabby"
 };
 let day = "Wednesday";
-fetch(`http://www.seis.sc.edu/dragrace/www/results/${day}/MostRecentResult.json`)
+fetch(`/dragrace/www/results/MostRecentResult.json`)
   .then(function(response){
     return response.json();
   })
