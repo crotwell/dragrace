@@ -1,7 +1,7 @@
 
 
 let datalink = seisplotjs.datalink
-
+let seisGraphMax = 0.5;
 
 //let wp = require('seisplotjs-waveformplot');
 // this global comes from the seisplotjs_waveformplot standalone js
@@ -226,7 +226,7 @@ let handleMaxAccSeismogram = function(seismogram) {
     seisPlotConfig.margin = margin ;
     seisPlotConfig.maxHeight = 200 ;
     seisPlotConfig.doRMean = false ;
-    seisPlotConfig.fixedYScale = [-.1, .5] ;
+    seisPlotConfig.fixedYScale = [-.1, seisGraphMax] ;
     seisPlotConfig.yScaleFormat = ".1f";
     let seisPlot = new wp.CanvasSeismograph(plotDiv, seisPlotConfig, [trace], timeWindow.start, timeWindow.end);
     seisPlot.svg.classed('realtimePlot', true).classed('overlayPlot', false)

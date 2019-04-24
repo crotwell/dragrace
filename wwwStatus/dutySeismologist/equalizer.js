@@ -6,13 +6,14 @@ class Equalizer{
     this.d3 = seisplotjs.d3
     this.margin = 30;
     this.w = 330;
-    this.h = 200; //px
+    this.h = 400; //px
     this.yScale = d3.scaleLinear()
-    .domain([0,.5])
+    .domain([0,2])
     .range([0,this.h]);
     console.log(`yscaletest ${this.yScale(1)}`)
-    this.yAxis = d3.axisLeft(this.yScale);
-    this.yAxis.ticks(10);
+    this.yAxis = d3.axisLeft(this.yScale).ticks(8, "0.1f");
+    // this.yAxis = d3.axisLeft(this.yScale);
+    // this.yAxis.ticks(10);
     this.barPadding = 1;
     //test
 
@@ -36,7 +37,8 @@ createEqualizer(selector){
 
   svg.append("g")
     .attr("class","axisLeft")
-    .call(this.yAxis);
+    .call(this.yAxis)
+    .attr("transform","translate(30,0)");
 
   let bars = svg.append("g")
   .classed("bars",true)
