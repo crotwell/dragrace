@@ -79,7 +79,7 @@ async def doTest(loop):
 
         elif packet.streamId.endswith("MTRIG"):
             HandleTriggerPacket(packet)
-            ProcessHoldingPin(trig_HoldingPin)
+            ProcessHoldingPin()
         else:
             print("Packet is not a MaxACC or a Trigger")
             continue
@@ -118,7 +118,7 @@ def HandleTriggerPacket(packet):
     trig["endTime"].replace(tzinfo = timezone.utc)
     trig_HoldingPin.append(trig)
 
-def ProcessHoldingPin(trig_HoldingPin):
+def ProcessHoldingPin():
     global maxAccPacket_list
     global trig_HoldingPin
     tooYoungTriggers = []
