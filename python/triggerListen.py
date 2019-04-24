@@ -117,84 +117,87 @@ def HandleTriggerPacket(packet):
     trig["endTime"].replace(tzinfo = timezone.utc)
     trig_HoldingPin.append(trig)
     tooYoungTriggers = []
-    for trig in trig_HoldingPin:
-        # convert incoming isoformat objects into datetime objects
-        # *** check to verify correct method to do this ***
+    while True:
+        
+        for trig in trig_HoldingPin:
+            # convert incoming isoformat objects into datetime objects
+            # *** check to verify correct method to do this ***
 
 
-        if trig["endTime"] < simpleDali.utcnowWithTz():
-        # process the trigger: look trough maxAccPacket_list, find the maxacc
-        # for each location
-            FL_acc = [0]
-            NL_acc = [0]
-            # CT_acc = []
-            NR_acc = [0]
-            FR_acc = [0]
-            m = maxAccPacket_list[0]
-            # print("maxAccPacket_list {} {} {}".format(m["start_time"], m["end_time"],m["station"]))
-            # print("trig  {} {}".format(trig["startTime"], trig["endTime"]))
+            if trig["endTime"] < simpleDali.utcnowWithTz():
+            # process the trigger: look trough maxAccPacket_list, find the maxacc
+            # for each location
+                FL_acc = [0]
+                NL_acc = [0]
+                # CT_acc = []
+                NR_acc = [0]
+                FR_acc = [0]
+                m = maxAccPacket_list[0]
+                # print("maxAccPacket_list {} {} {}".format(m["start_time"], m["end_time"],m["station"]))
+                # print("trig  {} {}".format(trig["startTime"], trig["endTime"]))
 
-            count = 0
+                count = 0
 
-            for maxAccJson in maxAccPacket_list:
-                # while maxcc's starttime > trig starttime AND maxacc's endtime < trigs endtime create a new results json
-                # this loop calls upon the keys of each individual json object as it loop through the big max acc packet list
-                if maxAccJson["start_time"] > trig["startTime"] and maxAccJson["end_time"] < trig["endTime"]:
-                    count = count + 1
-                    if maxAccJson["station"] == "FL":
-                        FL_acc.append(maxAccJson["maxacc"])
-                    elif maxAccJson["station"] == "NL":
-                        NL_acc.append(maxAccJson["maxacc"])
-                    # if maxAccJson["station"] == "CT"
-                    #     CT_acc.append(maxAccJson["maxacc"])
-                    elif maxAccJson["station"] == "NR":
-                        NR_acc.append(maxAccJson["maxacc"])
-                    elif maxAccJson["station"] == "FR":
-                        FR_acc.append(maxAccJson["maxacc"])
-                    else:
-                        print("maxACC Packet doesn't contain a station")
-                # else:
-            #         print("maxacc packet too old {}".format(maxAccJson["start_time"]))
-            # print("count {} {}".format(count, len(maxAccPacket_list)))
+                for maxAccJson in maxAccPacket_list:
+                    # while maxcc's starttime > trig starttime AND maxacc's endtime < trigs endtime create a new results json
+                    # this loop calls upon the keys of each individual json object as it loop through the big max acc packet list
+                    if maxAccJson["start_time"] > trig["startTime"] and maxAccJson["end_time"] < trig["endTime"]:
+                        count = count + 1
+                        if maxAccJson["station"] == "FL":
+                            FL_acc.append(maxAccJson["maxacc"])
+                        elif maxAccJson["station"] == "NL":
+                            NL_acc.append(maxAccJson["maxacc"])
+                        # if maxAccJson["station"] == "CT"
+                        #     CT_acc.append(maxAccJson["maxacc"])
+                        elif maxAccJson["station"] == "NR":
+                            NR_acc.append(maxAccJson["maxacc"])
+                        elif maxAccJson["station"] == "FR":
+                            FR_acc.append(maxAccJson["maxacc"])
+                        else:
+                            print("maxACC Packet doesn't contain a station")
+                    # else:
+                #         print("maxacc packet too old {}".format(maxAccJson["start_time"]))
+                # print("count {} {}".format(count, len(maxAccPacket_list)))
 
-            today = date.today()
-            weekday = date.isoweekday(today)
-            if weekday == 1:
-                dayName = "Monday"
-            if weekday == 2:
-                dayName = "Tuesday"
-            if weekday == 3:
-                dayName = "Wednesday"
-            if weekday == 4:
-                dayName = "Thursday"
-            if weekday == 5:
-                dayName == "Friday"
-            if weekday == 6:
-                dayName = "Saturday"
-            if weekday == 7:
-                dayName = "Sunday"
-            trig["startTime"] = trig["startTime"].strftime("%Y-%m-%dT%H:%M:%SZ")
-            trig["endTime"] = trig["endTime"].strftime("%Y-%m-%dT%H:%M:%SZ")
-            ResultsJson = {
-                "Day_Name": dayName,
-                "Trigger_Info": trig,
-                # Trigger info is a json that contains Duty Officer, Starttime, Endtime
-                "peakACC_FL": max(FL_acc),
-                "peakACC_NL": max(NL_acc),
-                # "peakACC_CT": max(CT_acc),
-                "peakACC_NR": max(NR_acc),
-                "peakACC_FR": max(FR_acc),
-                # add day: Friday Saturday Sunday as part of json
-                # add duty office (from trigger)
-                # add class name
-            }
-            # dump ResultsJson into a directory, index html
-            # sends ResultsJson to directories
-            SendResultsJson(ResultsJson)
-        else:
-            tooYoungTriggers.append(trig)
-            # else: keep looping...
-        trig_HoldingPin = tooYoungTriggers
+                today = date.today()
+                weekday = date.isoweekday(today)
+                if weekday == 1:
+                    dayName = "Monday"
+                if weekday == 2:
+                    dayName = "Tuesday"
+                if weekday == 3:
+                    dayName = "Wednesday"
+                if weekday == 4:
+                    dayName = "Thursday"
+                if weekday == 5:
+                    dayName == "Friday"
+                if weekday == 6:
+                    dayName = "Saturday"
+                if weekday == 7:
+                    dayName = "Sunday"
+                trig["startTime"] = trig["startTime"].strftime("%Y-%m-%dT%H:%M:%SZ")
+                trig["endTime"] = trig["endTime"].strftime("%Y-%m-%dT%H:%M:%SZ")
+                ResultsJson = {
+                    "Day_Name": dayName,
+                    "Trigger_Info": trig,
+                    # Trigger info is a json that contains Duty Officer, Starttime, Endtime
+                    "peakACC_FL": max(FL_acc),
+                    "peakACC_NL": max(NL_acc),
+                    # "peakACC_CT": max(CT_acc),
+                    "peakACC_NR": max(NR_acc),
+                    "peakACC_FR": max(FR_acc),
+                    # add day: Friday Saturday Sunday as part of json
+                    # add duty office (from trigger)
+                    # add class name
+                }
+                # dump ResultsJson into a directory, index html
+                # sends ResultsJson to directories
+                SendResultsJson(ResultsJson)
+            else:
+                tooYoungTriggers.append(trig)
+                # else: keep looping...
+            trig_HoldingPin = tooYoungTriggers
+        time.sleep(1)
 
 
 def SendResultsJson(ResultsJson):
