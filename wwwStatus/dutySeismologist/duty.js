@@ -311,9 +311,10 @@ let dlMaxAccelerationCallback = function(dlPacket) {
         const newTrace = trace.trim(littleBitLarger);
         if (! newTrace) {
           console.log(`trace trim returned null`);
+        } else {
+          allTraces.set(seismogram.codes(), newTrace);
+          allSeisPlots.get(seismogram.codes()).replace(trace, newTrace);
         }
-        allTraces.set(seismogram.codes(), newTrace);
-        allSeisPlots.get(seismogram.codes()).replace(trace, newTrace);
       }
       // if we are not paused, let timer animationLoop redraw
       // so we don't have to redraw for every packet
