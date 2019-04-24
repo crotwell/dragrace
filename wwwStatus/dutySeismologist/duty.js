@@ -107,6 +107,16 @@ d3.select('#stationChoice')
     .append("option")
     .text(function(d) {return d;});
 
+let equalizer = new Equalizer("div.equalizer");
+    d3.select('#classChoice')
+      .selectAll("option")
+      .data(classList)
+      .enter()
+        .append("option")
+        .text(function(d) {return d;});
+
+
+
 d3.selectAll('.textHost').text(host);
 
 let accelMaxValues = new Map();
