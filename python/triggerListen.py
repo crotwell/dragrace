@@ -280,7 +280,10 @@ def SendResultsJson(ResultsJson):
 
     print('I succesffuly sent results to results directory!')
 
-
+sendThread = Thread(target = ProcessHoldingPin)
+sendThread.daemon=True
+print("thread start")
+sendThread.start()
 
 
 loop = asyncio.get_event_loop()
