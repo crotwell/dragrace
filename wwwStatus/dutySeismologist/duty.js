@@ -389,7 +389,7 @@ let doDatalinkConnect = function() {
     if (staCode){
       return dlConn.awaitDLCommand("MATCH", `(${staCode}.*(_|\.)HNZ/MSEED)|(.*/MTRIG)|(.*/MAXACC)|(.*/ZMAXCFG)|(.*/IP)`);
     } else {
-      return dlConn.awaitDLCommand("MATCH", `(.*/MTRIG)|(.*/MxxxAXACC)|(.*/ZMAXCFG)|(.*/IP)`)
+      return dlConn.awaitDLCommand("MATCH", `(.*/MTRIG)|(.*/MAXACC)|(.*/ZMAXCFG)|(.*/IP)`)
     }
   }).then(response => {
     d3.select("div.triggers").append("p").text(`MATCH response: ${response}`);
