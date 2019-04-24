@@ -186,7 +186,11 @@ let handleMaxAccSeismogram = function(seismogram) {
   if (allSeisPlots.has(codes)) {
     if (allTraces.has(codes)) {
       const oldTrace = allTraces.get(codes);
-      oldTrace.append(seismogram);
+      if (oldTrace) {
+        oldTrace.append(seismogram);
+      } else {
+        oldTrace = new Trace(seismogram)
+      }
       const littleBitLarger = {'start': moment.utc(timeWindow.start).subtract(60, 'second'),
                               'end': moment.utc(timeWindow.end).add(180, 'second')};
       const newTrace = oldTrace.trim(littleBitLarger);
