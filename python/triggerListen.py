@@ -5,7 +5,7 @@ import logging
 import signal
 import sys
 import json
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from array import array
 import os
 import dateutil.parser
@@ -91,7 +91,9 @@ def HandleMaxACC_Packet(packet):
     maxAccPacket = json.loads(packet.data.decode("'UTF-8'"))
 
     maxAccPacket["start_time"] = dateutil.parser.parse(maxAccPacket["start_time"])
+    maxAccPacket["start_time"].replace(tzinfo = timezone.utc)
     maxAccPacket["end_time"] = dateutil.parser.parse(maxAccPacket["end_time"])
+    maxAccPacket["end_time"].replace(tzinfo = timezone.utc)
     maxAccPacket_list.append(maxAccPacket)
     if len(maxAccPacket_list) > 2000: # number subject to change
         maxAccPacket_list = maxAccPacket_list[1:]
@@ -109,7 +111,9 @@ def HandleTriggerPacket(packet):
     print("trig start {}".format(trig["startTime"]))
 
     trig["startTime"] = dateutil.parser.parse(trig["startTime"])
+    trig["startTime"].replace(tzinfo = timezone.utc)
     trig["endTime"] = dateutil.parser.parse(trig["endTime"])
+    trig["endTime"].replace(tzinfo = timezone.utc)
     trig_HoldingPin.append(trig)
     tooYoungTriggers = []
     for trig in trig_HoldingPin:
