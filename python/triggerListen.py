@@ -201,6 +201,14 @@ def ProcessHoldingPen():
             # dump ResultsJson into a directory, index html
             # sends ResultsJson to directories
             SendResultsJson(ResultsJson)
+            MostRecentResult = {
+                "class": trig.class,
+                "heat": trig.heat,
+                "day": dayName
+            }
+            with open("mseed/www/results/MostRecentResult.json","w") as f:
+                if f is not None:
+                    json.dump(MostRecentResult,f)
         else:
             tooYoungTriggers.append(trig)
             # else: keep looping...
