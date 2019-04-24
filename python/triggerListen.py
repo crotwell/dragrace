@@ -8,6 +8,7 @@ import json
 from datetime import datetime, timedelta, date
 from array import array
 import os
+import dateutil.parser
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -103,8 +104,9 @@ def HandleTriggerPacket(packet):
     global trig_HoldingPin
     trig = json.loads(packet.data.decode("'UTF-8'"))
     print("trig start {}".format(trig["startTime"]))
-    trig["startTime"] = datetime.fromisoformat(trig["startTime"])
-    trig["endTime"] = datetime.fromisoformat(trig["endTime"])
+
+    trig["startTime"] = dateutil.parser.parse(trig["startTime"])
+    trig["endTime"] = dateutil.parser.parse(trig["endTime"])
     trig_HoldingPin.append(trig)
     tooYoungTriggers = []
     for trig in trig_HoldingPin:
@@ -155,8 +157,8 @@ def HandleTriggerPacket(packet):
                 dayName = "Saturday"
             if weekday == 7:
                 dayName = "Sunday"
-            trig["startTime"] = trig["startTime"].isoformat()
-            trig["endTime"] = trig["endTime"].isoformat()
+            trig["startTime"] = trig["startTime"].strftime("%Y-%m-%dT%H:%M%SZ")
+            trig["endTime"] = trig["endTime"].strftime("%Y-%m-%dT%H:%M%SZ")
             ResultsJson = {
                 "Day_Name": dayName,
                 "Trigger_Info": trig,
