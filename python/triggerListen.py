@@ -8,6 +8,7 @@ import json
 from datetime import datetime, timedelta, date
 from array import array
 import os
+import dateutil.parser
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -42,6 +43,8 @@ signal.signal(signal.SIGTERM, handleSignal)
 
 async def doTest(loop):
     #dali = simpleDali.SocketDataLink(host, port)
+    global maxAccPacket_list
+    global trig_HoldingPin
     dali = simpleDali.WebSocketDataLink(uri)
     dali.verbose = True
     serverId = await dali.id(programname, username, processid, architecture)
@@ -50,7 +53,7 @@ async def doTest(loop):
     print("Info: {} ".format(serverInfo.message))
     #serverInfo = yield from dali.info("STREAMS")
     #print("Info: {} ".format(serverInfo.message))
-    r = await dali.match(".*/(MAXACC|MTRIG) ")
+    r = await dali.match(".*/(MAXACC|MTRIG)")
     print("match() Resonse {}".format(r))
 
     # begintime = simpleDali.utcnowWithTz() - timedelta(minutes=5)
@@ -72,39 +75,47 @@ async def doTest(loop):
         # if  peakPacket.streamId.endswith("ZMAXCFG"):
         #     config = json.loads(peakPacket.data.decode("'UTF-8'"))
         if packet.streamId.endswith("MAXACC"):
-            maxAccPacket_list = HandleMaxACC_Packet(packet)
+            HandleMaxACC_Packet(packet)
 
-        if packet.streamId.endswith("MTRIG"):
-            ResultsJson = HandleTriggerPacket(packet)
+        elif packet.streamId.endswith("MTRIG"):
+            HandleTriggerPacket(packet)
         else:
             print("Packet is not a MaxACC or a Trigger")
             continue
-        # sends ResultsJson to directories
-        SendResultsJson(ResultsJson)
 
     dali.close()
 
 def HandleMaxACC_Packet(packet):
+    global maxAccPacket_list
+    global trig_HoldingPin
     maxAccPacket = json.loads(packet.data.decode("'UTF-8'"))
+
+    maxAccPacket["start_time"] = dateutil.parser.parse(maxAccPacket["start_time"])
+    maxAccPacket["end_time"] = dateutil.parser.parse(maxAccPacket["end_time"])
     maxAccPacket_list.append(maxAccPacket)
-    if length(maxAccPacket_list) > 2000: # number subject to change
+    if len(maxAccPacket_list) > 2000: # number subject to change
         maxAccPacket_list = maxAccPacket_list[1:]
 
     else:
         pass
 
-    return maxAccPacket_list
+
 
 
 def HandleTriggerPacket(packet):
+    global maxAccPacket_list
+    global trig_HoldingPin
     trig = json.loads(packet.data.decode("'UTF-8'"))
+    print("trig start {}".format(trig["startTime"]))
+
+    trig["startTime"] = dateutil.parser.parse(trig["startTime"])
+    trig["endTime"] = dateutil.parser.parse(trig["endTime"])
     trig_HoldingPin.append(trig)
     tooYoungTriggers = []
     for trig in trig_HoldingPin:
         # convert incoming isoformat objects into datetime objects
         # *** check to verify correct method to do this ***
-        trig["startTime"] = datetime.fromisoformat(trig["startTime"])
-        trig["endTime"] = datetime.fromisoformat(trig["endTime"])
+
 
         if trig["endTime"] < simpleDali.utcnowWithTz():
         # process the trigger: look trough maxAccPacket_list, find the maxacc
@@ -149,9 +160,9 @@ def HandleTriggerPacket(packet):
                 dayName = "Saturday"
             if weekday == 7:
                 dayName = "Sunday"
+            trig["startTime"] = trig["startTime"].strftime("%Y-%m-%dT%H:%M%SZ")
+            trig["endTime"] = trig["endTime"].strftime("%Y-%m-%dT%H:%M%SZ")
             ResultsJson = {
-                # "trigger_startTime": trig["startTime"].isoformat(),
-                # "trigger_endTime": trig["endTime"].isoformat(),
                 "Day_Name": dayName,
                 "Trigger_Info": trig,
                 # Trigger info is a json that contains Duty Officer, Starttime, Endtime
@@ -165,13 +176,13 @@ def HandleTriggerPacket(packet):
                 # add class name
             }
             # dump ResultsJson into a directory, index html
+            # sends ResultsJson to directories
+            SendResultsJson(ResultsJson)
         else:
             tooYoungTriggers.append(trig)
             # else: keep looping...
-
-
         trig_HoldingPin = tooYoungTriggers
-        return ResultsJson
+
 
 def SendResultsJson(ResultsJson):
     day = ResultsJson["Day_Name"]
@@ -248,7 +259,7 @@ def SendResultsJson(ResultsJson):
         with open(heatNamesFile,'w') as f:
             json.dumps(heatNames,f)
 
-    return print('I succesffuly sent results to results directory!')
+    print('I succesffuly sent results to results directory!')
 
 
 
