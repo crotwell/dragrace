@@ -9,6 +9,8 @@ from datetime import datetime, timedelta, date, timezone
 from array import array
 import os
 import dateutil.parser
+from threading import Thread
+import time
 
 # logging.basicConfig(level=logging.DEBUG)
 
@@ -79,6 +81,7 @@ async def doTest(loop):
 
         elif packet.streamId.endswith("MTRIG"):
             HandleTriggerPacket(packet)
+            ProcessHoldingPin()
         else:
             print("Packet is not a MaxACC or a Trigger")
             continue
@@ -116,6 +119,12 @@ def HandleTriggerPacket(packet):
     trig["endTime"] = dateutil.parser.parse(trig["endTime"])
     trig["endTime"].replace(tzinfo = timezone.utc)
     trig_HoldingPin.append(trig)
+
+def ProcessHoldingPin():
+
+    global maxAccPacket_list
+    global trig_HoldingPin
+    print("ProcessHoldingPin {}".format(len(trig_HoldingPin)))
     tooYoungTriggers = []
     for trig in trig_HoldingPin:
         # convert incoming isoformat objects into datetime objects
@@ -195,7 +204,7 @@ def HandleTriggerPacket(packet):
             tooYoungTriggers.append(trig)
             # else: keep looping...
         trig_HoldingPin = tooYoungTriggers
-
+        time.sleep(1)
 
 def SendResultsJson(ResultsJson):
     day = ResultsJson["Day_Name"]
@@ -234,7 +243,7 @@ def SendResultsJson(ResultsJson):
     try:
         with open(classNamesFile,'r') as f:
             if f is not None:
-                classNames = json.loads(f)
+                classNames = json.load(f)
                 # if class (ie top fuel) is not in classnames.json, add the class
                 # to the classnames.json, then send this updated classnames.json to directory
                 # else, pass
@@ -258,7 +267,7 @@ def SendResultsJson(ResultsJson):
     try:
         with open(heatNamesFile,'r') as f:
             if f is not None:
-                heatNames = json.loads(f)
+                heatNames = json.load(f)
                 # if heat (ie heat 2) is not in heatnames.json, add the heat
                 # to the heatnames.json, then send this updated heatnames.json to directory
                 # else, pass
@@ -277,8 +286,14 @@ def SendResultsJson(ResultsJson):
             json.dump(heatNames,f)
 
     print('I succesffuly sent results to results directory!')
+def loopHoldingPen():
+    while True:
+        ProcessHoldingPin()
 
-
+sendThread = Thread(target = loopHoldingPen)
+sendThread.daemon=True
+print("thread start")
+sendThread.start()
 
 
 loop = asyncio.get_event_loop()
