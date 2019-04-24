@@ -106,14 +106,14 @@ d3.select('#stationChoice')
   .enter()
     .append("option")
     .text(function(d) {return d;});
-
-let equalizer = new Equalizer("div.equalizer");
-    d3.select('#classChoice')
-      .selectAll("option")
-      .data(classList)
-      .enter()
-        .append("option")
-        .text(function(d) {return d;});
+//
+// let equalizer = new Equalizer("div.equalizer");
+//     d3.select('#classChoice')
+//       .selectAll("option")
+//       .data(classList)
+//       .enter()
+//         .append("option")
+//         .text(function(d) {return d;});
 
 
 
