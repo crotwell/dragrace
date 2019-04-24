@@ -212,7 +212,7 @@ def SendResultsJson(ResultsJson):
                 # else, pass
             else:
                 pass
-            if classType is not in classNames:
+            if classNames.count(classType) == 0:
                 classNames.append(classType)
                 with open(classNamesFile,'w') as f:
                     json.dumps(classNames,f)
@@ -236,7 +236,7 @@ def SendResultsJson(ResultsJson):
                 # else, pass
             else:
                 pass
-            if heat is not in heatNames:
+            if heatNames.count(heat) == 0:
                 heatNames.append(heat)
                 with open(heatNamesFile,'w') as f:
                     json.dumps(heatNames,f)
