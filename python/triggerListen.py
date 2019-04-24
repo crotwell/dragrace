@@ -10,7 +10,7 @@ from array import array
 import os
 import dateutil.parser
 
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 
 host = "129.252.35.36"
