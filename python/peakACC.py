@@ -19,8 +19,8 @@ array_z = [9,10,11,12,47,100,0]
 # time_diff = timedelta(seconds=0.20)
 # end_time = start_time + time_diff
 import simpleDali
-# timestamp = simpleDali.utcnowWithTz().isoformat() # time need to be...
-# datetime.isoformat()
+# timestamp = simpleDali.utcnowWithTz().strftime("%Y-%m-%dT%H:%M%SZ") # time need to be...
+# datetime.strftime("%Y-%m-%dT%H:%M%SZ")
 # note this time is associated with last element of x,y,z data we get
 # would like to compare first and last of two packets..?
 
@@ -81,8 +81,8 @@ def compareSendPeakAccel(establishedJson, freshJson, Dali, maxWindow):
         # need datetime to calc hp times
         hpdatastart = simpleDali.datetimeToHPTime(establishedJson["start_time"])
         hpdataend = simpleDali.datetimeToHPTime(establishedJson["end_time"])
-        establishedJson["start_time"] = establishedJson["start_time"].isoformat()
-        establishedJson["end_time"] = establishedJson["end_time"].isoformat()
+        establishedJson["start_time"] = establishedJson["start_time"].strftime("%Y-%m-%dT%H:%M:%SZ")
+        establishedJson["end_time"] = establishedJson["end_time"].strftime("%Y-%m-%dT%H:%M:%SZ")
         if Dali is not None:
             # send establishedJson to ring server
             streamid = "{}.{}/MAXACC".format("XX", establishedJson["station"])

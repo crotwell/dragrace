@@ -185,9 +185,13 @@ let handleMaxAccSeismogram = function(seismogram) {
   let codes = seismogram.codes();
   //let seismogram = wp.miniseed.createSeismogram([miniseed]);
   if (allSeisPlots.has(codes)) {
-    if (allTraces.has(codes)) {
+    if (allTraces.has(codes) && allTraces.get(codes)) {
       const oldTrace = allTraces.get(codes);
-      oldTrace.append(seismogram);
+      if (oldTrace) {
+        oldTrace.append(seismogram);
+      } else {
+        oldTrace = new seisplotjs.model.Trace(seismogram)
+      }
       const littleBitLarger = {'start': moment.utc(timeWindow.start).subtract(60, 'second'),
                               'end': moment.utc(timeWindow.end).add(180, 'second')};
       const newTrace = oldTrace.trim(littleBitLarger);
@@ -308,9 +312,10 @@ let dlMaxAccelerationCallback = function(dlPacket) {
         const newTrace = trace.trim(littleBitLarger);
         if (! newTrace) {
           console.log(`trace trim returned null`);
+        } else {
+          allTraces.set(seismogram.codes(), newTrace);
+          allSeisPlots.get(seismogram.codes()).replace(trace, newTrace);
         }
-        allTraces.set(seismogram.codes(), newTrace);
-        allSeisPlots.get(seismogram.codes()).replace(trace, newTrace);
       }
       // if we are not paused, let timer animationLoop redraw
       // so we don't have to redraw for every packet
@@ -386,11 +391,11 @@ let doDatalinkConnect = function() {
     if (staCode){
       return dlConn.awaitDLCommand("MATCH", `(${staCode}.*(_|\.)HNZ/MSEED)|(.*/MTRIG)|(.*/MAXACC)|(.*/ZMAXCFG)|(.*/IP)`);
     } else {
-      return dlConn.awaitDLCommand("MATCH", `(.*/MTRIG)|(.*/MxxxAXACC)|(.*/ZMAXCFG)|(.*/IP)`)
+      return dlConn.awaitDLCommand("MATCH", `(.*/MTRIG)|(.*/MAXACC)|(.*/ZMAXCFG)|(.*/IP)`)
     }
   }).then(response => {
     d3.select("div.triggers").append("p").text(`MATCH response: ${response}`);
-    return dlConn.awaitDLCommand(`POSITION AFTER ${datalink.momentToHPTime(timeWindow.start)}`);
+    return dlConn.awaitDLCommand(`POSITION AFTER ${datalink.momentToHPTime(timeWindow.end.subtract(60, 'second'))}`);
   }).then(response => {
     d3.select("div.triggers").append("p").text(`POSITION response: ${response}`);
     dlConn.stream();

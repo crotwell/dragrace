@@ -90,9 +90,9 @@ def HandleMaxACC_Packet(packet):
     global trig_HoldingPin
     maxAccPacket = json.loads(packet.data.decode("'UTF-8'"))
 
-    maxAccPacket["start_time"] = dateutil.parser.parse(maxAccPacket["start_time"]+"Z")
+    maxAccPacket["start_time"] = dateutil.parser.parse(maxAccPacket["start_time"])
     maxAccPacket["start_time"].replace(tzinfo = timezone.utc)
-    maxAccPacket["end_time"] = dateutil.parser.parse(maxAccPacket["end_time"]+"Z")
+    maxAccPacket["end_time"] = dateutil.parser.parse(maxAccPacket["end_time"])
     maxAccPacket["end_time"].replace(tzinfo = timezone.utc)
     maxAccPacket_list.append(maxAccPacket)
     if len(maxAccPacket_list) > 2000: # number subject to change
@@ -125,32 +125,37 @@ def HandleTriggerPacket(packet):
         if trig["endTime"] < simpleDali.utcnowWithTz():
         # process the trigger: look trough maxAccPacket_list, find the maxacc
         # for each location
-            FL_acc = []
-            NL_acc = []
+            FL_acc = [0]
+            NL_acc = [0]
             # CT_acc = []
-            NR_acc = []
-            FR_acc = []
+            NR_acc = [0]
+            FR_acc = [0]
             m = maxAccPacket_list[0]
-            print("maxAccPacket_list {} {}".format(m["start_time"], m["end_time"]))
-            print("trig  {} {}".format(trig["startTime"], trig["endTime"]))
+            # print("maxAccPacket_list {} {} {}".format(m["start_time"], m["end_time"],m["station"]))
+            # print("trig  {} {}".format(trig["startTime"], trig["endTime"]))
+
+            count = 0
 
             for maxAccJson in maxAccPacket_list:
                 # while maxcc's starttime > trig starttime AND maxacc's endtime < trigs endtime create a new results json
                 # this loop calls upon the keys of each individual json object as it loop through the big max acc packet list
                 if maxAccJson["start_time"] > trig["startTime"] and maxAccJson["end_time"] < trig["endTime"]:
-
+                    count = count + 1
                     if maxAccJson["station"] == "FL":
                         FL_acc.append(maxAccJson["maxacc"])
-                    if maxAccJson["station"] == "NL":
+                    elif maxAccJson["station"] == "NL":
                         NL_acc.append(maxAccJson["maxacc"])
                     # if maxAccJson["station"] == "CT"
                     #     CT_acc.append(maxAccJson["maxacc"])
-                    if maxAccJson["station"] == "NR":
+                    elif maxAccJson["station"] == "NR":
                         NR_acc.append(maxAccJson["maxacc"])
-                    if maxAccJson["station"] == "FR":
+                    elif maxAccJson["station"] == "FR":
                         FR_acc.append(maxAccJson["maxacc"])
                     else:
                         print("maxACC Packet doesn't contain a station")
+                # else:
+            #         print("maxacc packet too old {}".format(maxAccJson["start_time"]))
+            # print("count {} {}".format(count, len(maxAccPacket_list)))
 
             today = date.today()
             weekday = date.isoweekday(today)
@@ -168,8 +173,8 @@ def HandleTriggerPacket(packet):
                 dayName = "Saturday"
             if weekday == 7:
                 dayName = "Sunday"
-            trig["startTime"] = trig["startTime"].strftime("%Y-%m-%dT%H:%M%SZ")
-            trig["endTime"] = trig["endTime"].strftime("%Y-%m-%dT%H:%M%SZ")
+            trig["startTime"] = trig["startTime"].strftime("%Y-%m-%dT%H:%M:%SZ")
+            trig["endTime"] = trig["endTime"].strftime("%Y-%m-%dT%H:%M:%SZ")
             ResultsJson = {
                 "Day_Name": dayName,
                 "Trigger_Info": trig,
@@ -194,8 +199,8 @@ def HandleTriggerPacket(packet):
 
 def SendResultsJson(ResultsJson):
     day = ResultsJson["Day_Name"]
-    classType = ResultsJson["trig"]["class"] # need to see updated trig with info!
-    heat = ResultsJson["trig"]["heat"] # need to see updated trig with info!
+    classType = ResultsJson["Trigger_Info"]["class"] # need to see updated trig with info!
+    heat = ResultsJson["Trigger_Info"]["heat"] # need to see updated trig with info!
 
     # Define directories to put jsons into
     resultsPath = "mseed/www/results/{}/{}/{}".format(day,classType,heat)
@@ -208,9 +213,13 @@ def SendResultsJson(ResultsJson):
     heatNamesFile = "mseed/www/results/{}/{}/heatnames.json".format(day,classType)
 
     # Create directories baased on directory PATHS defined 181-184
-    os.mkdir(resultsPath)
-    os.mkdir(classNamesPath)
-    os.mkdir(heatNamesPath)
+    if not os.path.exists(resultsPath):
+        os.makedirs(resultsPath)
+    if not os.path.exists(classNamesPath):
+        os.makedirs(classNamesPath)
+    if not os.path.exists(heatNamesPath):
+        os.makedirs(heatNamesPath)
+
     # NOTE: classType, heat, resultsPath, classNamesPath, heatNamesPath ALL
     # need to be checked with updated trigger from gabby
 
@@ -218,7 +227,7 @@ def SendResultsJson(ResultsJson):
 
     with open(resultsFile,"w") as f:
         if f is not None:
-            json.dumps(ResultsJson,f)
+            json.dump(ResultsJson,f)
 
     # read in classnames.json
 
@@ -234,14 +243,14 @@ def SendResultsJson(ResultsJson):
             if classNames.count(classType) == 0:
                 classNames.append(classType)
                 with open(classNamesFile,'w') as f:
-                    json.dumps(classNames,f)
+                    json.dump(classNames,f)
             else:
                 pass
 # first iteration through, create a classNames array
     except FileNotFoundError:
         classNames = [classType]
         with open(classNamesFile,'w') as f:
-            json.dumps(classNames,f)
+            json.dump(classNames,f)
 
 
 
@@ -258,14 +267,14 @@ def SendResultsJson(ResultsJson):
             if heatNames.count(heat) == 0:
                 heatNames.append(heat)
                 with open(heatNamesFile,'w') as f:
-                    json.dumps(heatNames,f)
+                    json.dump(heatNames,f)
             else:
                 pass
 # first iteration through, create a heat array
     except FileNotFoundError:
         heatNames = [heat]
         with open(heatNamesFile,'w') as f:
-            json.dumps(heatNames,f)
+            json.dump(heatNames,f)
 
     print('I succesffuly sent results to results directory!')
 

@@ -3,7 +3,7 @@ let makeSeismogram = function(maxacc) {
 
 let sampleRate = 4;
 
-let seismogram = new seisplotjs.model.Seismogram([maxacc.maxacc,maxacc.maxacc],sampleRate,moment.utc(maxacc.end_time));
+let seismogram = new seisplotjs.model.Seismogram([maxacc.maxacc],sampleRate,moment.utc(maxacc.end_time));
     seismogram.networkCode = "XX";
     seismogram.stationCode = maxacc.station;
     seismogram.locationCode = "  ";
