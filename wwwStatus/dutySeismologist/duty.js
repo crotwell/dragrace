@@ -184,12 +184,12 @@ let handleMaxAccSeismogram = function(seismogram) {
   let codes = seismogram.codes();
   //let seismogram = wp.miniseed.createSeismogram([miniseed]);
   if (allSeisPlots.has(codes)) {
-    if (allTraces.has(codes)) {
+    if (allTraces.has(codes) && allTraces.get(codes)) {
       const oldTrace = allTraces.get(codes);
       if (oldTrace) {
         oldTrace.append(seismogram);
       } else {
-        oldTrace = new Trace(seismogram)
+        oldTrace = new seisplotjs.model.Trace(seismogram)
       }
       const littleBitLarger = {'start': moment.utc(timeWindow.start).subtract(60, 'second'),
                               'end': moment.utc(timeWindow.end).add(180, 'second')};
