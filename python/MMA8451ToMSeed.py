@@ -57,6 +57,7 @@ MAX_SAMPLES = -1
 #MAX_SAMPLES = 1
 
 doDali = True
+doMSeedDali = False
 doArchive = True
 doFIR = True
 doMultiprocess = True
@@ -222,8 +223,9 @@ def sending_worker():
             if token:
                 authTask = my_loop.create_task(authorize(dali, token))
                 my_loop.run_until_complete(authTask)
-            for key, chan in chanMap.items():
-                miniseedBuffers[chan].dali = dali
+            if doMSeedDali:
+                for key, chan in chanMap.items():
+                    miniseedBuffers[chan].dali = dali
         while keepGoing:
             try:
                 item = dataQueue.get(timeout=2)
