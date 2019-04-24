@@ -286,8 +286,11 @@ def SendResultsJson(ResultsJson):
             json.dump(heatNames,f)
 
     print('I succesffuly sent results to results directory!')
+def loopHoldingPen():
+    while True:
+        ProcessHoldingPin()
 
-sendThread = Thread(target = ProcessHoldingPin)
+sendThread = Thread(target = loopHoldingPen)
 sendThread.daemon=True
 print("thread start")
 sendThread.start()
