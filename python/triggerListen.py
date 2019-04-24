@@ -10,7 +10,7 @@ from array import array
 import os
 import dateutil.parser
 
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 
 host = "129.252.35.36"
@@ -46,7 +46,7 @@ async def doTest(loop):
     global maxAccPacket_list
     global trig_HoldingPin
     dali = simpleDali.WebSocketDataLink(uri)
-    dali.verbose = True
+    # dali.verbose = True
     serverId = await dali.id(programname, username, processid, architecture)
     print("Resp: {}".format(serverId))
     serverInfo = await dali.info("STATUS")
@@ -66,7 +66,7 @@ async def doTest(loop):
 
     while(keepGoing):
         packet = await dali.parseResponse()
-        print("got a packet: {}".format(packet.streamId))
+        # print("got a packet: {}".format(packet.streamId))
 
 
         # from MMA8451ToMseed.py lines 430-435
@@ -90,9 +90,9 @@ def HandleMaxACC_Packet(packet):
     global trig_HoldingPin
     maxAccPacket = json.loads(packet.data.decode("'UTF-8'"))
 
-    maxAccPacket["start_time"] = dateutil.parser.parse(maxAccPacket["start_time"])
+    maxAccPacket["start_time"] = dateutil.parser.parse(maxAccPacket["start_time"]+"Z")
     maxAccPacket["start_time"].replace(tzinfo = timezone.utc)
-    maxAccPacket["end_time"] = dateutil.parser.parse(maxAccPacket["end_time"])
+    maxAccPacket["end_time"] = dateutil.parser.parse(maxAccPacket["end_time"]+"Z")
     maxAccPacket["end_time"].replace(tzinfo = timezone.utc)
     maxAccPacket_list.append(maxAccPacket)
     if len(maxAccPacket_list) > 2000: # number subject to change
@@ -109,6 +109,7 @@ def HandleTriggerPacket(packet):
     global trig_HoldingPin
     trig = json.loads(packet.data.decode("'UTF-8'"))
     print("trig start {}".format(trig["startTime"]))
+    print("trig end {}".format(trig["endTime"]))
 
     trig["startTime"] = dateutil.parser.parse(trig["startTime"])
     trig["startTime"].replace(tzinfo = timezone.utc)
@@ -129,6 +130,9 @@ def HandleTriggerPacket(packet):
             # CT_acc = []
             NR_acc = []
             FR_acc = []
+            m = maxAccPacket_list[0]
+            print("maxAccPacket_list {} {}".format(m["start_time"], m["end_time"]))
+            print("trig  {} {}".format(trig["startTime"], trig["endTime"]))
 
             for maxAccJson in maxAccPacket_list:
                 # while maxcc's starttime > trig starttime AND maxacc's endtime < trigs endtime create a new results json
