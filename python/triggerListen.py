@@ -50,7 +50,7 @@ async def doTest(loop):
     print("Info: {} ".format(serverInfo.message))
     #serverInfo = yield from dali.info("STREAMS")
     #print("Info: {} ".format(serverInfo.message))
-    r = await dali.match(".*/(MAXACC|MTRIG) ")
+    r = await dali.match(".*/(MAXACC|MTRIG)")
     print("match() Resonse {}".format(r))
 
     # begintime = simpleDali.utcnowWithTz() - timedelta(minutes=5)
