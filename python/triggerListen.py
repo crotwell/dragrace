@@ -92,6 +92,8 @@ def HandleMaxACC_Packet(packet):
     global maxAccPacket_list
     global trig_HoldingPin
     maxAccPacket = json.loads(packet.data.decode("'UTF-8'"))
+    if maxAccPacket["maxacc"] > 1.0:
+        print('ACC too Large: {}'.format(1.0))
 
     maxAccPacket["start_time"] = dateutil.parser.parse(maxAccPacket["start_time"])
     maxAccPacket["start_time"].replace(tzinfo = timezone.utc)
