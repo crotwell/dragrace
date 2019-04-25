@@ -19,6 +19,8 @@ let staList = ['FL', 'NL', 'CT', 'NR', 'FR'];
 //saturday = 6
 //sunday = 7
 let classList = [];
+let heatNumber = 1;
+let prevHeat= "";
 
 let today = moment()
   if(today.weekday() === 5){
@@ -443,6 +445,7 @@ wp.d3.select("button#trigger").on("click", function(d) {
   heatE = heatE.replace(/\W/, '');
   heatE = heatE.replace(/_/, '');
   heatE = heatE.toUpperCase();
+
   let classChoiceE = document.getElementById('classChoice');
   let classChoice = classChoiceE.options[classChoiceE.selectedIndex].text;
   let trigger = {
@@ -459,6 +462,17 @@ wp.d3.select("button#trigger").on("click", function(d) {
             "value": "enable"
         }
     };
+    prevHeat = heatE;
+  // update heat to next number
+
+  const heatRegex = /(.*\D)(\d+)/;
+  let matchinfo = heatRegex.exec(heatE);
+  let prefix = matchinfo[1];
+  let num = parseInt(matchinfo[2]) +1;
+  console.log(`prefix: ${prefix}  num: ${num}`)
+  heatE = `${prefix}${num}`
+  document.getElementsByName('heatE')[0].value = heatE;
+
   let dlTriggerConn = new datalink.DataLinkConnection(writeDatalinkUrl, dlTriggerCallback, errorFn);
   dlTriggerConn.connect().then(serverId => {
     d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
