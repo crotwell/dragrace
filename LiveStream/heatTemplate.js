@@ -22,7 +22,10 @@ let trig = {
 let day = "Wednesday";
 fetch(`/dragrace/www/results/MostRecentResult.json`)
   .then(function(response){
-    return response.json();
+    if(response.ok) {
+      return response.json();
+    }
+    throw new Error('Network response for MostRecentResult.json was not ok.');
   })
   .then(function(MRR) {
 //    for (let c of classnames){
@@ -32,7 +35,11 @@ fetch(`/dragrace/www/results/MostRecentResult.json`)
       return fetch(`http://www.seis.sc.edu/dragrace/www/results/${day}/${c}/${h}/results.json`)
     })
     .then(function(response){
-      return response.json();
+      .then(function(response){
+        if(response.ok) {
+          return response.json();
+        }
+        throw new Error('Network response for result.json was not ok.');
     })
     .then(function(result) {
       d3.select("div.currentRace").select("div.start_time").text(`Start Time = ${result.Trigger_Info.startTime}`);
@@ -45,7 +52,8 @@ fetch(`/dragrace/www/results/MostRecentResult.json`)
       let equalizer = new Equalizer("div.equalizer");
       let eqMap = createEqualizerMap(result)
       equalizer.updateEqualizer(eqMap);
-
+    }).catch(err) {
+      console.error(err);
     });
 
     createEqualizerMap = function(result){
