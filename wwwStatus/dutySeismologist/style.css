@@ -29,6 +29,9 @@ div.realtime {
     }
 }
 
+div.currentRace {
+  font-size: smaller;
+}
 
 svg.seismograph {
   height: 150px;

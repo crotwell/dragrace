@@ -260,41 +260,34 @@ doDatalinkConnect()
 
 
 let today = moment().format("dddd");
-fetch(`/dragrace/www/results/MostRecentResult.json`)
-  .then(function(response){
-    if(response.ok) {
-      return response.json();
-    }
-    throw new Error('Network response for MostRecentResult.json was not ok.');
-  })
-  .then(function(MRR) {
-//    for (let c of classnames){
-      let c = MRR.class;
-      let h = MRR.heat;
-      let day = MRR.day;
-
-      return fetch(`/dragrace/www/results/${day}/${c}/${h}/results.json`)
-    })
-    .then(function(response){
-      if(response.ok) {
-        return response.json();
-      }
-      throw new Error('Network response for result.json was not ok.');
-    })
+fetchCurrentResult()
     .then(function(result) {
       let floatFormat = d3.format(".2f");
-      d3.select("div.currentRace").select("div.start_time").text(`Start Time = ${result.Trigger_Info.startTime}`);
-      d3.select("div.currentRace").select("div.end_time").text(`End Time = ${result.Trigger_Info.endTime}`);
-      d3.select("div.currentRace").select("div.race_class").text(`Class = ${result.Trigger_Info.class}`);
-      d3.select("div.currentRace").select("div.race_heat").text(`Heat = ${result.Trigger_Info.heat}`);
-      d3.select("div.currentRace").select("div.dutyOfficer").text(`Duty Officer = ${result.Trigger_Info.dutyOfficer}`);
+      let cR = d3.select("div.currentRace");
+      cR.select("span.dayName").text(`${result.Day_Name}`);
+      cR.select("div.start_time").select("span").text(`${result.Trigger_Info.startTime}`);
+      cR.select("div.end_time").select("span").text(`${result.Trigger_Info.endTime}`);
+      cR.select("div.race_class").select("span").text(`${result.Trigger_Info.class}`);
+      let heatDiv = cR.select("div.race_heat");
+      heatDiv.select("span").text(`${result.Trigger_Info.heat}`);
+      cR.select("div.dutyOfficer").select("span").text(`${result.Trigger_Info.dutyOfficer}`);
       let datasetNow = [result.peakACC_FL,result.peakACC_NL,result.peakACC_NR,result.peakACC_FR];
-      d3.select("div.currentRace").select("div.maxacc").text(`Ground Acceleration = ${floatFormat(Math.max(...datasetNow))}`);
+      let accText = `max: ${floatFormat(Math.max(...datasetNow))} of ${floatFormat(result.peakACC_FL)}, ${floatFormat(result.peakACC_NL)}, ${floatFormat(result.peakACC_NR)}, ${floatFormat(result.peakACC_FR)}`
+      cR.select("div.maxacc").select("span").text(accText);
+
       let equalizer = new Equalizer("div.equalizer");
       let eqMap = createEqualizerMap(result)
       equalizer.updateEqualizer(eqMap);
     }).catch(function(err) {
       console.error(err);
+      d3.select("div.currentRace").select("div.start_time").select("span").text("");
+      d3.select("div.currentRace").select("div.end_time").select("span").text("");
+      d3.select("div.currentRace").select("div.race_class").select("span").text("");
+      let heatDiv = d3.select("div.currentRace").select("div.race_heat");
+      heatDiv.select("span").text("");
+      d3.select("div.currentRace").select("div.dutyOfficer").select("span").text("");
+      d3.select("div.currentRace").select("div.maxacc").select("span").text("");
+
     });
 
     createEqualizerMap = function(result){

@@ -121,14 +121,6 @@ if (protocol == 'https:') {
 
 let equalizer = new Equalizer("div.equalizer");
 
-
-d3.select('#stationChoice')
-  .selectAll("option")
-  .data(staList)
-  .enter()
-    .append("option")
-    .text(function(d) {return d;});
-
 d3.select('#classChoice')
   .selectAll("option")
   .data(classList)
@@ -462,16 +454,8 @@ wp.d3.select("button#trigger").on("click", function(d) {
             "value": "enable"
         }
     };
-    prevHeat = heatE;
   // update heat to next number
-
-  const heatRegex = /(.*\D)(\d+)/;
-  let matchinfo = heatRegex.exec(heatE);
-  let prefix = matchinfo[1];
-  let num = parseInt(matchinfo[2]) +1;
-  console.log(`prefix: ${prefix}  num: ${num}`)
-  heatE = `${prefix}${num}`
-  document.getElementsByName('heatE')[0].value = heatE;
+    updateHeatNumber(heatE);
 
   let dlTriggerConn = new datalink.DataLinkConnection(writeDatalinkUrl, dlTriggerCallback, errorFn);
   dlTriggerConn.connect().then(serverId => {
@@ -625,6 +609,71 @@ let dlPacketIPCallback = function(dlPacket) {
     }
   }
 }
+
+updateCurrentResult = function(result) {
+  let c = result.Trigger_Info.class;
+  let h = result.Trigger_Info.heat;
+  let day = result.Day_Name;
+  let floatFormat = d3.format(".2f");
+  let cR = d3.select("div.currentRace");
+  cR.select("span.dayName").text(`${result.Day_Name}`);
+  cR.select("div.start_time").select("span").text(`${result.Trigger_Info.startTime}`);
+  cR.select("div.end_time").select("span").text(`${result.Trigger_Info.endTime}`);
+  cR.select("div.race_class").select("span").text(`${result.Trigger_Info.class}`);
+  let heatDiv = cR.select("div.race_heat");
+  heatDiv.select("span").text(`${result.Trigger_Info.heat}`);
+  heatDiv.select("a").attr("href", `https://www.seis.sc.edu/dragrace/www/results/${day}/${c}/${h}/results.json`);
+  //d3.select("div.currentRace").select("div.race_heat").text(`Heat = ${result.Trigger_Info.heat}`);
+  cR.select("div.dutyOfficer").select("span").text(`${result.Trigger_Info.dutyOfficer}`);
+  let datasetNow = [result.peakACC_FL,result.peakACC_NL,result.peakACC_NR,result.peakACC_FR];
+  let accText = `${floatFormat(result.peakACC_FL)}, ${floatFormat(result.peakACC_NL)}, ${floatFormat(result.peakACC_NR)}, ${floatFormat(result.peakACC_FR)}`
+  cR.select("div.maxacc").select("span").text(accText);
+  return result;
+}
+
+updateHeatNumber = function(heatE) {
+    prevHeat = heatE;
+    const heatRegex = /(.*\D)(\d+)/;
+    let matchinfo = heatRegex.exec(heatE);
+    if (matchinfo){
+      let prefix = matchinfo[1];
+      let num = parseInt(matchinfo[2]) +1;
+      console.log(`updateHeatNumber prefix: ${prefix}  num: ${num}`)
+      heatE = `${prefix}${num}`
+      document.getElementsByName('heatE')[0].value = heatE;
+    }
+}
+
+// update first time, also set heat
+fetchCurrentResult()
+    .then(function(result) {
+      if (result && result.Trigger_Info.heat) {
+        updateHeatNumber(result.Trigger_Info.heat);
+      }
+      return result;
+    })
+    .then(function(result) {
+      return updateCurrentResult(result);
+    });
+
+// timer to update most recent result, every 10 seconds
+window.setInterval(()=>{
+  fetchCurrentResult()
+      .then(function(result) {
+        return updateCurrentResult(result);
+      }).catch(function(err){
+        console.error(`Trouble getting current race: ${err}`);
+        d3.select("div.currentRace").select("div.start_time").select("span").text("");
+        d3.select("div.currentRace").select("div.end_time").select("span").text("");
+        d3.select("div.currentRace").select("div.race_class").select("span").text("");
+        let heatDiv = d3.select("div.currentRace").select("div.race_heat");
+        heatDiv.select("span").text("");
+        heatDiv.select("a").attr("href", "").text("");
+        d3.select("div.currentRace").select("div.dutyOfficer").select("span").text("");
+        d3.select("div.currentRace").select("div.maxacc").select("span").text("");
+
+      });
+}, 10*1000);
 
 //
 let staCode = null
