@@ -28,7 +28,7 @@ processid=0
 architecture="python"
 
 keepGoing = True
-# create global variables for maxAccPacket list and Trigger Holding Pin
+
 maxAccPacket_list = []
 trig_HoldingPen = []
 
@@ -44,38 +44,20 @@ signal.signal(signal.SIGINT, handleSignal)
 signal.signal(signal.SIGTERM, handleSignal)
 
 async def doTest(loop):
-    #dali = simpleDali.SocketDataLink(host, port)
     global maxAccPacket_list
     global trig_HoldingPen
     dali = simpleDali.WebSocketDataLink(uri)
-    # dali.verbose = True
     serverId = await dali.id(programname, username, processid, architecture)
     print("Resp: {}".format(serverId))
     serverInfo = await dali.info("STATUS")
     print("Info: {} ".format(serverInfo.message))
-    #serverInfo = yield from dali.info("STREAMS")
-    #print("Info: {} ".format(serverInfo.message))
     r = await dali.match(".*/(MAXACC|MTRIG)")
     print("match() Resonse {}".format(r))
-
-    # begintime = simpleDali.utcnowWithTz() - timedelta(minutes=5)
-    # r = await dali.positionAfter(begintime)
-    # if r.type.startswith("ERROR"):
-    #     print("positionAfter() Resonse {}, ringserver might not know about these packets?".format(r))
-    # else:
-    #     print("positionAfter() Resonse m={}".format(r.message))
     r = await dali.stream()
 
     while(keepGoing):
         packet = await dali.parseResponse()
-        # print("got a packet: {}".format(packet.streamId))
 
-
-        # from MMA8451ToMseed.py lines 430-435
-        # peakPacket = await configDali.parseResponse()
-        # print("got a packet: {}".format(peakPacket.streamId,))
-        # if  peakPacket.streamId.endswith("ZMAXCFG"):
-        #     config = json.loads(peakPacket.data.decode("'UTF-8'"))
         if packet.streamId.endswith("MAXACC"):
             HandleMaxACC_Packet(packet)
 
@@ -93,21 +75,18 @@ def HandleMaxACC_Packet(packet):
     global trig_HoldingPen
     maxAccPacket = json.loads(packet.data.decode("'UTF-8'"))
     if maxAccPacket["maxacc"] > 1.0:
-        print('ACC too Large: {}'.format(1.0))
+        # print('ACC too Large: {}'.format(1.0))
 
     maxAccPacket["start_time"] = dateutil.parser.parse(maxAccPacket["start_time"])
     maxAccPacket["start_time"].replace(tzinfo = timezone.utc)
     maxAccPacket["end_time"] = dateutil.parser.parse(maxAccPacket["end_time"])
     maxAccPacket["end_time"].replace(tzinfo = timezone.utc)
     maxAccPacket_list.append(maxAccPacket)
-    if len(maxAccPacket_list) > 2000: # number subject to change
+    if len(maxAccPacket_list) > 2000: # list reaches max length after 1 min, 25 secs.
         maxAccPacket_list = maxAccPacket_list[1:]
 
     else:
         pass
-
-
-
 
 def HandleTriggerPacket(packet):
     global maxAccPacket_list
@@ -128,13 +107,7 @@ def ProcessHoldingPen():
     global trig_HoldingPen
     tooYoungTriggers = []
     for trig in trig_HoldingPen:
-        # convert incoming isoformat objects into datetime objects
-        # *** check to verify correct method to do this ***
-
-
         if trig["endTime"] < simpleDali.utcnowWithTz():
-        # process the trigger: look trough maxAccPacket_list, find the maxacc
-        # for each location
             FL_acc = [0]
             NL_acc = [0]
             # CT_acc = []
@@ -143,12 +116,8 @@ def ProcessHoldingPen():
             m = maxAccPacket_list[0]
             # print("maxAccPacket_list {} {} {}".format(m["start_time"], m["end_time"],m["station"]))
             # print("trig  {} {}".format(trig["startTime"], trig["endTime"]))
-
             count = 0
-
             for maxAccJson in maxAccPacket_list:
-                # while maxcc's starttime > trig starttime AND maxacc's endtime < trigs endtime create a new results json
-                # this loop calls upon the keys of each individual json object as it loop through the big max acc packet list
                 if maxAccJson["start_time"] > trig["startTime"] and maxAccJson["end_time"] < trig["endTime"]:
                     count = count + 1
                     if maxAccJson["station"] == "FL":
@@ -163,10 +132,6 @@ def ProcessHoldingPen():
                         FR_acc.append(maxAccJson["maxacc"])
                     else:
                         print("maxACC Packet doesn't contain a station")
-                # else:
-            #         print("maxacc packet too old {}".format(maxAccJson["start_time"]))
-            # print("count {} {}".format(count, len(maxAccPacket_list)))
-
             today = date.today()
             weekday = date.isoweekday(today)
             if weekday == 1:
@@ -188,18 +153,12 @@ def ProcessHoldingPen():
             ResultsJson = {
                 "Day_Name": dayName,
                 "Trigger_Info": trig,
-                # Trigger info is a json that contains Duty Officer, Starttime, Endtime
                 "peakACC_FL": max(FL_acc),
                 "peakACC_NL": max(NL_acc),
                 # "peakACC_CT": max(CT_acc),
                 "peakACC_NR": max(NR_acc),
                 "peakACC_FR": max(FR_acc),
-                # add day: Friday Saturday Sunday as part of json
-                # add duty office (from trigger)
-                # add class name
             }
-            # dump ResultsJson into a directory, index html
-            # sends ResultsJson to directories
             SendResultsJson(ResultsJson)
             MostRecentResult = {
                 "class": trig["class"],
@@ -211,7 +170,6 @@ def ProcessHoldingPen():
                     json.dump(MostRecentResult,f)
         else:
             tooYoungTriggers.append(trig)
-            # else: keep looping...
         trig_HoldingPen = tooYoungTriggers
 
 def SendResultsJson(ResultsJson):
@@ -237,17 +195,12 @@ def SendResultsJson(ResultsJson):
     if not os.path.exists(heatNamesPath):
         os.makedirs(heatNamesPath)
 
-    # NOTE: classType, heat, resultsPath, classNamesPath, heatNamesPath ALL
-    # need to be checked with updated trigger from gabby
-
     # send ResultsJson to directory
-
     with open(resultsFile,"w") as f:
         if f is not None:
             json.dump(ResultsJson,f)
 
     # read in classnames.json
-
     try:
         with open(classNamesFile,'r') as f:
             if f is not None:
@@ -292,8 +245,8 @@ def SendResultsJson(ResultsJson):
         heatNames = [heat]
         with open(heatNamesFile,'w') as f:
             json.dump(heatNames,f)
-
     print('I succesffuly sent results to results directory!')
+
 def loopHoldingPen():
     while True:
         ProcessHoldingPen()
@@ -303,7 +256,6 @@ sendThread = Thread(target = loopHoldingPen)
 sendThread.daemon=True
 print("thread start")
 sendThread.start()
-
 
 loop = asyncio.get_event_loop()
 loop.set_debug(True)
