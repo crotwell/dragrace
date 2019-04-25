@@ -22,11 +22,11 @@ class Equalizer{
   }
 createZeros(){
   let dataset=new Map();
-  dataset.set("FL",{'station':'FL','maxacc':.10 });
-  dataset.set("NL",{'station':'NL','maxacc':.5 });
-  dataset.set("CT",{'station':'CT','maxacc':.3 });
-  dataset.set("NR",{'station':'NR','maxacc':.3 });
-  dataset.set("FR",{'station':'FR','maxacc':.1 });
+  dataset.set("FL",{'station':'FL','maxacc':.0 });
+  dataset.set("NL",{'station':'NL','maxacc':.0 });
+  dataset.set("CT",{'station':'CT','maxacc':.0 });
+  dataset.set("NR",{'station':'NR','maxacc':.0 });
+  dataset.set("FR",{'station':'FR','maxacc':.0 });
   return dataset;
 }
 
