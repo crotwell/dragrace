@@ -85,11 +85,11 @@ bars.selectAll("rect")//select in the page and correspond to data
     return i * (that.width / 5);
   })
   .attr("y", function(d){
-    return that.height-that.yScale(d.maxacc); //height minus data value
+    return that.yScale(d.maxacc); //height minus data value
   })
   .attr("width", that.width / 5-that.barPadding)
   .attr("height",function(d){
-    return that.yScale(d.maxacc); // 2g = 100px according to yScale
+    return that.height-that.yScale(d.maxacc); // 2g = 100px according to yScale
 
     })
   .attr("fill",function(d){
