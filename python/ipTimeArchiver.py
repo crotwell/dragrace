@@ -62,7 +62,7 @@ class IpTimeArchive:
             now = datetime.utcnow().replace(tzinfo=timezone.utc)
             nowDelta = now - e
             upInterval = e - s
-            f.write('{} {} {} {} {}\n'.format(station, self.strfdelta(upInterval), s.strftime("%Y/%m/%dT%H:%M:%S"), e.strftime("%Y/%m/%dT%H:%M:%S"), self.strfdelta(nowDelta)))
+            f.write('{} {} {} {} {} {}\n'.format(station, self.strfdelta(upInterval), s.strftime("%Y/%m/%dT%H:%M:%S"), e.strftime("%Y/%m/%dT%H:%M:%S"), self.ipTime[station]['ip'], self.strfdelta(nowDelta)))
 
     def flushAll(self):
         now = datetime.utcnow().replace(tzinfo=timezone.utc)
@@ -74,7 +74,7 @@ class IpTimeArchive:
                 now = datetime.utcnow().replace(tzinfo=timezone.utc)
                 nowDelta = now - e
                 upInterval = e - s
-                f.write('{} {} {} {} {}\n'.format(station, self.strfdelta(upInterval), s.strftime("%Y/%m/%dT%H:%M:%S"), e.strftime("%Y/%m/%dT%H:%M:%S"), self.strfdelta(nowDelta)))
+                f.write('{} {} {} {} {}  {}\n'.format(station, self.strfdelta(upInterval), s.strftime("%Y/%m/%dT%H:%M:%S"), e.strftime("%Y/%m/%dT%H:%M:%S"), self.ipTime[station]['ip'], self.strfdelta(nowDelta)))
         self.lastFlushTime = datetime.utcnow().replace(tzinfo=timezone.utc)
 
     def strfdelta(self, tdelta):
@@ -89,37 +89,46 @@ class IpTimeArchive:
             minutesZero = '0'
         return "{}{}:{}{}".format(hoursZero, hours, minutesZero, minutes)
 
-    async def doLoop(self):
-        dali = simpleDali.SocketDataLink(self.host, self.port)
-        #dali = simpleDali.WebSocketDataLink(uri)
-        #dali.verbose = True
-        serverId = await dali.id(self.programname, self.username, self.processid, self.architecture)
+    async def initDali(self):
+        self.dali = simpleDali.SocketDataLink(self.host, self.port)
+        #self.dali = simpleDali.WebSocketDataLink(uri)
+        #self.dali.verbose = True
+        serverId = await self.dali.id(self.programname, self.username, self.processid, self.architecture)
         print("Resp: {}".format(serverId))
-        serverInfo = await dali.info("STATUS")
+        serverInfo = await self.dali.info("STATUS")
         print("Info: {} ".format(serverInfo.message))
-        #serverInfo = yield from dali.info("STREAMS")
+        #serverInfo = yield from self.dali.info("STREAMS")
         #print("Info: {} ".format(serverInfo.message))
-        r = await dali.match(".*/IP")
+        r = await self.dali.match(".*/IP")
         print("match() Resonse {}".format(r))
 
         if r.type.startswith("ERROR"):
             print("match() Resonse {}, ringserver might not know about these packets?".format(r))
         else:
             print("match() Resonse m={}".format(r.message))
-        r = await dali.stream()
+        r = await self.dali.stream()
         print("stream response: {}".format(r))
+
+    async def doLoop(self):
+        await self.initDali()
         while(self.keepGoing):
-            trig = await dali.parseResponse()
-            if not trig.type == "PACKET":
-                # might get an OK very first after stream
-                print("parseResponse not a PACKET {} ".format(trig))
-            else:
-                ipJson = json.loads(trig.data)
-                self.recordIPTime(ipJson)
-                #print("IP: {}  {}".format(trig, json.dumps(json.loads(trig.data), indent=4)))
+            try:
+                trig = await self.dali.parseResponse()
+                if not trig.type == "PACKET":
+                    # might get an OK very first after stream
+                    print("parseResponse not a PACKET {} ".format(trig))
+                else:
+                    ipJson = json.loads(trig.data)
+                    self.recordIPTime(ipJson)
+                    #print("IP: {}  {}".format(trig, json.dumps(json.loads(trig.data), indent=4)))
+            except:
+                if self.dali is not None:
+                    self.dali.close()
+                self.initDali()
+
 
         self.flushAll()
-        await dali.close()
+        await self.dali.close()
 
 
 
