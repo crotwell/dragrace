@@ -1,6 +1,6 @@
 
 
-let datalink = seisplotjs.datalink
+let datalink = seisplotjs.datalink;
 let seisGraphMax = 0.5;
 
 //let wp = require('seisplotjs-waveformplot');
