@@ -122,8 +122,8 @@ def ProcessHoldingPen():
                         FL_acc.append(maxAccJson["maxacc"])
                     elif maxAccJson["station"] == "NL":
                         NL_acc.append(maxAccJson["maxacc"])
-                    elif maxAccJson["station"] == "CT"
-                         CT_acc.append(maxAccJson["maxacc"])
+                    elif maxAccJson["station"] == "CT":
+                        CT_acc.append(maxAccJson["maxacc"])
                     elif maxAccJson["station"] == "NR":
                         NR_acc.append(maxAccJson["maxacc"])
                     elif maxAccJson["station"] == "FR":
