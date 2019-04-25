@@ -7,41 +7,43 @@
   </head>
   <body>
 
-    <div>
-      <p><font size ="5">Charlotte Motor Speedway Dragrace</font></p>
-      <p><img src="cocky.jpg" width="50px">
-      <strong>U of SC Geophysics</strong><img src="cocky.jpg" width="50px"></p>
-
-      <div align="right" class="equalizer">
+    <div class="top">
+      <div class="titles">
+        <p><font size ="5">Charlotte Motor Speedway Dragrace</font></p>
+        <p><img src="cocky.jpg" width="50px">
+        <strong>U of SC Geophysics</strong><img src="cocky.jpg" width="50px"></p>
       </div>
-    </div>
+      <div class="control">
+        <div class="piStatus">
+          <p>Status of Raspberry Pis</p>
 
-    <div class="piStatus">
-      <p>Status of Raspberry Pis</p>
+          <span class="FL" href="" title="PI= Theta= IP="><div></div>FL</span>
+          <span class="NL" href="" title="PI= IP="><div></div>NL</span>
+          <span class="CT"href="" title="PI= IP="><div></div>CT</span>
+          <span class="NR"href="" title="PI= IP="><div></div>NR</span>
+          <span class="FR"href="" title="PI= IP="><div></div>FR</span>
+        </div>
 
-    <span class="FL" href="" title="PI= Theta= IP="><div></div>FL</span>
-    <span class="NL" href="" title="PI= IP="><div></div>NL</span>
-    <span class="CT"href="" title="PI= IP="><div></div>CT</span>
-    <span class="NR"href="" title="PI= IP="><div></div>NR</span>
-    <span class="FR"href="" title="PI= IP="><div></div>FR</span>
+        <div>
+          <select id="stationChoice" name="stationChoice">
+          </select>
 
+          <button id="pause">Pause</button>
+          <button id="disconnect">Disconnect</button>
+          <button id="trigger">Trigger</button>
+          <p>
+          <label>Duty Officer</label><input name="dutyofficer" type="text" value="tjotest">
+          <select id="classChoice" name="classChoice">
+          </select>
+          <label>Heat</label><input name="heatE" type="text" value="Heat">
+          </p>
+        </div>
+      </div>
 
-    </div>
+      <div class="equalizer">
+      </div>
 
-    <div>
-      <select id="stationChoice" name="stationChoice">
-      </select>
-
-      <button id="pause">Pause</button>
-      <button id="disconnect">Disconnect</button>
-      <button id="trigger">Trigger</button>
-      <p>
-      <label>Duty Officer</label><input name="dutyofficer" type="text" value="tjotest">
-      <select id="classChoice" name="classChoice">
-      </select>
-      <label>Heat</label><input name="heatE" type="text" value="Heat">
-      </p>
-    </div>
+</div>
 
     <h3>Realtime</h3>
     <div class="realtime">

@@ -1,6 +1,34 @@
 div.realtime {
-  height: 250px;
+  height: 600px;
 }
+
+@media (min-width: 500px) {
+    .top {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows:1fr auto;
+        grid-template-areas:
+            "titles equalizer"
+            "control equalizer";
+        grid-gap: 20px;
+        margin-bottom: 4em;
+    }
+    .top > .top {
+        grid-column-start: 1;
+    }
+    .equalizer {
+        grid-area: equalizer;
+    }
+
+    .titles {
+        grid-area: titles;
+    }
+
+    .control {
+        grid-area: control;
+    }
+}
+
 
 svg.seismograph {
   height: 150px;
@@ -15,17 +43,6 @@ path.seispath {
   stroke: skyblue;
   fill: none;
   stroke-width: 1px;
-}
-div.equalizer {
-    height:120px;
-    margin-right:250px;
-}
-
-div.equalizer span div{
-  display: inline-block;
-    width:20px;
-    height:2px;
-    background-color:pink;
 }
 div.sidebar {
 
