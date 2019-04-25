@@ -74,8 +74,6 @@ def HandleMaxACC_Packet(packet):
     global maxAccPacket_list
     global trig_HoldingPen
     maxAccPacket = json.loads(packet.data.decode("'UTF-8'"))
-    if maxAccPacket["maxacc"] > 1.0:
-        # print('ACC too Large: {}'.format(1.0))
 
     maxAccPacket["start_time"] = dateutil.parser.parse(maxAccPacket["start_time"])
     maxAccPacket["start_time"].replace(tzinfo = timezone.utc)
@@ -110,7 +108,7 @@ def ProcessHoldingPen():
         if trig["endTime"] < simpleDali.utcnowWithTz():
             FL_acc = [0]
             NL_acc = [0]
-            # CT_acc = []
+            CT_acc = [0]
             NR_acc = [0]
             FR_acc = [0]
             m = maxAccPacket_list[0]
@@ -124,8 +122,8 @@ def ProcessHoldingPen():
                         FL_acc.append(maxAccJson["maxacc"])
                     elif maxAccJson["station"] == "NL":
                         NL_acc.append(maxAccJson["maxacc"])
-                    # if maxAccJson["station"] == "CT"
-                    #     CT_acc.append(maxAccJson["maxacc"])
+                    elif maxAccJson["station"] == "CT"
+                         CT_acc.append(maxAccJson["maxacc"])
                     elif maxAccJson["station"] == "NR":
                         NR_acc.append(maxAccJson["maxacc"])
                     elif maxAccJson["station"] == "FR":
@@ -155,7 +153,7 @@ def ProcessHoldingPen():
                 "Trigger_Info": trig,
                 "peakACC_FL": max(FL_acc),
                 "peakACC_NL": max(NL_acc),
-                # "peakACC_CT": max(CT_acc),
+                "peakACC_CT": max(CT_acc),
                 "peakACC_NR": max(NR_acc),
                 "peakACC_FR": max(FR_acc),
             }
