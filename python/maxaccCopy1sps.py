@@ -83,7 +83,7 @@ class MaxAccCopy:
                     # might get an OK very first after stream
                     print("parseResponse not a PACKET {} ".format(trig))
                 else:
-                    if dlPacket.streamId.endwith("MAXACC"):
+                    if dlPacket.streamId.endswith("MAXACC"):
                         prevTime = None
                         currTime = simpleDali.hptimeToDatetime(dlPacket.dataStartTime)
                         if dlPacket.streamId in self.lastTime:
