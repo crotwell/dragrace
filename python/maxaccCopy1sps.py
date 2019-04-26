@@ -64,7 +64,7 @@ class MaxAccCopy:
         print("Info: {} ".format(serverInfo.message))
         #serverInfo = yield from self.dali.info("STREAMS")
         #print("Info: {} ".format(serverInfo.message))
-        r = await self.dali.match(".*/MAXACC")
+        r = await self.dali.match(".*/(MAXACC)|(MTRIG)")
         print("match() Resonse {}".format(r))
 
         if r.type.startswith("ERROR"):
@@ -83,16 +83,20 @@ class MaxAccCopy:
                     # might get an OK very first after stream
                     print("parseResponse not a PACKET {} ".format(trig))
                 else:
-                    prevTime = None
-                    currTime = simpleDali.hptimeToDatetime(dlPacket.dataStartTime)
-                    if dlPacket.streamId in self.lastTime:
-                        prevTime = self.lastTime[dlPacket.streamId]
-                        if currTime - prevTime > self.maxWindow:
+                    if dlPacket.streamId.endwith("MAXACC"):
+                        prevTime = None
+                        currTime = simpleDali.hptimeToDatetime(dlPacket.dataStartTime)
+                        if dlPacket.streamId in self.lastTime:
+                            prevTime = self.lastTime[dlPacket.streamId]
+                            if currTime - prevTime > self.maxWindow:
+                                self.lastTime[dlPacket.streamId] = currTime
+                                await self.uploadDali.writeAck(dlPacket.streamId, int(dlPacket.dataStartTime), int(dlPacket.dataEndTime), dlPacket.data)
+                                print("copy {}  {}".format(dlPacket.streamId, currTime))
+                        else:
                             self.lastTime[dlPacket.streamId] = currTime
                             await self.uploadDali.writeAck(dlPacket.streamId, int(dlPacket.dataStartTime), int(dlPacket.dataEndTime), dlPacket.data)
-                            print("copy {}  {}".format(dlPacket.streamId, currTime))
                     else:
-                        self.lastTime[dlPacket.streamId] = currTime
+                        # forward everything else
                         await self.uploadDali.writeAck(dlPacket.streamId, int(dlPacket.dataStartTime), int(dlPacket.dataEndTime), dlPacket.data)
 
             except Exception:
