@@ -25,7 +25,7 @@ let prevHeat= "";
 
 let today = moment()
   if(today.weekday() === 5){
-    classList = ['FRIDAY','Sportsman-Qualifying','Competition-Eliminator-Qualifying Sessions','Midway-Open','Top-Alcohol-Qualifying-Session','Factory-Stock-Showdown-Qualifying','Mountain-Motor-Pro-Stock-Qualifying-Session','Pro-Mod-Qualifying-Session','Pro-Stock-Motorcycle-Qualifying-Session','Nitro-Qualifying-Session','Top-Alcohol-Qualifying-Session','Factory-Stock-Showdown-Qualifying','Mountain-Motor-Pro-Stock-Qualifying-Session','Pro-Mod-Qualifying-Session','Pro-Stock-Motorcycle-Qualifying Session','Nitro-Qualifying-Session','Secure-Track'];
+    classList = ['FRIDAY','Funny-Car','Sportsman-Qualifying','Competition-Eliminator-Qualifying Sessions','Midway-Open','Top-Alcohol-Qualifying-Session','Factory-Stock-Showdown-Qualifying','Mountain-Motor-Pro-Stock-Qualifying-Session','Pro-Mod-Qualifying-Session','Pro-Stock-Motorcycle-Qualifying-Session','Nitro-Qualifying-Session','Top-Alcohol-Qualifying-Session','Factory-Stock-Showdown-Qualifying','Mountain-Motor-Pro-Stock-Qualifying-Session','Pro-Mod-Qualifying-Session','Pro-Stock-Motorcycle-Qualifying Session','Nitro-Qualifying-Session','Secure-Track'];
   }else if(today.weekday() === 6){
     classList=['SATURDAY','Sportsman-Eliminations','Midway-Open','Competition-Eliminator','Top-Alcohol-Qualifying-Session','Factory-Stock-Showdown-Qualifying','Mountain-Motor-Pro-Stock-Qualifying-Session','Pro-Mod-Qualifying-Session','Pro-Stock-Motorcycle-Qualifying-Session','Nitro-Qualifying-Session','Top-Alcohol-Eliminations','Factory-Stock-Showdown','Pro-Mod-Qualifying-Session','Pro-Stock-Motorcycle-Qualifying-Session','Nitro-Qualifying-Session','Mountain Motor-Pro-Stock-Qualifying-////Session','Top-Alcohol-Eliminations','Secure-Track'];
   }else if(today.weekday() === 7){
@@ -455,8 +455,8 @@ wp.d3.select("button#trigger").on("click", function(d) {
         "heat":heatE,
         "class":classChoice,
         "time": trigtime.toISOString(),
-        "startTime":moment.utc(trigtime).subtract(15, 'seconds').toISOString(),
-        "endTime":moment.utc(trigtime).add(15, 'seconds').toISOString(),
+        "startTime":moment.utc(trigtime).subtract(10, 'seconds').toISOString(),
+        "endTime":moment.utc(trigtime).add(10, 'seconds').toISOString(),
         "creation": trigtime.toISOString(),
         "override": {
             "modtime": trigtime.toISOString(),
