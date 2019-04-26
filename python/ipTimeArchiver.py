@@ -4,6 +4,7 @@ import asyncio
 import logging
 import signal
 import sys
+import traceback
 import json
 from datetime import datetime, timedelta, timezone
 import dateutil.parser
@@ -40,7 +41,8 @@ class IpTimeArchive:
         if not sendIpJson['station'] in self.ipTime:
             self.ipTime[sendIpJson['station']] = {
                 'start':jsonTime,
-                'end':jsonTime
+                'end':jsonTime,
+                'ip': sendIpJson['ip']
             }
         else:
             if jsonTime - self.ipTime[sendIpJson['station']]['end']  < self.maxGap:
@@ -49,7 +51,8 @@ class IpTimeArchive:
                 self.writeToFile(sendIpJson['station'])
                 self.ipTime[sendIpJson['station']] = {
                     'start':jsonTime,
-                    'end':jsonTime
+                    'end':jsonTime,
+                    'ip': sendIpJson['ip']
                 }
         now = datetime.utcnow().replace(tzinfo=timezone.utc)
         if self.lastFlushTime is None or now - self.lastFlushTime > self.flushInterval:
@@ -121,10 +124,11 @@ class IpTimeArchive:
                     ipJson = json.loads(trig.data)
                     self.recordIPTime(ipJson)
                     #print("IP: {}  {}".format(trig, json.dumps(json.loads(trig.data), indent=4)))
-            except:
+            except Exception:
+                print(traceback.format_exc())
                 if self.dali is not None:
-                    self.dali.close()
-                self.initDali()
+                    await self.dali.close()
+                await self.initDali()
 
 
         self.flushAll()
