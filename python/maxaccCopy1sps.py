@@ -64,7 +64,7 @@ class MaxAccCopy:
         print("Info: {} ".format(serverInfo.message))
         #serverInfo = yield from self.dali.info("STREAMS")
         #print("Info: {} ".format(serverInfo.message))
-        r = await self.dali.match(".*/(MAXACC)|(MTRIG)")
+        r = await self.dali.match("(.*/MTRIG)|(.*/MAXACC)|(.*/ZMAXCFG)|(.*/IP)")
         print("match() Resonse {}".format(r))
 
         if r.type.startswith("ERROR"):
