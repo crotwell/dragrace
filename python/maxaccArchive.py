@@ -36,12 +36,17 @@ class MaxAccArchive:
 
         self.miniseedBuffers = dict()
         for s in self.staList:
-            self.miniseedBuffers[s] = dataBuffer.DataBuffer(self.net, s, self.loc, self.chan,
-                     self.sps, archive=True,
-                     encoding=simpleMiniseed.ENC_SHORT, dali=None,
-                     continuityFactor=2, verbose=self.verbose)
+            self.initBuffer(s, self.sps)
 
         self.keepGoing = True
+
+    def initBuffer(self, station, sps):
+        if station in self.miniseedBuffers and self.miniseedBuffers[station] is not None:
+            self.miniseedBuffers[station].close()
+        self.miniseedBuffers[station] = dataBuffer.DataBuffer(self.net, station, self.loc, self.chan,
+                 sps, archive=True,
+                 encoding=simpleMiniseed.ENC_SHORT, dali=None,
+                 continuityFactor=2, verbose=self.verbose)
 
     def calcSps(self, maxJson):
         dbuf = self.miniseedBuffers[maxJson['station']]
@@ -52,7 +57,7 @@ class MaxAccArchive:
             count = dbuf.numpts
             bufBegin = dbuf.starttime
             sps = 1000000.0* count / ((sampTime - bufBegin) / timedelta(microseconds=1) )
-            print("calcSps {} {} sps={}".format(maxJson['station'], sampTime, sps))
+            #print("calcSps {} {} sps={}".format(maxJson['station'], sampTime, sps))
             return sps
 
     async def initDali(self):
@@ -85,7 +90,10 @@ class MaxAccArchive:
                     print("parseResponse not a PACKET {} ".format(trig))
                 else:
                     maxJson=json.loads(dlPacket.data)
-                    #sps = self.calcSps(maxJson)
+                    sps = self.calcSps(maxJson)
+                    bufSps = self.miniseedBuffers[maxJson['station']].sampleRate
+                    if abs(sps-bufSps) > 1 :
+                        self.initBuffer(maxJson['station'], sps)
                     start = dateutil.parser.parse(maxJson['start_time']).replace(tzinfo=timezone.utc)
                     zData =  math.trunc( maxJson['maxacc'] * 4096 ) # back to counts
                     self.miniseedBuffers[maxJson['station']].push(start, [ zData ])
