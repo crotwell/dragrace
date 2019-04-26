@@ -1,0 +1,17 @@
+[Unit]
+Description=Public Ringserver
+After=multi-user.target
+
+[Service]
+User=geo
+Group=geo
+WorkingDirectory=/home/geo/Production/Run
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+Type=idle
+ExecStart=/home/geo/Production/Run/bin/ringserver /home/geo/Production/Run/ringserver-public.d
+
+[Install]
+WantedBy=default.target
+

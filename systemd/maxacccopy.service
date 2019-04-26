@@ -1,0 +1,13 @@
+[Unit]
+After=multi-user.target
+
+[Service]
+User=geo
+Group=geo
+WorkingDirectory=/home/geo/Production/Run
+Restart=always
+Type=idle
+ExecStart=/usr/bin/python3 /home/geo/Production/dragrace/python/maxaccCopy1sps.py
+
+[Install]
+WantedBy=default.target

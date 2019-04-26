@@ -1,0 +1,15 @@
+[Unit]
+After=multi-user.target
+
+[Service]
+User=geo
+Group=geo
+WorkingDirectory=/home/geo/Replay
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+Type=idle
+ExecStart=/usr/bin/python3 /home/geo/Replay/python/makePeakAccelerationTrace.py
+
+[Install]
+WantedBy=default.target

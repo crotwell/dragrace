@@ -1,0 +1,13 @@
+[Unit]
+After=multi-user.target
+
+[Service]
+User=geo
+Group=geo
+WorkingDirectory=/home/geo/Production/Run/mseed
+Restart=always
+Type=idle
+ExecStart=/usr/bin/python3 /home/geo/Production/dragrace/python/maxaccArchive.py
+
+[Install]
+WantedBy=default.target

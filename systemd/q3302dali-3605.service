@@ -1,0 +1,17 @@
+[Unit]
+Description=Q330 Datalink 3605
+After=multi-user.target
+
+[Service]
+User=geo
+Group=geo
+WorkingDirectory=/home/geo/Production/Run
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+Type=idle
+ExecStart=/home/geo/Production/Run/bin/q3302dali /home/geo/Production/Run/q3302ew_3605.d
+
+[Install]
+WantedBy=ringserver.target default.target
+

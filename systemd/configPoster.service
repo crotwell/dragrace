@@ -1,0 +1,15 @@
+[Unit]
+After=multi-user.target
+
+[Service]
+User=geo
+Group=geo
+WorkingDirectory=/home/geo/Production/Run
+StandardOutput=file:/home/geo/Production/Log/configPoster.log
+StandardError=file:/home/geo/Production/Log/configPoster.log
+Restart=no
+Type=idle
+ExecStart=/usr/bin/python3 /home/geo/Production/dragrace/python/configPoster.py
+
+[Install]
+WantedBy=default.target
