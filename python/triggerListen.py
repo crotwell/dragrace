@@ -141,7 +141,7 @@ def ProcessHoldingPen():
             if weekday == 4:
                 dayName = "Thursday"
             if weekday == 5:
-                dayName == "Friday"
+                dayName = "Friday"
             if weekday == 6:
                 dayName = "Saturday"
             if weekday == 7:

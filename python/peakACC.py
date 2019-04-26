@@ -61,23 +61,26 @@ def peakAccelerationCalculation(x,y,z,theta,alpha,station,start_time,end_time):
 
 def compareSendPeakAccel(establishedJson, freshJson, Dali, maxWindow):
     if freshJson is None:
-        #print('freshjson is none')
-        pass
+        return None
     if establishedJson is None:
-        #print('established is none')
         return freshJson
     if freshJson["end_time"] - establishedJson["start_time"] < maxWindow:
-        #print('in time window')
+        #print('in time window {} - {} = {}  {}'.format(freshJson["end_time"], establishedJson["start_time"], freshJson["end_time"] - establishedJson["start_time"], maxWindow))
         establishedJson["end_time"] = freshJson["end_time"]
         if freshJson["maxacc"] > establishedJson["maxacc"]:
             establishedJson["maxacc"] = freshJson["maxacc"]
             # if "freshly calculated" maxAcceljson has larger MAXCC than
             # "already established" json, then establsihed takes on MAXACC of
             # freshjson
-        else:
-            None
         return establishedJson
     else:
+        # helps with time alignment
+        if freshJson['start_time'] < establishedJson["start_time"] + maxWindow:
+            if freshJson["maxacc"] > establishedJson["maxacc"]:
+                establishedJson["maxacc"] = freshJson["maxacc"]
+            establishedJson['end_time'] = establishedJson["start_time"] + maxWindow
+            freshJson['start_time'] = establishedJson['end_time']
+
         # need datetime to calc hp times
         hpdatastart = simpleDali.datetimeToHPTime(establishedJson["start_time"])
         hpdataend = simpleDali.datetimeToHPTime(establishedJson["end_time"])
@@ -162,6 +165,15 @@ def subtractGravity(rotate_array_z, countToGravity):
         correct.append(i-countToGravity) # substracting gravity
     return correct
 
+def jsonToString(maxJson):
+    s = maxJson["start_time"]
+    e = maxJson["end_time"]
+    maxJson["start_time"] = maxJson["start_time"].strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]+'Z'
+    maxJson["end_time"] = maxJson["end_time"].strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]+'Z'
+    out = json.dumps(maxJson,indent = 4)
+    maxJson["start_time"] = s
+    maxJson["end_time"] = e
+    return out
 
 if __name__ == "__main__":
     # execute only if run directly as a script, ignore if imported
@@ -170,18 +182,45 @@ if __name__ == "__main__":
     array_y = [5,6,7,8,32,69,70]
     array_z = [9,10,11,12,47,100,0]
     theta = 20.0
+    alpha = 0
     station = 'PI01'
-    start_time = simpleDali.utcnowWithTz()
-    time_diff = timedelta(seconds=0.20)
+    start_time = simpleDali.utcnowWithTz().replace(hour=0, minute=0, second=0, microsecond=0)
+    time_diff = timedelta(seconds=0.10)
     end_time = start_time + time_diff
 
+    maxWindow = timedelta(seconds=0.25)
 
     # print('---')
     # print(sendPeakAccel(newJson))
     # timedelta should be about 0.25-0.5 s
 
-    freshJson = peakAccelerationCalculation(array_x,array_y,array_z,theta,station,start_time,end_time)
-    print(freshJson)
+    establishedJson = peakAccelerationCalculation(array_x,array_y,array_z,theta, alpha,station,start_time,end_time)
+    print("first: "+jsonToString(establishedJson))
+    start_time = start_time + timedelta(seconds=0.10)
+    end_time = start_time + time_diff
+    freshJson = peakAccelerationCalculation(array_x,array_y,array_z,theta, alpha,station,start_time,end_time)
+    establishedJson = compareSendPeakAccel(establishedJson, freshJson, None, maxWindow)
+    print("second: "+jsonToString(establishedJson))
+
+    start_time = start_time + timedelta(seconds=0.10)
+    end_time = start_time + time_diff
+    freshJson = peakAccelerationCalculation(array_x,array_y,array_z,theta, alpha,station,start_time,end_time)
+    establishedJson = compareSendPeakAccel(establishedJson, freshJson, None, maxWindow)
+    print("third: "+jsonToString(establishedJson))
+
+    start_time = start_time + timedelta(seconds=0.10)
+    end_time = start_time + time_diff
+    freshJson = peakAccelerationCalculation(array_x,array_y,array_z,theta, alpha,station,start_time,end_time)
+    establishedJson = compareSendPeakAccel(establishedJson, freshJson, None, maxWindow)
+    print("forth: "+jsonToString(establishedJson))
+
+    start_time = start_time + timedelta(seconds=0.10)
+    end_time = start_time + time_diff
+    freshJson = peakAccelerationCalculation(array_x,array_y,array_z,theta, alpha,station,start_time,end_time)
+    establishedJson = compareSendPeakAccel(establishedJson, freshJson, None, maxWindow)
+
+    print("last: "+jsonToString(establishedJson))
+    #print(freshJson)
     # establishedJson =
     # need an IP catcher, config listener + thrower, and make a dictionary...
     #  that makes info dictionary for each heat (time, max accel, )
