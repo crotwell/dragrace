@@ -73,9 +73,11 @@ bars.selectAll("rect")//select in the page and correspond to data
       i = 0;
     }else if (d.station === "NL") {
       i = 1;
-    }else if (d.station === "CT") {
-      i = 2;
     }else if (d.station === "NR") {
+      i = 2;
+    // }else if (d.station === "CT") {
+    //     i = 4;
+    }else if (d.station === "FR") {
       i = 3;
     }else if (d.station === "FR") {
       i = 4;
