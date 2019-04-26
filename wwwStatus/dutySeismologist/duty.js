@@ -10,6 +10,7 @@ let d3 = seisplotjs.d3;
 let moment = seisplotjs.moment;
 
 const doReplay = false
+const do1SPS = false
 
 let net = 'CO';
 //let staList = ['PI01', 'PI02', 'PI03', 'PI04', 'PI05', 'PI06', 'PI07', 'PI99'];
@@ -67,9 +68,13 @@ const EXTERNAL_PATH = '/dragracews/datalink';
 const REPLAY_PATH = '/replayracews/datalink';
 const REPLAY_INTERNAL_PATH = '/datalink';
 const AUTH_PATH = '/authracews/datalink'
+const AUTH_1SPS_PATH = '/auth1spsws/datalink'
 let host = EXTERNAL_HOST;
 let port = EXTERNAL_PORT;
 let path = EXTERNAL_PATH;
+if (do1SPS) {
+  path = AUTH_1SPS_PATH;
+}
 
 if (doReplay) {
   path = REPLAY_PATH;
@@ -99,7 +104,11 @@ let jwtTokenUrl = protocol+"//"+host+(port==80?'':':'+port)+'/authrace/dutytoken
 if (protocol == 'https:') {
   // only try to get token if https
   //writeDatalinkUrl =  wsProtocol+"//"+host+(port==80?'':':'+port)+AUTH_PATH;
-  writeDatalinkUrl = datalinkUrl
+  if ( do1SPS) {
+    writeDatalinkUrl = wsProtocol+"//"+host+(port==80?'':':'+port)+AUTH_PATH;
+  } else {
+    writeDatalinkUrl = datalinkUrl;
+  }
   jwtTokenPromise = fetch(jwtTokenUrl, {
     credentials: 'same-origin'
   }).then(function(response) {
