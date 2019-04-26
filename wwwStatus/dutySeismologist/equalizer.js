@@ -8,10 +8,10 @@ class Equalizer{
     this.width = 330 - this.margin.left - this.margin.right;
     this.height = 400 - this.margin.top - this.margin.bottom;
     this.yScale = d3.scaleLinear()
-    .domain([0,(1)])
+    .domain([0,(1.5)])
     .range([this.height, 0]);
     console.log(`yscaletest ${this.yScale(1)}`)
-    this.yAxis = d3.axisLeft(this.yScale).ticks(8, "0.1f");
+    this.yAxis = d3.axisLeft(this.yScale).ticks(10, "0.1f");
     // this.yAxis = d3.axisLeft(this.yScale);
     // this.yAxis.ticks(10);
     this.barPadding = 1;
