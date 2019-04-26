@@ -2,6 +2,7 @@ import struct
 from array import array
 from collections import namedtuple
 from datetime import datetime, timedelta, timezone
+import math
 import sys
 
 
@@ -89,16 +90,35 @@ class MiniseedHeader:
         self.packBTime(header, self.starttime)
         tempsampRateFactor = self.sampRateFactor
         tempsampRateMult = self.sampRateMult
-        if self.sampRateFactor == 0 and self.sampRateMult == 0:
-            # this is wrong if rate not integer Hz or integer sec
-            if self.sampleRate > 1:
-                tempsampRateFactor=int(self.sampleRate)
-                tempsampRateMult=1
-            else:
-                tempsampRateFactor=int(-1.0/self.sampleRate)
-                tempsampRateMult=1
-        struct.pack_into(self.endianChar+'HHH', header, 30, self.numsamples, tempsampRateFactor, tempsampRateMult);
+        if self.sampleRate != 0 and self.sampRateFactor == 0 and self.sampRateMult == 0:
+            tempsampRateFactor, tempsampRateMult = self.calcSeedMultipilerFactor()
+        struct.pack_into(self.endianChar+'Hhh', header, 30, self.numsamples, tempsampRateFactor, tempsampRateMult);
         return header
+
+    def calcSeedMultipilerFactor(self):
+        SHORT_MIN_VALUE = -1*math.pow(2,15)
+        SHORT_MAX_VALUE = math.pow(2,15)-1
+        factor = 0
+        divisor = 0
+        if (self.sampleRate  == 0):
+            factor = 0
+            divisor = 0
+        elif (self.sampleRate  >= 1):
+            # don't get too close to the max for a short, use ceil as neg
+            divisor = math.ceil((SHORT_MIN_VALUE + 2) / self.sampleRate );
+            # don't get too close to the max for a short
+            if (divisor < SHORT_MIN_VALUE + 2):
+                divisor = SHORT_MIN_VALUE + 2;
+            factor = round(-1 * self.sampleRate  * divisor);
+        else:
+            # don't get too close to the max for a short, use ceil as neg
+            factor = -1 * round(math.floor(1.0 * sps * (SHORT_MAX_VALUE - 2)) / self.sampleRate);
+            # don't get too close to the max for a short
+            if (factor > SHORT_MAX_VALUE - 2):
+                factor = SHORT_MAX_VALUE - 2;
+            divisor = round(-1 * factor * self.sampleRate);
+        return factor, divisor
+
 
     def packBTime(self, header, time):
         tt = time.timetuple()
@@ -136,7 +156,7 @@ class MiniseedRecord:
 
     def clone(self):
         return unpackMiniseedRecord(self.pack())
-        
+
     def pack(self):
         recordBytes = bytearray(self.header.recordLength)
         recordBytes[0:48] = self.header.pack()
