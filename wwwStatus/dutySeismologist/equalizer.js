@@ -8,10 +8,10 @@ class Equalizer{
     this.width = 330 - this.margin.left - this.margin.right;
     this.height = 400 - this.margin.top - this.margin.bottom;
     this.yScale = d3.scaleLinear()
-    .domain([0,(0.2)])
+    .domain([0,(0.5)])
     .range([this.height, 0]);
     console.log(`yscaletest ${this.yScale(1)}`)
-    this.yAxis = d3.axisLeft(this.yScale).ticks(2, "0.1f");
+    this.yAxis = d3.axisLeft(this.yScale).ticks(5, "0.1f");
     // this.yAxis = d3.axisLeft(this.yScale);
     // this.yAxis.ticks(10);
     this.barPadding = 1;
@@ -95,7 +95,7 @@ bars.selectAll("rect")//select in the page and correspond to data
 
     })
   .attr("fill",function(d){
-    return "rgb( " + (Math.round(d.maxacc * 255/0.2)) + " , 0, 0 )";
+    return "rgb( " + (Math.round(d.maxacc * 255/0.2)) + " , 0, 0 )";//255/0.2
   });
   }
 }
