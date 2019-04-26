@@ -95,7 +95,7 @@ bars.selectAll("rect")//select in the page and correspond to data
 
     })
   .attr("fill",function(d){
-    return "rgb( " + (Math.round(d.maxacc * 255/2)) + " , 0, 0 )";
+    return "rgb( " + (Math.round(d.maxacc * 255/0.2)) + " , 0, 0 )";
   });
   }
 }
