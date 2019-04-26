@@ -81,8 +81,8 @@ def compareSendPeakAccel(establishedJson, freshJson, Dali, maxWindow):
         # need datetime to calc hp times
         hpdatastart = simpleDali.datetimeToHPTime(establishedJson["start_time"])
         hpdataend = simpleDali.datetimeToHPTime(establishedJson["end_time"])
-        establishedJson["start_time"] = establishedJson["start_time"].strftime("%Y-%m-%dT%H:%M:%SZ")
-        establishedJson["end_time"] = establishedJson["end_time"].strftime("%Y-%m-%dT%H:%M:%SZ")
+        establishedJson["start_time"] = establishedJson["start_time"].strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]+'Z'
+        establishedJson["end_time"] = establishedJson["end_time"].strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]+'Z'
         if Dali is not None:
             # send establishedJson to ring server
             streamid = "{}.{}/MAXACC".format("XX", establishedJson["station"])

@@ -7,41 +7,51 @@
   </head>
   <body>
 
-    <div>
-      <p><font size ="5">Charlotte Motor Speedway Dragrace</font></p>
-      <p><img src="cocky.jpg" width="50px">
-      <strong>U of SC Geophysics</strong><img src="cocky.jpg" width="50px"></p>
-
-      <div align="right" class="equalizer">
+    <div class="top">
+      <div class="titles">
+        <p><font size ="5">Charlotte Motor Speedway Dragrace</font></p>
+        <p><img src="cocky.jpg" width="50px">
+        <strong>U of SC Geophysics</strong><img src="cocky.jpg" width="50px"></p>
+        <div class="currentRace">
+          <h5>Last Result on <span class="dayName"></span>:</h5>
+          <div class="race_class">Class: <span></span></div>
+          <div class="race_heat">Heat: <a><span></span></a></div>
+          <div class="maxacc">Ground Acceleration: <span></span></div>
+          <div class="dutyOfficer">Duty Officer: <span></span></div>
+          <div class="start_time">Start Time: <span></span></div>
+          <div class="end_time">End Time: <span></span></div>
+        </div>
       </div>
-    </div>
+      <div class="control">
+        <div class="piStatus">
+          <p>Status of Raspberry Pis</p>
 
-    <div class="piStatus">
-      <p>Status of Raspberry Pis</p>
+          <span class="FL" href="" title="PI= Theta= IP="><div></div>FL</span>
+          <span class="NL" href="" title="PI= IP="><div></div>NL</span>
+          <span class="CT"href="" title="PI= IP="><div></div>CT</span>
+          <span class="NR"href="" title="PI= IP="><div></div>NR</span>
+          <span class="FR"href="" title="PI= IP="><div></div>FR</span>
+        </div>
 
-    <span class="FL" href="" title="PI= Theta= IP="><div></div>FL</span>
-    <span class="NL" href="" title="PI= IP="><div></div>NL</span>
-    <span class="CT"href="" title="PI= IP="><div></div>CT</span>
-    <span class="NR"href="" title="PI= IP="><div></div>NR</span>
-    <span class="FR"href="" title="PI= IP="><div></div>FR</span>
+        <div>
+          <div>
+            <label>Duty Officer</label><input name="dutyofficer" type="text" value="tjotest">
+            <select id="classChoice" name="classChoice">
+            </select>
+            <label>Heat</label><input name="heatE" type="text" value="Heat1">
+          </div>
+          <div>
+            <button id="pause">Pause</button>
+            <button id="disconnect">Disconnect</button>
+            <button id="trigger">Trigger</button>
+          </div>
+        </div>
+      </div>
 
+      <div class="equalizer">
+      </div>
 
-    </div>
-
-    <div>
-      <select id="stationChoice" name="stationChoice">
-      </select>
-
-      <button id="pause">Pause</button>
-      <button id="disconnect">Disconnect</button>
-      <button id="trigger">Trigger</button>
-      <p>
-      <label>Duty Officer</label><input name="dutyofficer" type="text" value="tjotest">
-      <select id="classChoice" name="classChoice">
-      </select>
-      <label>Heat</label><input name="heatE" type="text" value="Heat">
-      </p>
-    </div>
+</div>
 
     <h3>Realtime</h3>
     <div class="realtime">
@@ -52,6 +62,7 @@
     </div>
 
     <script src="seisplotjs_2.0.0-alpha.1_standalone.js"></script>
+    <script src="commonFuncs.js"></script>
     <script src="equalizer.js"></script>
     <script src="maxAccSeismogram.js"></script>
     <script src="duty.js"></script>
