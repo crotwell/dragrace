@@ -144,14 +144,16 @@ class SendMyIP:
                     repeatException = False
             except Exception:
                 if self.daliUpload is not None:
-                    self.daliUpload.close()
+                    closeTask = loop.create_task(self.daliUpload.close())
+                    loop.run_until_complete(closeTask)
                 if not repeatException:
                     print(traceback.format_exc())
                     repeatException = True
             except:
                 # bail out
                 if self.daliUpload is not None:
-                    self.daliUpload.close()
+                    closeTask = loop.create_task(self.daliUpload.close())
+                    loop.run_until_complete(closeTask)
                 self.keepGoing = False
                 print(traceback.format_exc())
                 raise
