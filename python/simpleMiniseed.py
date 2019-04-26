@@ -92,7 +92,6 @@ class MiniseedHeader:
         tempsampRateMult = self.sampRateMult
         if self.sampleRate != 0 and self.sampRateFactor == 0 and self.sampRateMult == 0:
             tempsampRateFactor, tempsampRateMult = self.calcSeedMultipilerFactor()
-        print(" after:  {} {} {}".format(self.numsamples, tempsampRateFactor, tempsampRateMult))
         struct.pack_into(self.endianChar+'Hhh', header, 30, self.numsamples, tempsampRateFactor, tempsampRateMult);
         return header
 
@@ -118,7 +117,6 @@ class MiniseedHeader:
             if (factor > SHORT_MAX_VALUE - 2):
                 factor = SHORT_MAX_VALUE - 2;
             divisor = round(-1 * factor * self.sampleRate);
-        print("calcSeedMultipilerFactor: {} {} {} {}".format(factor, divisor, SHORT_MIN_VALUE, SHORT_MAX_VALUE))
         return factor, divisor
 
 
