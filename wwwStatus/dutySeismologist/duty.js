@@ -455,8 +455,8 @@ wp.d3.select("button#trigger").on("click", function(d) {
         "heat":heatE,
         "class":classChoice,
         "time": trigtime.toISOString(),
-        "startTime":moment.utc(trigtime).subtract(10, 'seconds').toISOString(),
-        "endTime":moment.utc(trigtime).add(10, 'seconds').toISOString(),
+        "startTime":moment.utc(trigtime).subtract(20, 'seconds').toISOString(),
+        "endTime":moment.utc(trigtime).add(20, 'seconds').toISOString(),
         "creation": trigtime.toISOString(),
         "override": {
             "modtime": trigtime.toISOString(),
