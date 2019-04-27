@@ -49,7 +49,9 @@ createEqualizer(selector){
 updateEqualizer(allmaxaccJson){
   let dataset = new Array();
   for (let x of allmaxaccJson.values()){
-    dataset.push(x);
+    if (x.station !== 'CT') {
+      dataset.push(x);
+    }
 
   }
   //create a svg element before body taag and assigns a svg with height and width
