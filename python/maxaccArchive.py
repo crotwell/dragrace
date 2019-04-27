@@ -32,7 +32,7 @@ class MaxAccArchive:
         self.net = "XX"
         self.loc = "00"
         self.chan = 'HNM'
-        self.sps = 7.5
+        self.sps = 4
 
         self.miniseedBuffers = dict()
         for s in self.staList:
