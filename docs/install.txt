@@ -1,0 +1,49 @@
+
+ubuntu server
+--------------
+sudo apt-get install python3-websockets
+
+
+pi
+---------------
+sudo apt-get update
+sudo apt-get upgrade
+
+# force hdmi so can plug in monitor after boot
+# edit /boot/config.txt and uncomment line:
+# hdmi_force_hotplug=1
+
+# set wifi country to US
+sudo raspi-config
+# network options -> wi-fi
+
+# set up as wifi hotspot so laptop can connect
+# see https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
+# if get error:
+# Failed to restart hostapd.service: Unit hostapd.service is masked.
+sudo systemctl unmask hostapd
+sudo systemctl enable hostapd
+sudo systemctl restart hostapd
+
+sudo apt-get install python3-netifaces python3-websockets python3-pip i2c-tools python3-gpiozero git apache2 ntp
+pip3 install pyjwt
+#pip3 install digi-xbee adafruit-blinka
+git clone https://github.com/crotwell/Adafruit_CircuitPython_MMA8451
+cd Adafruit_CircuitPython_MMA8451
+git checkout fifomode
+python3 setup.py install --user
+
+#copy jwt token to Production/Run on pi
+# on dragrace.seis.sc.edu
+cd Auth/auth
+scp pi01_token.jwt pi@10.80.193.90:Production/Run/.
+
+#and fix start script arg to use it with -t
+
+cd ..
+git clone https://github.com/crotwell/dragrace.git
+cd dragrace/sensorNode
+sudo cp mma8451.service /etc/systemd/system/.
+sudo cp sendmyip.service /etc/systemd/system/.
+sudo systemctl enable mma8451.service
+sudo systemctl enable sendmyip.service
