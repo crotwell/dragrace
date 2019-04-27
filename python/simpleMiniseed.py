@@ -112,7 +112,7 @@ class MiniseedHeader:
             factor = round(-1 * self.sampleRate  * divisor);
         else:
             # don't get too close to the max for a short, use ceil as neg
-            factor = -1 * round(math.floor(1.0 * sps * (SHORT_MAX_VALUE - 2)) / self.sampleRate);
+            factor = -1 * round(math.floor(1.0 * self.sampleRate * (SHORT_MAX_VALUE - 2)) / self.sampleRate);
             # don't get too close to the max for a short
             if (factor > SHORT_MAX_VALUE - 2):
                 factor = SHORT_MAX_VALUE - 2;
