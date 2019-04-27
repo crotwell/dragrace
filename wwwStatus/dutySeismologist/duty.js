@@ -1,7 +1,7 @@
 
 
 let datalink = seisplotjs.datalink;
-let seisGraphMax = 0.5;
+let seisGraphMax = 2.0;
 
 //let wp = require('seisplotjs-waveformplot');
 // this global comes from the seisplotjs_waveformplot standalone js
@@ -455,8 +455,8 @@ wp.d3.select("button#trigger").on("click", function(d) {
         "heat":heatE,
         "class":classChoice,
         "time": trigtime.toISOString(),
-        "startTime":moment.utc(trigtime).subtract(10, 'seconds').toISOString(),
-        "endTime":moment.utc(trigtime).add(10, 'seconds').toISOString(),
+        "startTime":moment.utc(trigtime).subtract(20, 'seconds').toISOString(),
+        "endTime":moment.utc(trigtime).add(20, 'seconds').toISOString(),
         "creation": trigtime.toISOString(),
         "override": {
             "modtime": trigtime.toISOString(),
