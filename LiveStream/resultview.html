@@ -3,7 +3,7 @@
   <head>
      <meta charset="utf-8" />
      <link rel="stylesheet" href="style.css">
-     <title>4Wide Duty Seismologist</title>
+     <title>4Wide Result Viewer</title>
   </head>
   <body>
 
@@ -13,8 +13,8 @@
         <p><img src="cocky.jpg" width="50px">
         <strong>U of SC Geophysics</strong><img src="cocky.jpg" width="50px"></p>
         <div class="currentRace">
-          <h5>Last Result on <span class="dayName"></span>:</h5>
-          <div class="race_class">Class: <span></span></div>
+          <h5>Last Result on <span class="dayName"><a></a></span>:</h5>
+          <div class="race_class">Class: <a><span></span></a></div>
           <div class="race_heat">Heat: <a><span></span></a></div>
           <div class="maxacc">Ground Acceleration: <span></span></div>
           <div class="dutyOfficer">Duty Officer: <span></span></div>
@@ -22,28 +22,22 @@
           <div class="end_time">End Time: <span></span></div>
         </div>
       </div>
+
       <div class="control">
-        <div class="piStatus">
-          <p>Status of Raspberry Pis</p>
-
-          <span class="FL" href="" title="PI= Theta= IP="><div></div>FL</span>
-          <span class="NL" href="" title="PI= IP="><div></div>NL</span>
-          <span class="CT"href="" title="PI= IP="><div></div>CT</span>
-          <span class="NR"href="" title="PI= IP="><div></div>NR</span>
-          <span class="FR"href="" title="PI= IP="><div></div>FR</span>
+        <h5>List:</h5>
+        <div class="navlist">
         </div>
-
+        <h5>Control:</h5>
         <div>
           <div>
             <label>Duty Officer</label><input name="dutyofficer" type="text" value="tjotest">
-            <select id="classChoice" name="classChoice">
-            </select>
-            <label>Heat</label><input name="heatE" type="text" value="Heat1">
+            <label>Msg</label><input name="msgE" type="text" value="">
+            <button id="msg">Msg</button>
           </div>
           <div>
-            <button id="pause">Pause</button>
-            <button id="disconnect">Disconnect</button>
-            <button id="trigger">Trigger</button>
+            <button id="prev">Pause</button>
+            <button id="up">Disconnect</button>
+            <button id="next">Trigger</button>
           </div>
         </div>
       </div>
@@ -51,20 +45,14 @@
       <div class="equalizer">
       </div>
 
-</div>
-
-    <h3>Realtime</h3>
-    <div class="realtime">
     </div>
 
-    <h3>Triggers</h3>
-    <div class="triggers">
-    </div>
 
     <script src="seisplotjs_2.0.0-alpha.1_standalone.js"></script>
-    <script src="commonFuncs.js"></script>
-    <script src="equalizer.js"></script>
     <script src="maxAccSeismogram.js"></script>
-    <script src="duty.js"></script>
+    <script src="equalizer.js"></script>
+    <script src="commonFuncs.js"></script>
+    <script src="resultview.js"></script>
+
   </body>
 </html>
