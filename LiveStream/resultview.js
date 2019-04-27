@@ -22,6 +22,7 @@ let updateClassHeat = function(day, classname, heatname) {
     if (heatname) {
       let result = fetchHeatResult(day, classname, heatname)
           .then(function(result) {
+            console.log(`fetchHeatResult ${day}, ${classname}, ${heatname} ${result}`)
             let floatFormat = d3.format(".2f");
             let cR = d3.select("div.currentRace");
             cR.select("span.dayName").select("a").attr("href", d =>  {
@@ -81,6 +82,8 @@ let updateClassHeat = function(day, classname, heatname) {
               return url.toString();
             })
             .text(d => { return d;});
+        }).catch(function(err) {
+            console.error(err);
         });
       }
     } else {
@@ -101,6 +104,8 @@ let updateClassHeat = function(day, classname, heatname) {
             return url.toString();
           })
           .text(d => { return d;});
+      }).catch(function(err) {
+          console.error(err);
       });
     }
 }
