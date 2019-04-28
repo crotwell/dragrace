@@ -156,7 +156,8 @@ let loadSeismograms = function(result) {
       //     moment(result.Trigger_Info.endTime));
       // seisPlot.draw();
     });
-    let staMax = new Map();
+    let staVecMax = new Map();
+    let chanMax = new Map();
     let traceMax = 0;
     for (let sta of staList) {
       let x = traceMap.get(`XX.${sta}.00.HNX`);
@@ -164,22 +165,27 @@ let loadSeismograms = function(result) {
       let z = traceMap.get(`XX.${sta}.00.HNZ`);
       let max = 0;
       if (x && y && z){
+        let xMinMax = wp.findMinMax(x);
+        let yMinMax = wp.findMinMax(y);
+        let zMinMax = wp.findMinMax(z);
+        traceMax = Math.max(traceMax, Math.abs(xMinMax[0]),Math.abs(xMinMax[1]));
+        chanMax.set(`${sta}.HNX`, xMinMax);
+        traceMax = Math.max(traceMax, Math.abs(yMinMax[0]),Math.abs(yMinMax[1]));
+        chanMax.set(`${sta}.HNY`, yMinMax);
+        traceMax = Math.max(traceMax, Math.abs(zMinMax[0]),Math.abs(zMinMax[1]));
+        chanMax.set(`${sta}.HNZ`, zMinMax);
         for (let s=0; s<x.segments.length; s++) {
           for (let i=0; i<x.segments[s].y.length; i++) {
-            traceMax = Math.max(traceMax, Math.max(...x.segments[s].y));
-            traceMax = Math.max(traceMax, Math.max(...y.segments[s].y));
-            traceMax = Math.max(traceMax, Math.max(...z.segments[s].y));
             let vec = x.segments[s].y[i]*x.segments[s].y[i]
             +y.segments[s].y[i]*y.segments[s].y[i]
             +z.segments[s].y[i]*z.segments[s].y[i];
-            vec = Math.sqrt(vec);
             if (vec > max) {
               max = vec;
             }
           }
         }
       }
-      staMax.set(sta, max);
+      staVecMax.set(sta, Math.round(Math.sqrt(max)));
       console.log(`${sta}  max: ${max}`);
     }
     seisPlotConfig.fixedYScale = [ -1*traceMax, traceMax];
@@ -192,7 +198,8 @@ let loadSeismograms = function(result) {
         if (trace) {
           let subDiv = staDiv.append("div").classed(chan, true);
           let seisPlotConfigClone = seisPlotConfig.clone();
-          seisPlotConfigClone.xLabel = `${sta} ${chan} ${staMax.get(sta)}`;
+          let mychanMinMax = chanMax.get(`${sta}.${chan}`);
+          seisPlotConfigClone.xLabel = `${sta} ${chan} chan:${mychanMinMax} staVec:${staVecMax.get(sta)}`;
           let seisPlot = new wp.CanvasSeismograph(subDiv,
               seisPlotConfigClone,
               trace, moment(result.Trigger_Info.startTime),
