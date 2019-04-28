@@ -11,6 +11,7 @@ import os
 import dateutil.parser
 from threading import Thread
 import time
+import queue
 
 # logging.basicConfig(level=logging.DEBUG)
 
@@ -30,7 +31,7 @@ architecture="python"
 keepGoing = True
 
 maxAccPacket_list = []
-trig_HoldingPen = []
+trig_HoldingPen = queue.Queue()
 
 def handleSignal(sigNum, stackFrame):
     print("############ handleSignal {} ############".format(sigNum))
@@ -45,7 +46,6 @@ signal.signal(signal.SIGTERM, handleSignal)
 
 async def doTest(loop):
     global maxAccPacket_list
-    global trig_HoldingPen
     dali = simpleDali.WebSocketDataLink(uri)
     serverId = await dali.id(programname, username, processid, architecture)
     print("Resp: {}".format(serverId))
@@ -68,11 +68,10 @@ async def doTest(loop):
             print("Packet is not a MaxACC or a Trigger")
             continue
 
-    dali.close()
+    await dali.close()
 
 def HandleMaxACC_Packet(packet):
     global maxAccPacket_list
-    global trig_HoldingPen
     maxAccPacket = json.loads(packet.data.decode("'UTF-8'"))
 
     maxAccPacket["start_time"] = dateutil.parser.parse(maxAccPacket["start_time"])
@@ -97,82 +96,79 @@ def HandleTriggerPacket(packet):
     trig["startTime"].replace(tzinfo = timezone.utc)
     trig["endTime"] = dateutil.parser.parse(trig["endTime"])
     trig["endTime"].replace(tzinfo = timezone.utc)
-    trig_HoldingPen.append(trig)
+    trig_HoldingPen.put(trig)
 
 def ProcessHoldingPen():
-
     global maxAccPacket_list
     global trig_HoldingPen
     tooYoungTriggers = []
-    for trig in trig_HoldingPen:
-        if trig["endTime"] < simpleDali.utcnowWithTz():
-            FL_acc = [0]
-            NL_acc = [0]
-            CT_acc = [0]
-            NR_acc = [0]
-            FR_acc = [0]
-            m = maxAccPacket_list[0]
-            # print("maxAccPacket_list {} {} {}".format(m["start_time"], m["end_time"],m["station"]))
-            # print("trig  {} {}".format(trig["startTime"], trig["endTime"]))
-            count = 0
-            for maxAccJson in maxAccPacket_list:
-                if maxAccJson["start_time"] > trig["startTime"] and maxAccJson["end_time"] < trig["endTime"]:
-                    count = count + 1
-                    if maxAccJson["station"] == "FL":
-                        FL_acc.append(maxAccJson["maxacc"])
-                    elif maxAccJson["station"] == "NL":
-                        NL_acc.append(maxAccJson["maxacc"])
-                    elif maxAccJson["station"] == "CT":
-                        CT_acc.append(maxAccJson["maxacc"])
-                    elif maxAccJson["station"] == "NR":
-                        NR_acc.append(maxAccJson["maxacc"])
-                    elif maxAccJson["station"] == "FR":
-                        FR_acc.append(maxAccJson["maxacc"])
-                    else:
-                        print("maxACC Packet doesn't contain a station")
-            d = datetime.now(timezone.utc)
-            d.isoformat()
-            edt = timezone(timedelta(hours=-4), name="EDT")
-            d_edt = d.astimezone(tz=edt)
-            d_edt.isoformat()
-            weekday = date.isoweekday(d_edt)
-            if weekday == 1:
-                dayName = "Monday"
-            if weekday == 2:
-                dayName = "Tuesday"
-            if weekday == 3:
-                dayName = "Wednesday"
-            if weekday == 4:
-                dayName = "Thursday"
-            if weekday == 5:
-                dayName = "Friday"
-            if weekday == 6:
-                dayName = "Saturday"
-            if weekday == 7:
-                dayName = "Sunday"
-            trig["startTime"] = trig["startTime"].strftime("%Y-%m-%dT%H:%M:%SZ")
-            trig["endTime"] = trig["endTime"].strftime("%Y-%m-%dT%H:%M:%SZ")
-            ResultsJson = {
-                "Day_Name": dayName,
-                "Trigger_Info": trig,
-                "peakACC_FL": max(FL_acc),
-                "peakACC_NL": max(NL_acc),
-                "peakACC_CT": max(CT_acc),
-                "peakACC_NR": max(NR_acc),
-                "peakACC_FR": max(FR_acc),
-            }
-            SendResultsJson(ResultsJson)
-            MostRecentResult = {
-                "class": trig["class"],
-                "heat": trig["heat"],
-                "day": dayName
-            }
-            with open("mseed/www/results/MostRecentResult.json","w") as f:
-                if f is not None:
-                    json.dump(MostRecentResult,f)
-        else:
-            tooYoungTriggers.append(trig)
-        trig_HoldingPen = tooYoungTriggers
+    trig = trig_HoldingPen.get()
+    while trig["endTime"] > simpleDali.utcnowWithTz():
+        time.sleep(1)
+    FL_acc = [0]
+    NL_acc = [0]
+    CT_acc = [0]
+    NR_acc = [0]
+    FR_acc = [0]
+    m = maxAccPacket_list[0]
+    # print("maxAccPacket_list {} {} {}".format(m["start_time"], m["end_time"],m["station"]))
+    # print("trig  {} {}".format(trig["startTime"], trig["endTime"]))
+    count = 0
+    for maxAccJson in maxAccPacket_list:
+        if maxAccJson["start_time"] > trig["startTime"] and maxAccJson["end_time"] < trig["endTime"]:
+            count = count + 1
+            if maxAccJson["station"] == "FL":
+                FL_acc.append(maxAccJson["maxacc"])
+            elif maxAccJson["station"] == "NL":
+                NL_acc.append(maxAccJson["maxacc"])
+            elif maxAccJson["station"] == "CT":
+                CT_acc.append(maxAccJson["maxacc"])
+            elif maxAccJson["station"] == "NR":
+                NR_acc.append(maxAccJson["maxacc"])
+            elif maxAccJson["station"] == "FR":
+                FR_acc.append(maxAccJson["maxacc"])
+            else:
+                print("maxACC Packet doesn't contain a station")
+    d = datetime.now(timezone.utc)
+    d.isoformat()
+    edt = timezone(timedelta(hours=-4), name="EDT")
+    d_edt = d.astimezone(tz=edt)
+    d_edt.isoformat()
+    weekday = date.isoweekday(d_edt)
+    if weekday == 1:
+        dayName = "Monday"
+    if weekday == 2:
+        dayName = "Tuesday"
+    if weekday == 3:
+        dayName = "Wednesday"
+    if weekday == 4:
+        dayName = "Thursday"
+    if weekday == 5:
+        dayName = "Friday"
+    if weekday == 6:
+        dayName = "Saturday"
+    if weekday == 7:
+        dayName = "Sunday"
+    trig["startTime"] = trig["startTime"].strftime("%Y-%m-%dT%H:%M:%SZ")
+    trig["endTime"] = trig["endTime"].strftime("%Y-%m-%dT%H:%M:%SZ")
+    ResultsJson = {
+        "Day_Name": dayName,
+        "Trigger_Info": trig,
+        "peakACC_FL": max(FL_acc),
+        "peakACC_NL": max(NL_acc),
+        "peakACC_CT": max(CT_acc),
+        "peakACC_NR": max(NR_acc),
+        "peakACC_FR": max(FR_acc),
+    }
+    SendResultsJson(ResultsJson)
+    MostRecentResult = {
+        "class": trig["class"],
+        "heat": trig["heat"],
+        "day": dayName
+    }
+    with open("mseed/www/results/MostRecentResult.json","w") as f:
+        if f is not None:
+            json.dump(MostRecentResult,f)
 
 def SendResultsJson(ResultsJson):
     day = ResultsJson["Day_Name"]
