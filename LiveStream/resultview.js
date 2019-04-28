@@ -205,12 +205,60 @@ let loadSeismograms = function(result) {
               trace, moment(result.Trigger_Info.startTime),
               moment(result.Trigger_Info.endTime));
           seisPlot.draw();
+          allSeisPlots.push(seisPlot);
         }
       }
     }
 
   });
 };
+
+let plotTimeAdjust = function(adjType) {
+  console.log(`plotTimeAdjust(${adjType})`)
+  for (let seisplot of allSeisPlots) {
+    let s = moment.utc(seisplot.xScale.domain()[0]);
+    let e = moment.utc(seisplot.xScale.domain()[1]);
+    console.log(`s: ${s.toISOString()}   e: ${e.toISOString()}`)
+    let dur = moment.duration(e.diff(s));
+    let halfDur = moment.duration(dur.asMilliseconds()/2);//milliseconds
+    let quarterDur = moment.duration(halfDur.asMilliseconds()/2);//milliseconds
+
+    console.log(`dur: ${dur.seconds()}   quarter: ${quarterDur.seconds()}`);
+    if (adjType === "zoomLeft") {
+      s.add(quarterDur);
+      e.add(quarterDur);
+      seisplot.setPlotStartEnd(s,e);
+    } else if (adjType === "zoomIn") {
+      s.add(quarterDur);
+      e.subtract(quarterDur);
+      seisplot.setPlotStartEnd(s,e);
+      console.log(`After:${s} ${e}  ${seisplot.xScale.domain()}`)
+    } else if (adjType === "zoomOut") {
+      s.subtract(quarterDur);
+      e.add(quarterDur);
+      seisplot.setPlotStartEnd(s,e);
+      console.log(`After:${s} ${e}  ${seisplot.xScale.domain()}`)
+    } else if (adjType === "zoomRight") {
+      s.subtract(quarterDur);
+      e.subtract(quarterDur);
+      seisplot.setPlotStartEnd(s,e);
+    }
+
+  }
+};
+
+wp.d3.select("button#zoomLeft").on("click", function(d) {
+  plotTimeAdjust("zoomLeft")
+});
+wp.d3.select("button#zoomIn").on("click", function(d) {
+  plotTimeAdjust("zoomIn")
+});
+wp.d3.select("button#zoomOut").on("click", function(d) {
+  plotTimeAdjust("zoomOut")
+});
+wp.d3.select("button#zoomRight").on("click", function(d) {
+  plotTimeAdjust("zoomRight")
+});
 
 
 console.log(window.location);
@@ -222,5 +270,6 @@ if ( ! day) {
 }
 let classname = params.get('class');
 let heatname = params.get('heat');
+let allSeisPlots = [];
 console.log(`class: ${classname}  heat: ${heatname}`);
 updateClassHeat(day, classname, heatname);
