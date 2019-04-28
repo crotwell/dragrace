@@ -54,6 +54,7 @@ let updateClassHeat = function(day, classname, heatname) {
             let equalizer = new Equalizer("div.equalizer");
             let eqMap = createEqualizerMap(result)
             equalizer.updateEqualizer(eqMap);
+            loadSeismograms(result);
           }).catch(function(err) {
             console.error(err);
             d3.select("div.currentRace").select("div.start_time").select("span").text("");
@@ -109,6 +110,100 @@ let updateClassHeat = function(day, classname, heatname) {
       });
     }
 }
+
+let loadSeismograms = function(result) {
+  let staList = ['FL','NL','NR','FR'];
+  let chanList = ['HNX', 'HNY', 'HNZ'];
+  let protocol = 'http:';
+  if ("https:" == document.location.protocol) {
+    protocol = 'https:'
+  }
+  const host = document.location.hostname;
+  let subdir = "mseed"
+  if (host === 'www.seis.sc.edu') {
+    subdir = "dragrace";
+  }
+  let mseedQ = new seisplotjs.seedlink.MSeedArchive(
+    `${protocol}//${host}/${subdir}`,
+    "%n/%s/%Y/%j/%n.%s.%l.%c.%Y.%j.%H");
+
+  let net = new seisplotjs.model.Network("XX");
+  let LOC = "00";
+  let chanTR = [];
+  for (let sta of staList) {
+    let staObj = new seisplotjs.model.Station(net, sta);
+    for (let chan of chanList) {
+      let chanObj = new seisplotjs.model.Channel(staObj, chan, LOC);
+      chanTR.push({
+            channel: chanObj,
+            startTime: moment(result.Trigger_Info.startTime),
+            endTime: moment(result.Trigger_Info.endTime)
+          });
+    }
+  }
+  mseedQ.loadTraces(chanTR)
+  .then(traceMap => {
+    let seisPlotConfig = new wp.SeismographConfig();
+    seisPlotConfig.doRMean = false;
+    let seisDiv = seisplotjs.d3.select("div.seismograms");
+
+    traceMap.forEach((trace, key) => {
+      console.log(`traceMap: ${key}`);
+      // let subDiv = seisDiv.append("div");
+      // let seisPlot = new wp.CanvasSeismograph(subDiv,
+      //     seisPlotConfig,
+      //     trace, moment(result.Trigger_Info.startTime),
+      //     moment(result.Trigger_Info.endTime));
+      // seisPlot.draw();
+    });
+    let staMax = new Map();
+    let traceMax = 0;
+    for (let sta of staList) {
+      let x = traceMap.get(`XX.${sta}.00.HNX`);
+      let y = traceMap.get(`XX.${sta}.00.HNY`);
+      let z = traceMap.get(`XX.${sta}.00.HNZ`);
+      let max = 0;
+      if (x && y && z){
+        for (let s=0; s<x.segments.length; s++) {
+          for (let i=0; i<x.segments[s].y.length; i++) {
+            traceMax = Math.max(traceMax, Math.max(...x.segments[s].y));
+            traceMax = Math.max(traceMax, Math.max(...y.segments[s].y));
+            traceMax = Math.max(traceMax, Math.max(...z.segments[s].y));
+            let vec = x.segments[s].y[i]*x.segments[s].y[i]
+            +y.segments[s].y[i]*y.segments[s].y[i]
+            +z.segments[s].y[i]*z.segments[s].y[i];
+            vec = Math.sqrt(vec);
+            if (vec > max) {
+              max = vec;
+            }
+          }
+        }
+      }
+      staMax.set(sta, max);
+      console.log(`${sta}  max: ${max}`);
+    }
+    seisPlotConfig.fixedYScale([ -1*traceMax, traceMax]);
+    for (let sta of staList) {
+      let staDiv = seisDiv.append("div").classed(sta, true);
+      for (let chan of chanList) {
+        let k = `XX.${sta}.00.${chan}`;
+        let trace = traceMap.get(k);
+        console.log(`${k}  trace: ${trace}`);
+        if (trace) {
+          let subDiv = staDiv.append("div").classed(chan, true);
+          let seisPlotConfigClone = seisPlotConfig.clone();
+          seisPlotConfigClone.xLabel = `${sta} ${chan} ${staMax.get(sta)}`;
+          let seisPlot = new wp.CanvasSeismograph(subDiv,
+              seisPlotConfigClone,
+              trace, moment(result.Trigger_Info.startTime),
+              moment(result.Trigger_Info.endTime));
+          seisPlot.draw();
+        }
+      }
+    }
+
+  });
+};
 
 
 console.log(window.location);
