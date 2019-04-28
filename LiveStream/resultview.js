@@ -182,7 +182,7 @@ let loadSeismograms = function(result) {
       staMax.set(sta, max);
       console.log(`${sta}  max: ${max}`);
     }
-    seisPlotConfig.fixedYScale([ -1*traceMax, traceMax]);
+    seisPlotConfig.fixedYScale = [ -1*traceMax, traceMax];
     for (let sta of staList) {
       let staDiv = seisDiv.append("div").classed(sta, true);
       for (let chan of chanList) {
