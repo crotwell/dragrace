@@ -130,10 +130,8 @@ def ProcessHoldingPen():
             else:
                 print("maxACC Packet doesn't contain a station")
     d = datetime.now(timezone.utc)
-    d.isoformat()
     edt = timezone(timedelta(hours=-4), name="EDT")
     d_edt = d.astimezone(tz=edt)
-    d_edt.isoformat()
     weekday = date.isoweekday(d_edt)
     if weekday == 1:
         dayName = "Monday"
