@@ -37,9 +37,9 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
     <i class="fa fa-remove"></i>
   </a>
   <h4 class="w3-bar-item"><b>Race Day</b></h4>
-  <a class="w3-bar-item w3-button w3-hover-black" href="resultviewTest.html?day=Friday">Friday</a>
-  <a class="w3-bar-item w3-button w3-hover-black" href="resultviewTest.html?day=Saturday">Saturday</a>
-  <a class="w3-bar-item w3-button w3-hover-black" href="resultviewTest.html?day=Sunday">Sunday</a>
+  <a class="w3-bar-item w3-button w3-hover-black" href="resultview.html?day=Friday">Friday</a>
+  <a class="w3-bar-item w3-button w3-hover-black" href="resultview.html?day=Saturday">Saturday</a>
+  <a class="w3-bar-item w3-button w3-hover-black" href="resultview.html?day=Sunday">Sunday</a>
 
 </nav>
 
@@ -49,41 +49,8 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 <!-- Main content: shift it to the right by 250 pixels when the sidebar is visible -->
 <div class="w3-main" style="margin-left:250px">
 
-  <div class="w3-row w3-padding-64">
-    <div class="w3-twothird w3-container">
-      <h1 class="w3-text-teal">NHRA 4-Wide Nationals Ground Motion Experiment at zMAX Dragway</h1>
-      <p>Can you feel the ground shaking as the dragrace cars zoom by? We are measuring the ground shaking of dragrace cars at the zMAX Dragway with seismic devices!  Students and faculty from the
-      University of South Carolina have created four devices to do the job!  They are deployed on all four lanes.  The ground shaking is measured in "g's" (gees) which is a percent of gravitational acceleration.
-    For reference, 1 g is what it takes to lift up an object off the ground!</p>
-    </div>
-
-
-  <div class="w3-row">
-    <div class="w3-twothird w3-container ">
-
-  <div class="control">
-      <h5>List:</h5>
-      <div class="navlist">
-      </div>
-      <h5>Control:</h5>
-  </div>
-
-
-      <h1 class="w3-text-teal">Peak Acceleration</h1>
-      <p>Ground acceleration measured in g on each lane.</p>
-      <div align="left" class="w3-twothird w3-container">Equalizer
-        <div class="equalizer">
-        </div>
-
-        <div> ---Lane1-- --Lane2-- --Lane3-- --Lane4</div>
-      </div>
-
-    </div>
-    <div class="w3-twothird w3-container currentRace">
-      <h1 class="w3-text-teal">Race Information</h1>
-      <p>Ground Motion data<span class="dayName"></span>.</p>
-
-      <div align="left" class="w3-twothird w3-container">
+<h1 class="w3-text-teal">Live Stream</h1>
+      <div class="currentRace">
         <h5>Last Result on <span class="dayName"><a></a></span>:</h5>
         <div class="race_class">Class: <a><span></span></a></div>
         <div class="race_heat">Heat: <a><span></span></a></div>
@@ -91,20 +58,48 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
         <div class="dutyOfficer">Duty Officer: <span></span></div>
         <div class="start_time">Start Time: <span></span></div>
         <div class="end_time">End Time: <span></span></div>
+      </div>
     </div>
-  </div>
-</div>
 
-  <div>
-    <label>Comment</label><input name="msgE" type="text" value="">
-    <button id="msg">Msg</button>
+    <div class="control">
+      <h5>List:</h5>
+      <div class="navlist">
+      </div>
+      <h5>Control:</h5>
+      <div>
+        <div>
+          <label>Duty Officer</label><input name="dutyofficer" type="text" value="tjotest">
+          <label>Msg</label><input name="msgE" type="text" value="">
+          <button id="msg">Msg</button>
+        </div>
+        <div>
+          <button id="prev">Pause</button>
+          <button id="up">Disconnect</button>
+          <button id="next">Trigger</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="equalizer">
+    </div>
+
+  </div>
+
+  <div class="seismograms">
+    <div class="seisControl">
+      <button id="zoomLeft"><</button>
+      <button id="zoomIn">+</button>
+      <button id="zoomOut">-</button>
+      <button id="zoomRight">></button>
+    </div>
   </div>
 
 
 
   <footer id="myFooter">
     <div class="w3-container w3-theme-l2 w3-padding-32">
-      <h4>Footer</h4>
+      <span><img src="zmax.jpg" width="300px"><span><img src="4-wide.png" width="200px"><img src="USC.png" width="200px"></span></span>
+
     </div>
 
     <div class="w3-container w3-theme-l1">
