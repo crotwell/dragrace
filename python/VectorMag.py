@@ -47,30 +47,16 @@ def peakAccelerationCalculation(x,y,z,theta,alpha,station,start_time,end_time):
 
     vmag = Magnitude_ThreeC_TimeSeries_jake(rotate_array_x, rotate_array_y, new_array_z)
 
-    maxVmag = max(vmag)
-    print(f"maxVmag is {maxVmag}")
-    maxIndex = vmag.index(maxVmag) #index function searches elements to return position, returns the smallest position first
-    vmagPair = (maxIndex,maxVmag) #create tuple of index and vmag value
-
-
-    maxacc = max(vmag)/countToGravity
-    print(f"maxVmag is {maxVmag}")
-    print(f"maxacc is {maxacc}")
+    peakAccel = max(vmag)/countToGravity
     maxAcceljson = {
         "station":station,
         "start_time":start_time,
         # "start_time":start in MMA8451 line 254
         "end_time":end_time,
         # "end_time": last_sample_time in MMA8451 line, also as now
-        "maxacc":maxacc,
+        "maxacc":peakAccel
         # add in x,y,z and x',y',z', theta
-        "maxVmag":maxVmag,
-        "maxIndex":maxIndex,
-        "vmagPair":vmagPair
-        # return the index of peak Acceleration
-    }
-    a = maxAcceljson['maxVmag']
-    print(f"maxVmag is {a}")
+     }
     return maxAcceljson
 
 def compareSendPeakAccel(establishedJson, freshJson, Dali, maxWindow):
@@ -139,103 +125,3 @@ def compareSendPeakAccel(establishedJson, freshJson, Dali, maxWindow):
 # series
 # input = rotate_array_x,array_y,new_array_z
 # output = vmag
-def Magnitude_ThreeC_TimeSeries_jake(x,y,z):
-    nptsx=len(x)
-    nptsy=len(y)
-    nptsz=len(z)
-    if nptsx != nptsy:
-        print("x and y of different lengths",nptsx,nptsy)
-        return
-    elif nptsx != nptsz:
-        print("z different length than x and y",nptsx,nptsz)
-        return
-    i = 0
-    vmag = []
-    while i < nptsx:
-        vmag.append(VectorMagnitude(x[i],y[i],z[i]))
-        i += 1
-    return vmag
-
-# Divide vmag list by 4096 to convert counts to g's
-# input = vmag
-# output = peakAccel
-def countsTog(vmag):
-    npts = len(vmag)
-    peakAccel = []
-    i = 0
-    countsIng = 4096
-    while i < npts:
-        peakAccel.append(vmag[i]/countsIng)
-        i += 1
-    return peakAccel
-
-# rest state correction
-# function to correct rotate_array_z for the rest state correction of -1
-# input = rotate_array_z
-# output = new_array_z
-def subtractGravity(rotate_array_z, countToGravity):
-    correct = []
-    for i in rotate_array_z:
-        correct.append(i-countToGravity) # substracting gravity
-    return correct
-
-def jsonToString(maxJson):
-    s = maxJson["start_time"]
-    e = maxJson["end_time"]
-    maxJson["start_time"] = maxJson["start_time"].strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]+'Z'
-    maxJson["end_time"] = maxJson["end_time"].strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]+'Z'
-    out = json.dumps(maxJson,indent = 4)
-    maxJson["start_time"] = s
-    maxJson["end_time"] = e
-    return out
-
-if __name__ == "__main__":
-    # execute only if run directly as a script, ignore if imported
-    # note: each element of x,y,z makes one vector!
-    array_x = [1,2,3,4,500,15,25]
-    array_y = [5,6,7,8,32,69,70]
-    array_z = [9,10,11,12,47,100,0]
-    theta = 20.0
-    alpha = 0
-    station = 'PI01'
-    start_time = simpleDali.utcnowWithTz().replace(hour=0, minute=0, second=0, microsecond=0)
-    time_diff = timedelta(seconds=0.10)
-    end_time = start_time + time_diff
-
-    maxWindow = timedelta(seconds=0.25)
-
-    # print('---')
-    # print(sendPeakAccel(newJson))
-    # timedelta should be about 0.25-0.5 s
-
-    establishedJson = peakAccelerationCalculation(array_x,array_y,array_z,theta, alpha,station,start_time,end_time)
-    print("first: "+jsonToString(establishedJson))
-    start_time = start_time + timedelta(seconds=0.10)
-    end_time = start_time + time_diff
-    freshJson = peakAccelerationCalculation(array_x,array_y,array_z,theta, alpha,station,start_time,end_time)
-    establishedJson = compareSendPeakAccel(establishedJson, freshJson, None, maxWindow)
-    print("second: "+jsonToString(establishedJson))
-
-    start_time = start_time + timedelta(seconds=0.10)
-    end_time = start_time + time_diff
-    freshJson = peakAccelerationCalculation(array_x,array_y,array_z,theta, alpha,station,start_time,end_time)
-    establishedJson = compareSendPeakAccel(establishedJson, freshJson, None, maxWindow)
-    print("third: "+jsonToString(establishedJson))
-
-    start_time = start_time + timedelta(seconds=0.10)
-    end_time = start_time + time_diff
-    freshJson = peakAccelerationCalculation(array_x,array_y,array_z,theta, alpha,station,start_time,end_time)
-    establishedJson = compareSendPeakAccel(establishedJson, freshJson, None, maxWindow)
-    print("forth: "+jsonToString(establishedJson))
-
-    start_time = start_time + timedelta(seconds=0.10)
-    end_time = start_time + time_diff
-    freshJson = peakAccelerationCalculation(array_x,array_y,array_z,theta, alpha,station,start_time,end_time)
-    establishedJson = compareSendPeakAccel(establishedJson, freshJson, None, maxWindow)
-
-    print("last: "+jsonToString(establishedJson))
-    #print(freshJson)
-    # establishedJson =
-    # need an IP catcher, config listener + thrower, and make a dictionary...
-    #  that makes info dictionary for each heat (time, max accel, )
-    # Theta is found from config listener + thrower from ring server
