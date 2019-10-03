@@ -18,7 +18,7 @@ def checkComponentMax(filename, bitShift=False):
                    if msr.data[i] > 8000 or msr.data[i] < -8000:
                       print("MAX ALERT for {} at roughly {}, {:d}".format(msr.codes(), msr.starttime(), msr.data[i]))
             except:
-                print("Bad record in file {}".format(filename))
+                #print("Bad record in file {}".format(filename))
                 break
 
 def checkComponentMaxDir(topDirName, bitShift=False):
