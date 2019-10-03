@@ -7,15 +7,19 @@ def checkComponentMax(filename, bitShift=False):
     print("checkComponent Max {}".format(filename))
     with open(filename, 'rb+') as f:
         while True:
-            rawBytes = f.read(512)
-            if len(rawBytes) < 512:
-                print("Done {:d}".format(len(rawBytes)))
+            try:
+                rawBytes = f.read(512)
+                if len(rawBytes) < 512:
+                    print("Done {:d}".format(len(rawBytes)))
+                    break
+                msr = simpleMiniseed.unpackMiniseedRecord(rawBytes)
+                #print("read record: {} {:d} {:d} {:d}".format(msr.codes(), msr.header.recordLength, msr.header.numsamples, msr.header.encoding))
+                for i in range(len(msr.data)):
+                   if msr.data[i] > 8000:
+                      print("Almost 2g for {} at index {}".format(msr.codes(), i))
+            except:
+                print("Bad record in file {:d}".format(filename))
                 break
-            msr = simpleMiniseed.unpackMiniseedRecord(rawBytes)
-            #print("read record: {} {:d} {:d} {:d}".format(msr.codes(), msr.header.recordLength, msr.header.numsamples, msr.header.encoding))
-            for i in range(len(msr.data)):
-               if msr.data[i] > 8000:
-                  print("Almost 2g for {} at index {}".format(msr.codes(), i))
 
 def checkComponentMaxDir(topDirName, bitShift=False):
     if (os.path.isfile(topDirName)):
