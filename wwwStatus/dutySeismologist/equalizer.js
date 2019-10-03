@@ -93,7 +93,7 @@ bars.selectAll("rect")//select in the page and correspond to data
       i = 1;
     }else if (d.station === "FL1K") {
       i = 0;                              //make FL equalizer
-    }
+    
     // }else if (d.station === "NR") {
     //   i = 2;
     // // }else if (d.station === "CT") {

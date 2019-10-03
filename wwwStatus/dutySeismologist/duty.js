@@ -128,7 +128,7 @@ if (protocol == 'https:') {
   });
 }
 
-let equalizer = new Equalizer("div.FLequalizer",["FL0","FL60","FL330","FL660","FL1K"]);
+let FLequalizer = new Equalizer("div.FLequalizer",["FL0","FL60","FL330","FL660","FL1K"]);
 
 d3.select('#classChoice')
   .selectAll("option")
@@ -137,7 +137,7 @@ d3.select('#classChoice')
     .append("option")
     .text(function(d) {return d;});
 
-let equalizer = new Equalizer("div.laneEqualizer",["FL","NL"]);
+let laneEqualizer = new Equalizer("div.laneEqualizer",["FL","NL"]);
 d3.select('#classChoice')
     .selectAll("option")
     .data(classList)
@@ -275,7 +275,8 @@ let dlTriggerCallback = function(dlPacket) {
 // update equilizer and seis plots, but only as fast as the browser can handle redraws
 let animationDrawLoop = function() {
   if ( ! paused) {
-    equalizer.updateEqualizer(accelMaxValues);
+    FLequalizer.updateEqualizer(accelMaxValues);
+    laneEqualizer.updateEqualizer(accelMaxValues);
 
     d3.select("div.piStatus").selectAll(`span`).classed('struggling', false).classed('good', false);
     accelMaxValues.forEach((maxaccJson, streamId, map) => {
