@@ -18,7 +18,7 @@ def checkComponentMax(filename, bitShift=False):
                    if msr.data[i] > 8000:
                       print("Almost 2g for {} at index {}".format(msr.codes(), i))
             except:
-                print("Bad record in file {:d}".format(filename))
+                print("Bad record in file {}".format(filename))
                 break
 
 def checkComponentMaxDir(topDirName, bitShift=False):
