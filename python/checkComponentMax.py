@@ -16,7 +16,7 @@ def checkComponentMax(filename, bitShift=False):
                 #print("read record: {} {:d} {:d} {:d}".format(msr.codes(), msr.header.recordLength, msr.header.numsamples, msr.header.encoding))
                 for i in range(len(msr.data)):
                    if msr.data[i] > 8000 or msr.data[i] < -8000:
-                      print("Almost 2g for {} at index {}, {:d}".format(msr.codes(), i, msr.data[i]))
+                      print("MAX ALERT for {} at roughly {}, {:d}".format(msr.codes(), msr.starttime(), msr.data[i]))
             except:
                 print("Bad record in file {}".format(filename))
                 break
