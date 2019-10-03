@@ -51,7 +51,17 @@ createEqualizerMap = function(result){
   let dataset=new Map();
   dataset.set("FL",{'station':'FL','maxacc':result.peakACC_FL});
   dataset.set("NL",{'station':'NL','maxacc':result.peakACC_NL});
-  dataset.set("NR",{'station':'NR','maxacc':result.peakACC_NR});
-  dataset.set("FR",{'station':'FR','maxacc':result.peakACC_FR});
+  // dataset.set("FL",{'station':'NR','maxacc':result.peakACC_NR});
+  // dataset.set("FR",{'station':'FR','maxacc':result.peakACC_FR});
+  dataset.set("FL0",{'station':'FL0','maxacc':result.peakACC_NL});
+  dataset.set("FL60",{'station':'FL60','maxacc':result.peakACC_NL});
+  dataset.set("FL330",{'station':'FL330','maxacc':result.peakACC_NL});
+  dataset.set("FL660",{'station':'FL660','maxacc':result.peakACC_NL});
+  dataset.set("FL1K",{'station':'FL1K','maxacc':result.peakACC_NL});
+
+
+
+
+
   return dataset;
 }

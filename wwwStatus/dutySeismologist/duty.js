@@ -1,7 +1,7 @@
 
 
 let datalink = seisplotjs.datalink;
-let seisGraphMax = 2.0;
+let seisGraphMax = 2.0;   //max
 
 //let wp = require('seisplotjs-waveformplot');
 // this global comes from the seisplotjs_waveformplot standalone js
@@ -14,7 +14,7 @@ const do1SPS = false
 
 let net = 'CO';
 //let staList = ['PI01', 'PI02', 'PI03', 'PI04', 'PI05', 'PI06', 'PI07', 'PI99'];
-let staList = ['FL', 'NL', 'CT', 'NR', 'FR'];
+let staList = ['FL', 'NL', 'CT', 'NR', 'FR','FL0','FL60','FL330','FL660','FL1K'];
 //monday = 1
 //friday = 5
 //saturday = 6
@@ -128,7 +128,7 @@ if (protocol == 'https:') {
   });
 }
 
-let equalizer = new Equalizer("div.equalizer");
+let equalizer = new Equalizer("div.FLequalizer",["FL0","FL60","FL330","FL660","FL1K"]);
 
 d3.select('#classChoice')
   .selectAll("option")
@@ -137,6 +137,13 @@ d3.select('#classChoice')
     .append("option")
     .text(function(d) {return d;});
 
+let equalizer = new Equalizer("div.laneEqualizer",["FL","NL"]);
+d3.select('#classChoice')
+    .selectAll("option")
+    .data(classList)
+    .enter()
+      .append("option")
+      .text(function(d) {return d;});
 
 
 d3.selectAll('.textHost').text(host);

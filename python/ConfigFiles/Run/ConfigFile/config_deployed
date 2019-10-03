@@ -6,8 +6,12 @@
     "PI04":"FL",
     "PI05":"FR",
     "PI06":"NR",
-    "PI07":"CT",
-    "PI99":"FK"
+    "PI07":"FL1K",
+    "PI99":"FL660"
+    "PI08":"FL0"
+    "PI09":"FL60"
+    "PI10":"FL330"
+    "PI11":"NO"
   },
   "LocInfo":{
     "FL":{
@@ -51,6 +55,41 @@
          "Alpha": 0.0
       },
       "Name":"Fake Loc, PI99"
+    },
+    "FL0":{
+      "Angles":{
+         "Theta": 0.0,
+         "Alpha": 0.0
+      },
+      "Name":"Far Left 0 ft"
+    },
+    "FL60":{
+      "Angles":{
+         "Theta": 0.0,
+         "Alpha": 0.0
+      },
+      "Name":"Far Left 60 ft"
+    },
+    "FL330":{
+      "Angles":{
+         "Theta": 0.0,
+         "Alpha": 0.0
+      },
+      "Name":"Far Left 330 ft"
+    },
+    "FL660":{
+      "Angles":{
+         "Theta": 0.0,
+         "Alpha": 0.0
+      },
+      "Name":"Far Left 660 ft"
+    },
+    "FL1K":{
+      "Angles":{
+         "Theta": 0.0,
+         "Alpha": 0.0
+      },
+      "Name":"Far Left 1,000 ft"
     }
   }
 }

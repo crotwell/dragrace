@@ -1,7 +1,8 @@
 
 //make equalizer from maxacc json data
 class Equalizer{
-  constructor(selector){
+  constructor(selector, plotStations){
+    this.plotStations = plotStations;
     this.selector = selector;
     this.d3 = seisplotjs.d3
     this.margin = {top: 20, right: 10, bottom: 20, left: 30};
@@ -27,6 +28,11 @@ createZeros(){
   dataset.set("CT",{'station':'CT','maxacc':.0 });
   dataset.set("NR",{'station':'NR','maxacc':.0 });
   dataset.set("FR",{'station':'FR','maxacc':.0 });
+  dataset.set("FL0",{'station':'FL0','maxacc':.0 });
+  dataset.set("FL60",{'station':'FL60','maxacc':.0 });
+  dataset.set("FL330",{'station':'FL330','maxacc':.0 });
+  dataset.set("FL660",{'station':'FL660','maxacc':.0 });
+  dataset.set("FL1K",{'station':'FL1K','maxacc':.0 });
   return dataset;
 }
 
@@ -49,9 +55,11 @@ createEqualizer(selector){
 updateEqualizer(allmaxaccJson){
   let dataset = new Array();
   for (let x of allmaxaccJson.values()){
-    if (x.station !== 'CT') {
+    if( this.plotStations.includes(x.station)){
       dataset.push(x);
     }
+    // if (x.station !== 'CT') {       // fix this with 'find' return if exists
+    //   dataset.push(x);
 
   }
   //create a svg element before body taag and assigns a svg with height and width
@@ -74,15 +82,26 @@ bars.selectAll("rect")//select in the page and correspond to data
     if (d.station === "FL") {
       i = 0;
     }else if (d.station === "NL") {
-      i = 1;
-    }else if (d.station === "NR") {
-      i = 2;
-    // }else if (d.station === "CT") {
-    //     i = 4;
-    }else if (d.station === "FR") {
-      i = 3;
-    }else if (d.station === "FR") {
+      i = 1;                            //make the first Lane 1 lane 2 equalizer
+    }else if (d.station === "FL0") {
       i = 4;
+    }else if (d.station === "FL60") {
+      i = 3;
+    } else if (d.station === "FL330") {
+      i = 2;
+    }else if (d.station === "FL660") {
+      i = 1;
+    }else if (d.station === "FL1K") {
+      i = 0;                              //make FL equalizer
+    }
+    // }else if (d.station === "NR") {
+    //   i = 2;
+    // // }else if (d.station === "CT") {
+    // //     i = 4;
+    // }else if (d.station === "FR") {
+    //   i = 3;
+    // }else if (d.station === "FR") {
+    //   i = 4;
     }else {
          console.log(`no station found ${d.station}`);
     }

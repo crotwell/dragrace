@@ -54,7 +54,7 @@ def configSanityCheck(configFile):
 #
 # Test for known Pis.  Undocumented Pis are not identified
 #
-    for pi in ["PI01", "PI02", "PI03", "PI04", "PI05", "PI06", "PI07"]:
+    for pi in ["PI01", "PI02", "PI03", "PI04", "PI05", "PI06", "PI07", "PI08", "PI09","PI10","PI11"]:
         foundIt=piDict.get(pi,"False")
         if(foundIt == "False"):
             print("{} is missing in Location Dictionary".format(pi))
@@ -63,7 +63,7 @@ def configSanityCheck(configFile):
 # Make sure known Pis are in known locations
 #    This will find unknown location codes
 #
-        if piDict.get(pi) not in ["NO","FL","NL","CT","NR","FR"]:
+        if piDict.get(pi) not in ["NO","FL","NL","CT","NR","FR","FL0","FL60","FL330","FL660","FL1K"]:
             print('{}:  Location of {} is not valid'.format(pi,piDict.get(pi)))
             sanityPass=False
     return sanityPass
