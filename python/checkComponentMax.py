@@ -4,7 +4,7 @@ import dataBuffer
 import os
 
 def checkComponentMax(filename, bitShift=False):
-    print("checkComponent Max {}".format(filename))
+    #print("checkComponent Max {}".format(filename))
     with open(filename, 'rb+') as f:
         while True:
             try:
