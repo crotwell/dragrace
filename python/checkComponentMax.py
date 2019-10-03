@@ -4,7 +4,7 @@ import dataBuffer
 import os
 
 def checkComponentMax(filename, bitShift=False):
-    print("recompress {}".format(filename))
+    print("checkComponent Max {}".format(filename))
     with open(filename, 'rb+') as f:
         while True:
             rawBytes = f.read(512)
@@ -13,20 +13,9 @@ def checkComponentMax(filename, bitShift=False):
                 break
             msr = simpleMiniseed.unpackMiniseedRecord(rawBytes)
             #print("read record: {} {:d} {:d} {:d}".format(msr.codes(), msr.header.recordLength, msr.header.numsamples, msr.header.encoding))
-            if not msr.codes() in miniseedBuffers:
-                miniseedBuffers[msr.codes()] = \
-                    dataBuffer.DataBuffer(msr.header.network,
-                        msr.header.station,
-                        msr.header.location,
-                        msr.header.channel,
-                        msr.header.sampleRate,
-                        archive=True,
-                        encoding=simpleMiniseed.ENC_SHORT)
-            if bitShift:
-                for i in range(len(msr.data)):
-                    msr.data[i] = msr.data[i] >> 2
-
-            miniseedBuffers[msr.codes()].push(msr.starttime(), msr.data)
+            for i in range(len(msr.data)):
+               if msr.data[i] > 8000:
+            print("Almost 2g for {} at index {}".format(msr.codes(), i))
 
 def checkComponentMaxDir(topDirName, bitShift=False):
     if (os.path.isfile(topDirName)):
