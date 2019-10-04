@@ -48,14 +48,14 @@ def peakAccelerationCalculation(x,y,z,theta,alpha,station,start_time,end_time):
     vmag = Magnitude_ThreeC_TimeSeries_jake(rotate_array_x, rotate_array_y, new_array_z)
 
     maxVmag = max(vmag)
-    print(f"maxVmag is {maxVmag}")
+    #print(f"maxVmag is {maxVmag}")
     maxIndex = vmag.index(maxVmag) #index function searches elements to return position, returns the smallest position first
     vmagPair = (maxIndex,maxVmag) #create tuple of index and vmag value
 
 
     maxacc = max(vmag)/countToGravity
-    print(f"maxVmag is {maxVmag}")
-    print(f"maxacc is {maxacc}")
+    #print(f"maxVmag is {maxVmag}")
+    #print(f"maxacc is {maxacc}")
     maxAcceljson = {
         "station":station,
         "start_time":start_time,
