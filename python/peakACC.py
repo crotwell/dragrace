@@ -70,7 +70,7 @@ def peakAccelerationCalculation(x,y,z,theta,alpha,station,start_time,end_time):
         # return the index of peak Acceleration
     }
     a = maxAcceljson['maxVmag']
-    print(f"maxVmag is {a}")
+    #print(f"maxVmag is {a}")
     return maxAcceljson
 
 def compareSendPeakAccel(establishedJson, freshJson, Dali, maxWindow):
