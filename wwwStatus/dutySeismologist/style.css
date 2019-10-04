@@ -9,7 +9,8 @@ div.realtime {
         grid-template-rows:1fr auto;
         grid-template-areas:
             "titles equalizer"
-            "control equalizer";
+            "control equalizer"
+            "bottom bottom";
         grid-gap: 20px;
         margin-bottom: 4em;
     }
@@ -27,26 +28,16 @@ div.realtime {
     .control {
         grid-area: control;
     }
+    .seismograms {
+        grid-area: bottom;
+    }
 }
 
 div.currentRace {
   font-size: smaller;
 }
 
-svg.seismograph {
-  height: 150px;
-  width: 90%;
-}
-canvas.seismograph {
-  height: 150px;
-  width: 90%;
-}
 
-path.seispath {
-  stroke: skyblue;
-  fill: none;
-  stroke-width: 1px;
-}
 div.sidebar {
 
   height: 100%;
@@ -101,17 +92,6 @@ div.piStatus span{
   margin-left: 20px;
 }
 
-path.seisplot .orientZ {
-  stroke: seagreen;
-}
-
-path.seisplot .orientN {
-  stroke: red;
-}
-
-path.seisplot .orientE {
-  stroke: orange;
-}
 
 text.sublabel {
   font-size: x-small;

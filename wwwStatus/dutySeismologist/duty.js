@@ -3,9 +3,7 @@
 let datalink = seisplotjs.datalink;
 let seisGraphMax = 2.0;   //max
 
-//let wp = require('seisplotjs-waveformplot');
 // this global comes from the seisplotjs_waveformplot standalone js
-let wp = seisplotjs.waveformplot;
 let d3 = seisplotjs.d3;
 let moment = seisplotjs.moment;
 
@@ -37,11 +35,11 @@ console.log("we have wrong dates")
 
 let config = null;
 let ipmap = new Map();
-let timerInProgress = false;
+let redrawInProgress = false;
 let clockOffset = 0; // should get from server somehow
-let duration = 300;
+let duration = seisplotjs.moment.duration(5, 'minutes');
 let maxSteps = -1; // max num of ticks of the timer before stopping, for debuging
-let timeWindow = seisplotjs.fdsndataselect.calcStartEndDates(null, null, duration, clockOffset);
+let timeWindow = new seisplotjs.util.StartEndDuration(null, null, duration, clockOffset);
 let protocol = 'http:';
 if ("https:" == document.location.protocol) {
   protocol = 'https:'
@@ -154,7 +152,7 @@ let dlConn = null;
 let allSeisPlots = new Map();
 let allTraces = new Map();
 let markers = [];
-let svgParent = wp.d3.select('div.realtime');
+let svgParent = d3.select('div.realtime');
 let margin = {top: 5, right: 20, bottom: 40, left: 60};
 let needsRedraw = new Set();
 
@@ -167,22 +165,22 @@ let numSteps = 0;
 
 //go into sidebar buttons and deactivate
 let togglebutton = function(heatdiv) {
-  wp.d3.select("div.sidebar").selectAll("div").select(".panel").style("display","none");
-  wp.d3.select("div.sidebar").selectAll("div").select("button").classed("active", false);
+  d3.select("div.sidebar").selectAll("div").select(".panel").style("display","none");
+  d3.select("div.sidebar").selectAll("div").select("button").classed("active", false);
 
     heatdiv.select("button").classed("active", true);
     heatdiv.select(".panel").style("display","block");
 };
-wp.d3.select("div.class1 button.heatcollapse").on("click", function(d) {
+d3.select("div.class1 button.heatcollapse").on("click", function(d) {
   console.log("buttonclick "+d);
-   let heatdiv = wp.d3.select("div.class1");
+   let heatdiv = d3.select("div.class1");
    togglebutton(heatdiv);
 
 
 });
-wp.d3.select("div.class2 button.heatcollapse").on("click", function(d) {
+d3.select("div.class2 button.heatcollapse").on("click", function(d) {
   console.log("buttonclick "+d);
-   let heatdiv = wp.d3.select("div.class2");
+   let heatdiv = d3.select("div.class2");
    togglebutton(heatdiv);
 
 });
@@ -192,60 +190,60 @@ wp.d3.select("div.class2 button.heatcollapse").on("click", function(d) {
 let packetCount = 0;
 
 let handleMaxAccSeismogram = function(seismogram) {
+  console.log(`handleMaxAccSeismogram`)
   let codes = seismogram.codes();
-  //let seismogram = wp.miniseed.createSeismogram([miniseed]);
   if (allSeisPlots.has(codes)) {
     if (allTraces.has(codes) && allTraces.get(codes)) {
-      const oldTrace = allTraces.get(codes);
-      if (oldTrace) {
-        oldTrace.append(seismogram);
+      let sdd = allTraces.get(codes);
+      if (sdd) {
+        sdd.seismogram.append(seismogram);
       } else {
-        oldTrace = new seisplotjs.model.Trace(seismogram)
+        sdd = seisplotjs.seismogram.SeismogramDisplayData.fromSeismogram(seismogram);
       }
-      const littleBitLarger = {'start': moment.utc(timeWindow.start).subtract(60, 'second'),
-                              'end': moment.utc(timeWindow.end).add(180, 'second')};
-      const newTrace = oldTrace.trim(littleBitLarger);
+      const littleBitLarger = new seisplotjs.util.StartEndDuration(moment.utc(timeWindow.start).subtract(60, 'second'),
+                              moment.utc(timeWindow.end).add(180, 'second'));
+
+      const newTrace = sdd.seismogram.trim(littleBitLarger);
       if (newTrace) {
-        allTraces.set(codes, newTrace);
-        allSeisPlots.get(codes).replace(oldTrace, newTrace);
+        sdd.seismogram = newTrace;
+        allTraces.set(codes, sdd);
         allSeisPlots.get(codes).calcScaleDomain();
       } else {
         // trim removed all data, nothing left in window
         allTraces.delete(codes);
-        allSeisPlots.get(codes).remove(oldTrace);
+        allSeisPlots.get(codes).remove(sdd);
       }
     } else {
-      let newTrace = new seisplotjs.model.Trace(seismogram);
-      allSeisPlots.get(codes).append(newTrace);
+      let sdd = seisplotjs.seismogram.SeismogramDisplayData.fromSeismogram(seismogram);
+      allSeisPlots.get(codes).append(sdd);
       needsRedraw.add(allSeisPlots.get(codes))
     }
 //      allSeisPlots.get(codes).trim(timeWindow);
   } else {
     svgParent.select("p.waitingondata").remove();
-    let seisDiv = svgParent.append('div').attr('class', codes);
+    let seisDiv = svgParent.append('div').classed(codes, true);
 //    seisDiv.append('p').text(codes);
-    let plotDiv = seisDiv.append('div').attr('class', 'realtime');
-    plotDiv.style("position", "relative");
-    plotDiv.style("width", "100%");
-    plotDiv.style("height", "150px");
-    let trace = new seisplotjs.model.Trace(seismogram);
-    let seisPlotConfig = new wp.SeismographConfig();
+    let plotDiv = seisDiv.append('div');
+    let seisPlotConfig = new seisplotjs.seismographconfig.SeismographConfig();
     seisPlotConfig.connectSegments = true;
+    //seisPlotConfig.drawingType = seisplotjs.seismographconfig.DRAW_BOTH_ALIGN;
     seisPlotConfig.lineWidth = 2;
+    seisPlotConfig.title= ["testing", codes]
     seisPlotConfig.xLabel = codes;
     seisPlotConfig.margin = margin ;
     seisPlotConfig.maxHeight = 200 ;
     seisPlotConfig.doRMean = false ;
     seisPlotConfig.fixedYScale = [-.1, seisGraphMax] ;
     seisPlotConfig.yScaleFormat = ".1f";
-    let seisPlot = new wp.CanvasSeismograph(plotDiv, seisPlotConfig, [trace], timeWindow.start, timeWindow.end);
-    seisPlot.svg.classed('realtimePlot', true).classed('overlayPlot', false)
-    seisPlot.disableWheelZoom();
-    seisPlot.setHeight(150);
-    seisPlot.appendMarkers(markers);
+    seisPlotConfig.wheelZoom = false;
+    let sdd = seisplotjs.seismogram.SeismogramDisplayData.fromSeismogram(seismogram);
+    sdd.timeWindow = timeWindow;
+    sdd.addMarkers(markers);
+    let seisPlot = new seisplotjs.seismograph.Seismograph(plotDiv, seisPlotConfig, sdd);
+    seisPlot.svg.classed('realtimePlot', true).classed('overlayPlot', false);
     seisPlot.draw();
     allSeisPlots.set(codes, seisPlot);
-    allTraces.set(codes, trace)
+    allTraces.set(codes, sdd)
   }
 }
 
@@ -265,8 +263,8 @@ let dlTriggerCallback = function(dlPacket) {
   //Gabby & Emma tried to make two trigger flags appear at 3 seconds apart
   let endMark = { markertype: 'predicted', name: displayHeat, time:  moment.utc(trig.endTime) };
   markers.push(endMark);
-  for (let sp of allSeisPlots.values()) {
-    sp.appendMarkers( [ startMark,endMark ]);
+  for (let sp of allTraces.values()) {
+    sp.addMarkers( [ startMark,endMark ]);
   }
 
 };
@@ -310,24 +308,33 @@ let dlMaxAccelerationCallback = function(dlPacket) {
     let maxaccJson = JSON.parse(s);
 
     let seismogram = makeSeismogram(maxaccJson);
-    let trace = allTraces.get(seismogram.codes());
-    if(trace){
-      let oldSeis = trace.segments[trace.segments.length-1];
+    let sdd = allTraces.get(seismogram.codes());
+    if(sdd){
+      let trace = sdd.seismogram;
       let delta = moment.duration(.5, 'seconds');
-      if (seismogram.start.isAfter(oldSeis.end) && seismogram.start.subtract(delta).isBefore(oldSeis.end)){
-        oldSeis.y.push(maxaccJson.maxacc);
+      let lastSeg = trace.segments[trace.segments.length-1];
+
+      if (lastSeg.numPoints < 100 && seismogram.startTime.isAfter(trace.endTime) && seismogram.startTime.subtract(delta).isBefore(trace.endTime)){
+        let appendData = new Float32Array(lastSeg.numPoints+1);
+        lastSeg.y.forEach((d,i) => appendData[i] = d);
+        appendData[appendData.length-1] = maxaccJson.maxacc;
+        let cloneSeg = lastSeg.cloneWithNewData(appendData)
+        trace.segments[trace.segments.length-1] = cloneSeg;
+        trace.findStartEnd();
       }else{
         trace.append(seismogram);
-        const littleBitLarger = {'start': moment.utc(timeWindow.start).subtract(60, 'second'),
-                                'end': moment.utc(timeWindow.end).add(180, 'second')};
-        const newTrace = trace.trim(littleBitLarger);
-        if (! newTrace) {
-          console.log(`trace trim returned null`);
-        } else {
-          allTraces.set(seismogram.codes(), newTrace);
-          allSeisPlots.get(seismogram.codes()).replace(trace, newTrace);
-        }
       }
+      const littleBitLarger = new seisplotjs.util.StartEndDuration(moment.utc(timeWindow.start).subtract(60, 'second'),
+                              moment.utc(timeWindow.end).add(180, 'second'));
+
+      const newTrace = trace.trim(littleBitLarger);
+      if (! newTrace) {
+        console.log(`trace trim returned null`);
+      } else {
+        sdd.seismogram = newTrace;
+      }
+      sdd.timeWindow = new seisplotjs.util.StartEndDuration(sdd.startTime, seismogram.endTime);
+
       // if we are not paused, let timer animationLoop redraw
       // so we don't have to redraw for every packet
       // if paused, then schedule a redraw the next time is comes
@@ -444,7 +451,7 @@ doplot = function(sta) {
 };
 
 
-wp.d3.select("button#trigger").on("click", function(d) {
+d3.select("button#trigger").on("click", function(d) {
   let trigtime = moment.utc()
   let dutyOfficer = document.getElementsByName('dutyofficer')[0].value;
   dutyOfficer = dutyOfficer.replace(/\W/, '');
@@ -499,11 +506,11 @@ wp.d3.select("button#trigger").on("click", function(d) {
   });
 });
 
-wp.d3.select("button#pause").on("click", function(d) {
+d3.select("button#pause").on("click", function(d) {
   doPause( ! paused);
 });
 
-wp.d3.select("button#disconnect").on("click", function(d) {
+d3.select("button#disconnect").on("click", function(d) {
   doDisconnect( ! stopped);
 });
 
@@ -511,9 +518,9 @@ let doPause = function(value) {
   console.log("Pause..."+paused+" -> "+value);
   paused = value;
   if (paused) {
-    wp.d3.select("button#pause").text("Play");
+    d3.select("button#pause").text("Play");
   } else {
-    wp.d3.select("button#pause").text("Pause");
+    d3.select("button#pause").text("Pause");
   }
 }
 
@@ -522,39 +529,41 @@ let doDisconnect = function(value) {
   stopped = value;
   if (stopped) {
     if (dlConn) {dlConn.close();}
-    wp.d3.select("button#disconnect").text("Reconnect");
+    d3.select("button#disconnect").text("Reconnect");
   } else {
     doDatalinkConnect().then( () => {
-      wp.d3.select("button#disconnect").text("Disconnect");
+      d3.select("button#disconnect").text("Disconnect");
     });
   }
 }
 
-let timerInterval = (timeWindow.end.valueOf()-timeWindow.start.valueOf())/
-                    (parseInt(svgParent.style("width"))-margin.left-margin.right);
+
+let rect = svgParent.node().getBoundingClientRect();
+let timerInterval = duration.asMilliseconds()/
+                    (rect.width-margin.left-margin.right);
 while (timerInterval < 100) { timerInterval *= 2;}
-let timer = wp.d3.interval(function(elapsed) {
-  if ( paused || timerInProgress) {
+console.log(`redraw interval: ${timerInterval}`)
+let timer = seisplotjs.d3.interval(function(elapsed) {
+  if ( paused || redrawInProgress) {
     return;
   }
-  timerInProgress = true;
-  if ( allSeisPlots.size > 1) {
-    numSteps++;
-    if (maxSteps > 0 && numSteps > maxSteps ) {
-      console.log("quit after max steps: "+maxSteps);
-      timer.stop();
-      dlConn.close();
-    }
-  }
-  timeWindow = wp.calcStartEndDates(null, null, duration, clockOffset);
+  redrawInProgress = true;
   window.requestAnimationFrame(timestamp => {
-    allSeisPlots.forEach(function(value, key) {
-        value.setPlotStartEnd(timeWindow.start, timeWindow.end);
-    });
-    timerInProgress = false
+    try {
+      timeWindow = new seisplotjs.util.StartEndDuration(null, null, duration, clockOffset);
+      allSeisPlots.forEach(function(value, key) {
+          value.seismographConfig.fixedTimeScale = timeWindow;
+          value.calcTimeScaleDomain();
+          value.draw();
+      });
+    } catch(err) {
+      console.assert(false, err);
+    }
+    redrawInProgress = false;
   });
 
-}, timerInterval);
+  }, timerInterval);
+
 
 
 function makeString(dataView , offset , length )  {
