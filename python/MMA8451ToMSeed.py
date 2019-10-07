@@ -147,8 +147,8 @@ if doFIR:
         }
 establishedJson = None
 maxWindow = timedelta(seconds=0.25)
-# theta = 70.0
-# alpha = 0.0
+theta = 0.0
+alpha = 0.0
 
 def getSps():
     sps = 1
@@ -455,7 +455,7 @@ if doDali:
         configTask = loop.create_task(getConfig())
         loop.run_until_complete(configTask)
         config = configTask.result()
-        if hostname in config["Loc"]:
+        if hostname in config["Loc"] and config["Loc"][hostname] != "NO":
             sta = config["Loc"][hostname]
             theta = config["LocInfo"][sta]["Angles"]["Theta"]
             alpha = config["LocInfo"][sta]["Angles"]["Alpha"]
