@@ -27,6 +27,7 @@ class Equalizer{
   }
 createZeros(){
   let dataset=new Map();
+  dataset.set("GAP",{'station':'GAP','maxacc':.0 });
   dataset.set("FL",{'station':'FL','maxacc':.0 });
   dataset.set("NL",{'station':'NL','maxacc':.0 });
   dataset.set("CT",{'station':'CT','maxacc':.0 });
@@ -61,17 +62,20 @@ columnForStation(d) {
   if (d.station === "FL") {
     i = 0;
   }else if (d.station === "NL") {
-    i = 1;                            //make the first Lane 1 lane 2 equalizer
-  }else if (d.station === "FL0") {
-    i = 4;
-  }else if (d.station === "FL60") {
-    i = 3;
-  } else if (d.station === "FL330") {
-    i = 2;
-  }else if (d.station === "FL660") {
     i = 1;
+  }else if (d.station === "FL0") {
+    i = 7;
+  }else if (d.station === "FL60") {
+    i = 6;
+  } else if (d.station === "FL330") {
+    i = 5;
+  }else if (d.station === "FL660") {
+    i = 4;
   }else if (d.station === "FL1K") {
-    i = 0;                              //make FL equalizer
+    i = 3;
+  }else if (d.station === "GAP") {
+    i = 2;
+                             //make FL equalizer
 
   // }else if (d.station === "NR") {
   //   i = 2;
@@ -87,16 +91,42 @@ columnForStation(d) {
   return i;
 }
 
+titleForStation(d) {
+  let i = 'title';
+
+  if (d.station === "FL") {
+    i = 'Lane 1';
+  }else if (d.station === "NL") {
+    i = 'Lane 2';
+  }else if (d.station === "FL0") {
+    i = 'Start';
+  }else if (d.station === "FL60") {
+    i = '60 ft';
+  } else if (d.station === "FL330") {
+    i = '330 ft';
+  }else if (d.station === "FL660") {
+    i = '660 ft';
+  }else if (d.station === "FL1K") {
+    i = '1,000 ft';
+  }else if (d.station === "GAP") {
+    i = ' ';
+  }else {
+       console.log(`no station found ${d.station}`);
+  }
+  return i;
+}
+
 updateEqualizer(allmaxaccJson){
   let dataset = new Array();
+  console.log(`update equalizer${dataset.length}`)
   for (let x of allmaxaccJson.values()){
-    if( this.plotStations.includes(x.station)){
+    // if( this.plotStations.includes(x.station)){
       dataset.push(x);
     }
     // if (x.station !== 'CT') {       // fix this with 'find' return if exists
     //   dataset.push(x);
 
-  }
+  // }
   //create a svg element before body taag and assigns a svg with height and width
 
 let svg = d3.select(this.selector).select("svg").select("g.main");
@@ -110,14 +140,14 @@ bars.selectAll("text")
   .join("text")
   .attr("x",function(d){
     let i = that.columnForStation(d);
-    return i * (that.width / 5);
+    return i * (that.width / (that.plotStations.length+1));  //with 7 stations with 1 gap
   })
   .attr("y", function(d){
 
       console.log(`text y ${that.height} ${that.margin.top}`);
     return that.height+that.margin.top+10; //height minus data value
   })
-  .text(d => d.station);
+  .text(d => that.titleForStation(d));
 
 bars.selectAll("rect")//select in the page and correspond to data
   .data(dataset, function(d){
@@ -129,12 +159,12 @@ bars.selectAll("rect")//select in the page and correspond to data
 
   .attr("x",function(d){
     let i = that.columnForStation(d);
-    return i * (that.width / 5);
+    return i * (that.width / (that.plotStations.length+1));
   })
   .attr("y", function(d){
     return that.yScale(d.maxacc); //height minus data value
   })
-  .attr("width", that.width / 5-that.barPadding)
+  .attr("width", that.width / (that.plotStations.length+1)-that.barPadding)
   .attr("height",function(d){
     return that.height-that.yScale(d.maxacc); // 2g = 100px according to yScale
 

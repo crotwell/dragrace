@@ -20,11 +20,9 @@ fetchCurrentResult()
       let accText = `max: ${floatFormat(Math.max(...datasetNow))} of ${floatFormat(result.peakACC_FL)}, ${floatFormat(result.peakACC_NL)}, ${floatFormat(result.peakACC_NR)}, ${floatFormat(result.peakACC_FR)}`
       cR.select("div.maxacc").select("span").text(accText);
 
-      let flEqualizer = new Equalizer("#lastRaceFLequalizer", ["FL1K", "FL660", "FL330", "FL60", "FL0"]);
+      let lastRaceEqualizer = new Equalizer("#lastRaceEqualizer");
       let eqMap = createEqualizerMap(result)
-      flEqualizer.updateEqualizer(eqMap);
-      let laneEqualizer = new Equalizer("#lastRaceLaneEqualizer", ["FL", "NL"]);
-      laneEqualizer.updateEqualizer(eqMap);
+      lastRaceEqualizer.updateEqualizer(eqMap);
     }).catch(function(err) {
       console.error(err);
       d3.select("div.currentRace").select("div.start_time").select("span").text("");
@@ -44,5 +42,9 @@ fetchCurrentResult()
       dataset.set("NR",{'station':'NR','maxacc':result.peakACC_NR});
       dataset.set("FR",{'station':'FR','maxacc':result.peakACC_FR});
       dataset.set("FL1K",{'station':'FL1K','maxacc':result.peakACC_FL1K});
+      dataset.set("FL660",{'station':'FL660','maxacc':result.peakACC_FL660});
+      dataset.set("FL330",{'station':'FL330','maxacc':result.peakACC_FL330});
+      dataset.set("FL60",{'station':'FL60','maxacc':result.peakACC_FL60});
+      dataset.set("FL0",{'station':'FL0','maxacc':result.peakACC_FL0});
       return dataset;
     }
