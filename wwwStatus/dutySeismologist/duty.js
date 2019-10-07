@@ -220,30 +220,32 @@ let handleMaxAccSeismogram = function(seismogram) {
     }
 //      allSeisPlots.get(codes).trim(timeWindow);
   } else {
-    svgParent.select("p.waitingondata").remove();
-    let seisDiv = svgParent.append('div').classed(codes, true);
-//    seisDiv.append('p').text(codes);
-    let plotDiv = seisDiv.append('div');
-    let seisPlotConfig = new seisplotjs.seismographconfig.SeismographConfig();
-    seisPlotConfig.connectSegments = true;
-    //seisPlotConfig.drawingType = seisplotjs.seismographconfig.DRAW_BOTH_ALIGN;
-    seisPlotConfig.lineWidth = 2;
-    seisPlotConfig.title= [codes]
-    seisPlotConfig.xLabel = codes;
-    seisPlotConfig.margin = margin ;
-    seisPlotConfig.maxHeight = 200 ;
-    seisPlotConfig.doRMean = false ;
-    seisPlotConfig.fixedYScale = [-.1, seisGraphMax] ;
-    seisPlotConfig.yScaleFormat = ".1f";
-    seisPlotConfig.wheelZoom = false;
-    let sdd = seisplotjs.seismogram.SeismogramDisplayData.fromSeismogram(seismogram);
-    sdd.timeWindow = timeWindow;
-    sdd.addMarkers(markers);
-    let seisPlot = new seisplotjs.seismograph.Seismograph(plotDiv, seisPlotConfig, sdd);
-    seisPlot.svg.classed('realtimePlot', true).classed('overlayPlot', false);
-    seisPlot.draw();
-    allSeisPlots.set(codes, seisPlot);
-    allTraces.set(codes, sdd)
+    if (svgParent && ! svgParent.empty()){
+      svgParent.select("p.waitingondata").remove();
+      let seisDiv = svgParent.append('div').classed(codes, true);
+  //    seisDiv.append('p').text(codes);
+      let plotDiv = seisDiv.append('div');
+      let seisPlotConfig = new seisplotjs.seismographconfig.SeismographConfig();
+      seisPlotConfig.connectSegments = true;
+      //seisPlotConfig.drawingType = seisplotjs.seismographconfig.DRAW_BOTH_ALIGN;
+      seisPlotConfig.lineWidth = 2;
+      seisPlotConfig.title= [codes]
+      //seisPlotConfig.xLabel = codes;
+      seisPlotConfig.margin = margin ;
+      seisPlotConfig.maxHeight = 200 ;
+      seisPlotConfig.doRMean = false ;
+      seisPlotConfig.fixedYScale = [-.1, seisGraphMax] ;
+      seisPlotConfig.yScaleFormat = ".1f";
+      seisPlotConfig.wheelZoom = false;
+      let sdd = seisplotjs.seismogram.SeismogramDisplayData.fromSeismogram(seismogram);
+      sdd.timeWindow = timeWindow;
+      sdd.addMarkers(markers);
+      let seisPlot = new seisplotjs.seismograph.Seismograph(plotDiv, seisPlotConfig, sdd);
+      seisPlot.svg.classed('realtimePlot', true).classed('overlayPlot', false);
+      seisPlot.draw();
+      allSeisPlots.set(codes, seisPlot);
+      allTraces.set(codes, sdd);
+    }
   }
 }
 
@@ -439,11 +441,13 @@ doplot = function(sta) {
     net = "CO";
   }
 
-  svgParent.selectAll("*").remove();
-  if (wsProtocol == 'wss:' && host == IRIS_HOST) {
-    svgParent.append("h3").attr('class', 'waitingondata').text("IRIS currently does not support connections from https pages, try from a http page instead.");
-  } else {
-    svgParent.append("p").attr('class', 'waitingondata').text("waiting on first data");
+  if (svgParent && ! svgParent.empty()){
+    svgParent.selectAll("*").remove();
+    if (wsProtocol == 'wss:' && host == IRIS_HOST) {
+      svgParent.append("h3").attr('class', 'waitingondata').text("IRIS currently does not support connections from https pages, try from a http page instead.");
+    } else {
+      svgParent.append("p").attr('class', 'waitingondata').text("waiting on first data");
+    }
   }
 
   doDisconnect(false);
@@ -537,10 +541,12 @@ let doDisconnect = function(value) {
   }
 }
 
-
-let rect = svgParent.node().getBoundingClientRect();
-let timerInterval = duration.asMilliseconds()/
+let timerInterval = 250;
+if (svgParent && ! svgParent.empty()){
+  let rect = svgParent.node().getBoundingClientRect();
+  timerInterval = duration.asMilliseconds()/
                     (rect.width-margin.left-margin.right);
+}
 while (timerInterval < 100) { timerInterval *= 2;}
 console.log(`redraw interval: ${timerInterval}`)
 let timer = seisplotjs.d3.interval(function(elapsed) {
@@ -666,7 +672,7 @@ updateHeatNumber = function(heatE) {
       let num = parseInt(matchinfo[2]) +1;
       console.log(`updateHeatNumber prefix: ${prefix}  num: ${num}`)
       heatE = `${prefix}${num}`
-      document.getElementsByName('heatE')[0].value = heatE;
+      d3.select('heatE').text(heatE);
     }
 }
 

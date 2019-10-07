@@ -2,7 +2,11 @@
 //make equalizer from maxacc json data
 class Equalizer{
   constructor(selector, plotStations){
-    this.plotStations = plotStations;
+    if (plotStations) {
+      this.plotStations = plotStations;
+    } else {
+      this.plotStations = Array.from(this.createZeros().keys());
+    }
     this.selector = selector;
     this.d3 = seisplotjs.d3
     this.margin = {top: 20, right: 10, bottom: 20, left: 30};
@@ -93,7 +97,7 @@ bars.selectAll("rect")//select in the page and correspond to data
       i = 1;
     }else if (d.station === "FL1K") {
       i = 0;                              //make FL equalizer
-    
+
     // }else if (d.station === "NR") {
     //   i = 2;
     // // }else if (d.station === "CT") {

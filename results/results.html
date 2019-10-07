@@ -68,7 +68,7 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
       <h1 class="w3-text-red">Live Stream</h1>
       <p>Live ground acceleration.</p>
       <div align="left" class="w3-twothird w3-container">Equalizer
-        <div align="right" class="liveequalizer">
+        <div align="right" class="laneEqualizer">
         </div>
 
         <div> ---Lane1-- --Lane2--</div>
@@ -81,7 +81,7 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
       <h1 class="w3-text-red">Live Stream down the Track</h1>
       <p>Live ground acceleration.</p>
       <div align="left" class="w3-twothird w3-container">Equalizer
-        <div align="right" class="liveequalizer">
+        <div align="right" class="FLequalizer">
         </div>
 
         <div> 1,000 ft ...</div>
@@ -89,27 +89,19 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 
     </div>
     <div class="w3-twothird w3-container currentRace">
+      <span>
       <h1 class="w3-text-red">Current Race-Lane 1 and Lane 2</h1>
       <p>Results from the most recent race on <span class="dayName"></span>.</p>
 
       <div align="left" class="w3-twothird w3-container">Equalizer
-        <div align="right" class="laneEqualizer">
-        </div>
-          <div class="race_class">Class: <span></span></div>
-          <div class="race_heat">Heat: <a><span></span></a></div>
-          <div class="maxacc">Ground Acceleration: <span></span></div>
-          <div class="dutyOfficer">Duty Officer: <span></span></div>
-          <div class="start_time">Start Time: <span></span></div>
-          <div class="end_time">End Time: <span></span></div>
-      </div>
-    </div>
-
-    <div class="w3-twothird w3-container currentRace">
+        <div align="right" id="lastRaceLaneEqualizer">
+      </span>
+      <span>
       <h1 class="w3-text-red">Current Race-Down the Track</h1>
       <p>Results from the most recent race on <span class="dayName"></span>.</p>
-
+    </span>
       <div align="left" class="w3-twothird w3-container">Equalizer
-        <div align="right" class="FLequalizer">
+        <div align="right" id="lastRaceFLequalizer">
         </div>
           <div class="race_class">Class: <span></span></div>
           <div class="race_heat">Heat: <a><span></span></a></div>
@@ -173,11 +165,11 @@ function w3_close() {
 </script>
 
 
-    <script src="seisplotjs_2.0.0-alpha.5_standalone.js"></script>
-    <script src="plotSeismogram.js"></script>
+    <script src="seisplotjs_2.0.0-alpha.6_standalone.js"></script>
     <script src="maxAccSeismogram.js"></script>
     <script src="equalizer.js"></script>
     <script src="commonFuncs.js"></script>
+    <script src="duty.js"></script>
     <script src="heatTemplate.js"></script>
   </body>
 </html>
