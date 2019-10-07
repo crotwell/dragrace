@@ -4,6 +4,7 @@ import json
 import jwt # pip3 install pyjwt (not jwt!!!)
 import websockets
 from datetime import datetime, timedelta, timezone
+import defusedxml.ElementTree
 
 # https://raw.githubusercontent.com/iris-edu/libdali/master/doc/DataLink.protocol
 
@@ -15,6 +16,7 @@ class DataLink(ABC):
 
     def __init__(self, verbose=False):
         self.verbose = verbose
+        self.token = None
 
 
     @abstractmethod
@@ -78,6 +80,7 @@ class DataLink(ABC):
         return r
 
     async def auth(self, token):
+        self.token = token
         if self.verbose: print("simpleDali.auth {} ".format(token))
         if isinstance(token, str):
             token = token.encode('utf-8')
@@ -129,8 +132,25 @@ class DataLink(ABC):
         await self.send(header, None)
 
     async def reconnect(self):
+        if self.verbose:
+            print("reconnecting...")
         await self.close()
-        self.createDaliConnection()
+        await self.createDaliConnection()
+        if self.token:
+            await self.auth(self.token)
+
+    def parseInfoStatus(self, infoResponse):
+        """ realy simple parsing of info xml, but not using an xml parser"""
+        if infoResponse.type != 'INFO' or infoResponse.value != 'STATUS':
+            raise Exception("Does not look like INFO STATUS DaliResponse: {} {}".format(infoResponse.type, infoResponse.value))
+        xmlTree = defusedxml.ElementTree.fromstring(infoResponse.message)
+        out = {}
+        for k,v in xmlTree.attrib.items():
+            out[k] = v
+        out['Status'] = {}
+        for k,v in xmlTree.find('Status').attrib.items():
+            out['Status'][k] = v
+        return out
 
 class SocketDataLink(DataLink):
     def __init__(self, host, port, verbose=False):
@@ -149,7 +169,7 @@ class SocketDataLink(DataLink):
             h = header.encode('UTF-8')
             pre = "DL"
             if self.isClosed():
-                 await self.createDaliConnection()
+                 await self.reconnect()
             self.writer.write(pre.encode('UTF-8'))
             lenByte = len(h).to_bytes(1, byteorder='big', signed=False)
             self.writer.write(lenByte)
@@ -246,7 +266,7 @@ class WebSocketDataLink(DataLink):
     async def send(self, header, data):
         try:
             if self.isClosed():
-                 await self.createDaliConnection()
+                 await self.reconnect()
             h = header.encode('UTF-8')
             if len(h) > 255:
                 raise Exception("header lengh must be <= 255, {}".format(len(h)))
