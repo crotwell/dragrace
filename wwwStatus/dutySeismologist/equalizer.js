@@ -9,7 +9,7 @@ class Equalizer{
     }
     this.selector = selector;
     this.d3 = seisplotjs.d3
-    this.margin = {top: 20, right: 10, bottom: 20, left: 30};
+    this.margin = {top: 20, right: 10, bottom: 30, left: 30};
     this.width = 330 - this.margin.left - this.margin.right;
     this.height = 400 - this.margin.top - this.margin.bottom;
     this.yScale = d3.scaleLinear()
@@ -55,6 +55,37 @@ createEqualizer(selector){
   let bars = svg.append("g")
   .classed("bars",true);
 }
+columnForStation(d) {
+  let i = 99;
+
+  if (d.station === "FL") {
+    i = 0;
+  }else if (d.station === "NL") {
+    i = 1;                            //make the first Lane 1 lane 2 equalizer
+  }else if (d.station === "FL0") {
+    i = 4;
+  }else if (d.station === "FL60") {
+    i = 3;
+  } else if (d.station === "FL330") {
+    i = 2;
+  }else if (d.station === "FL660") {
+    i = 1;
+  }else if (d.station === "FL1K") {
+    i = 0;                              //make FL equalizer
+
+  // }else if (d.station === "NR") {
+  //   i = 2;
+  // // }else if (d.station === "CT") {
+  // //     i = 4;
+  // }else if (d.station === "FR") {
+  //   i = 3;
+  // }else if (d.station === "FR") {
+  //   i = 4;
+  }else {
+       console.log(`no station found ${d.station}`);
+  }
+  return i;
+}
 
 updateEqualizer(allmaxaccJson){
   let dataset = new Array();
@@ -72,6 +103,22 @@ let svg = d3.select(this.selector).select("svg").select("g.main");
 let bars = svg.select("g.bars");
 let that = this;
 
+bars.selectAll("text")
+  .data(dataset, function(d){
+    return d.station;
+  })
+  .join("text")
+  .attr("x",function(d){
+    let i = that.columnForStation(d);
+    return i * (that.width / 5);
+  })
+  .attr("y", function(d){
+
+      console.log(`text y ${that.height} ${that.margin.top}`);
+    return that.height+that.margin.top+10; //height minus data value
+  })
+  .text(d => d.station);
+
 bars.selectAll("rect")//select in the page and correspond to data
   .data(dataset, function(d){
     return d.station;
@@ -81,34 +128,7 @@ bars.selectAll("rect")//select in the page and correspond to data
   //define NL... as numbers
 
   .attr("x",function(d){
-    let i = 99;
-
-    if (d.station === "FL") {
-      i = 0;
-    }else if (d.station === "NL") {
-      i = 1;                            //make the first Lane 1 lane 2 equalizer
-    }else if (d.station === "FL0") {
-      i = 4;
-    }else if (d.station === "FL60") {
-      i = 3;
-    } else if (d.station === "FL330") {
-      i = 2;
-    }else if (d.station === "FL660") {
-      i = 1;
-    }else if (d.station === "FL1K") {
-      i = 0;                              //make FL equalizer
-
-    // }else if (d.station === "NR") {
-    //   i = 2;
-    // // }else if (d.station === "CT") {
-    // //     i = 4;
-    // }else if (d.station === "FR") {
-    //   i = 3;
-    // }else if (d.station === "FR") {
-    //   i = 4;
-    }else {
-         console.log(`no station found ${d.station}`);
-    }
+    let i = that.columnForStation(d);
     return i * (that.width / 5);
   })
   .attr("y", function(d){

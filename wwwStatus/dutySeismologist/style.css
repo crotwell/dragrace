@@ -96,3 +96,7 @@ div.piStatus span{
 text.sublabel {
   font-size: x-small;
 }
+
+svg text {
+  fill: black;
+}
