@@ -466,7 +466,7 @@ if doDali:
             print("host not in config, keep default name {}".format(sta))
 
         # load token
-        with open("mseed_token.jwt") as f:
+        with open("pi_token.jwt") as f:
             token = f.readline().strip()
         print("init DataLink at {0}".format(daliUri))
     except ValueError as err:
