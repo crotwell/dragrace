@@ -26,7 +26,23 @@ sudo systemctl enable hostapd
 sudo systemctl restart hostapd
 
 # set up hardware clock
+# edit /boot/config.txt
+dtoverlay=i2c-rtc,pcf8523
+sudo apt-get -y remove fake-hwclock
+sudo update-rc.d -f fake-hwclock remove
+sudo systemctl disable fake-hwclock
+# edit /lib/udev/hwclock-set and uncomment
+#if [ -e /run/systemd/system ] ; then
+# exit 0
+#fi
 
+Also comment out the two lines
+/sbin/hwclock --rtc=$dev --systz --badyear
+and
+/sbin/hwclock --rtc=$dev --systz
+
+after ntp syncs clock
+sudo hwclock -w
 
 sudo apt-get install python3-netifaces python3-websockets python3-pip i2c-tools python3-gpiozero git apache2 ntp python3-defusedxml
 pip3 install pyjwt
