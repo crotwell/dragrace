@@ -486,14 +486,14 @@ d3.select("button#trigger").on("click", function(d) {
     }
   }).then(authResponse => {
     d3.select("div.triggers").append("p").text(`AUTH ack: ${authResponse}`);
-    if ( ! authResponse.startsWith("OK")) {
+    if ( authResponse.type !== "OK") {
       throw new Error(`AUTH ack: ${authResponse}`);
     }
     d3.select("div.triggers").append("p").text(`Send Trigger: ${JSON.stringify(trigger)}`);
     return dlTriggerConn.writeAck(`XX_MANUAL_TRIG_${dutyOfficer}/MTRIG`,
       trigtime,
       trigtime,
-      datalink.stringToUnit8Array(JSON.stringify(trigger)));
+      datalink.stringToUint8Array(JSON.stringify(trigger)));
   }).then(ack => {
     dlTriggerConn.close();
     d3.select("div.triggers").append("p").text(`Send trigger ack: ${ack}`);
