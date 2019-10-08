@@ -45,6 +45,7 @@ import simpleDali
 import dataBuffer
 import decimate
 
+verbose = False
 
 daliHost="129.252.35.36"
 daliPort=15003
@@ -358,7 +359,7 @@ def sendToMseed(last_sample_time, status, samplesAvail, data, dali):
     miniseedBuffers[chanMap["Z"]].push(start, zData)
     miniseedBuffers[chanMap["Y"]].push(start, yData)
     miniseedBuffers[chanMap["X"]].push(start, xData)
-    if self.verbose:
+    if verbose:
         print("sendToMseed {} {} {}".format(sta, start, len(xData)))
 
 def initDali(daliUri):
