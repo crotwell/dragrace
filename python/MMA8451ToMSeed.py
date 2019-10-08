@@ -358,7 +358,8 @@ def sendToMseed(last_sample_time, status, samplesAvail, data, dali):
     miniseedBuffers[chanMap["Z"]].push(start, zData)
     miniseedBuffers[chanMap["Y"]].push(start, yData)
     miniseedBuffers[chanMap["X"]].push(start, xData)
-    print("sendToMseed {} {} {}".format(sta, start, len(xData)))
+    if self.verbose:
+        print("sendToMseed {} {} {}".format(sta, start, len(xData)))
 
 def initDali(daliUri):
     print("Init Dali at {0}".format(daliUri))
