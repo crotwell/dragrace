@@ -68,17 +68,29 @@ class SendMyIP:
                 raise Exception("AUTHORIZATION failed, {} {}".format(authResp.type, authResp.message))
 
     async def initConnections(self, daliUpload):
+        if self.verbose:
+            print("initConnections...{}".format(daliUpload is not None))
         if self.daliUpload is None:
             # create a separate upload datalink
             #self.daliUpload = simpleDali.SocketDataLink(self.host, self.port)
             self.daliUpload = simpleDali.WebSocketDataLink(self.uri)
+            self.daliUpload.verbose = False
+            await self.authorize()
         else:
-            self.daliUpload.reconnect()
-        #daliUpload.verbose = True
-        await self.authorize()
+            await self.daliUpload.reconnect()
         serverId = await self.daliUpload.id(self.programname, self.username, self.processid, self.architecture)
         if self.verbose:
             print("Connect Upload: {}".format(serverId))
+            serverInfo = await self.daliUpload.info("STATUS")
+            print("Server Info: {}".format(serverInfo));
+            infoDict = self.daliUpload.parseInfoStatus(serverInfo)
+            for k,v in infoDict.items():
+                if isinstance(v,dict):
+                    print(k)
+                    for k,v in v.items():
+                        print("   {} = {}".format(k,v))
+                else:
+                    print("   {} = {}".format(k,v))
         return self.daliUpload
 
     def getIPAddr(self):
@@ -91,6 +103,37 @@ class SendMyIP:
                             return ip
         raise Exception("No interface has a public IPv4 address")
 
+    async def doSingleLapAroundTheTrack(self):
+        if self.token is not None and simpleDali.timeUntilExpireToken(self.token) < timedelta(0):
+            # maybe someone gave us a new one?
+            if self.verbose:
+                print("token expired, reloading")
+            self.reloadToken()
+            if self.token is not None and simpleDali.timeUntilExpireToken(self.token) < timedelta(0):
+                raise Exception("Expired token in {}...".format(self.tokenFilename))
+
+        if self.daliUpload is None:
+            # first time or maybe something bad happened
+            print("  sendMyIP while loop  {}   closed={}".format(self.daliUpload is not None, self.daliUpload is not None and self.daliUpload.isClosed()))
+            self.daliUpload = await self.initConnections(self.daliUpload)
+        myIPaddr = self.getIPAddr()
+        starttime = simpleDali.utcnowWithTz()
+        jsonMessage = {
+            "station": self.sta,
+            "time": starttime.isoformat(),
+            "ip": myIPaddr
+        }
+        streamid = "{}_{}/IP".format(self.net, self.sta)
+        hpdatastart = simpleDali.datetimeToHPTime(starttime)
+        hpdataend = simpleDali.datetimeToHPTime(starttime)
+        response = await self.daliUpload.writeJSON(streamid, hpdatastart, hpdataend, jsonMessage)
+        if self.verbose:
+            print("send ip as {} ip = {} as json, {}".format(streamid, myIPaddr, response))
+        if response.type == 'ERROR' and response.message.startswith(simpleDali.NO_SOUP):
+            print("AUTHORIZATION failed, quiting...")
+            self.keepGoing = False
+        #keepGoing = False
+
     def run(self):
         loop = asyncio.get_event_loop()
         loop.set_exception_handler(self.exceptionHandler)
@@ -98,46 +141,11 @@ class SendMyIP:
         repeatException = False
         while self.keepGoing:
             try:
-                if self.token is not None and simpleDali.timeUntilExpireToken(self.token) < timedelta(0):
-                    # maybe someone gave us a new one?
-                    if self.verbose:
-                        print("token expired, reloading")
-                    self.reloadToken()
-                    if self.token is not None and simpleDali.timeUntilExpireToken(self.token) < timedelta(0):
-                        raise Exception("Expired token in {}...".format(self.tokenFilename))
+                doItTask = loop.create_task(self.doSingleLapAroundTheTrack())
+                loop.run_until_complete(doItTask)
+                if doItTask.exception() is not None:
+                    raise doItTask.exception()
 
-                if self.daliUpload is None or self.daliUpload.isClosed():
-                    # first time or maybe something bad happened
-                    initTask = loop.create_task(self.initConnections(self.daliUpload))
-                    loop.run_until_complete(initTask)
-                    if initTask.exception() is not None:
-                        raise initTask.exception()
-                    self.daliUpload = initTask.result()
-                myIPaddr = self.getIPAddr()
-                starttime = simpleDali.utcnowWithTz()
-                jsonMessage = {
-                    "station": self.sta,
-                    "time": starttime.isoformat(),
-                    "ip": myIPaddr
-                }
-                streamid = "{}_{}/IP".format(self.net, self.sta)
-                hpdatastart = simpleDali.datetimeToHPTime(starttime)
-                hpdataend = simpleDali.datetimeToHPTime(starttime)
-                jsonSendTask = loop.create_task(self.daliUpload.writeJSON(streamid, hpdatastart, hpdataend, jsonMessage))
-                loop.run_until_complete(jsonSendTask)
-                if jsonSendTask.exception() is not None:
-                    self.daliUpload.close()
-                    if self.verbose:
-                        print("Exception sending json: {}".format( jsonSendTask.exception()))
-                    raise jsonSendTask.exception()
-                else:
-                    response = jsonSendTask.result()
-                    if self.verbose:
-                        print("send ip as {} ip = {} as json, {}".format(streamid, myIPaddr, response))
-                    if response.type == 'ERROR' and response.message.startswith(simpleDali.NO_SOUP):
-                        print("AUTHORIZATION failed, quiting...")
-                        self.keepGoing = False
-                    #keepGoing = False
                 if repeatException:
                     if self.verbose:
                         print("Recovered from repeat exception")

@@ -25,9 +25,15 @@ sudo systemctl unmask hostapd
 sudo systemctl enable hostapd
 sudo systemctl restart hostapd
 
-sudo apt-get install python3-netifaces python3-websockets python3-pip i2c-tools python3-gpiozero git apache2 ntp
+# set up hardware clock
+
+
+sudo apt-get install python3-netifaces python3-websockets python3-pip i2c-tools python3-gpiozero git apache2 ntp python3-defusedxml
 pip3 install pyjwt
 #pip3 install digi-xbee adafruit-blinka
+mkdir Production
+cd Production
+mkdir Run
 git clone https://github.com/crotwell/Adafruit_CircuitPython_MMA8451
 cd Adafruit_CircuitPython_MMA8451
 git checkout fifomode
@@ -36,11 +42,11 @@ python3 setup.py install --user
 #copy jwt token to Production/Run on pi
 # on dragrace.seis.sc.edu
 cd Auth/auth
-scp pi01_token.jwt pi@10.80.193.90:Production/Run/.
+scp pi_token.jwt pi@10.80.193.90:Production/Run/.
 
-#and fix start script arg to use it with -t
 
-cd ..
+cd
+cd Production
 git clone https://github.com/crotwell/dragrace.git
 cd dragrace/sensorNode
 sudo cp mma8451.service /etc/systemd/system/.

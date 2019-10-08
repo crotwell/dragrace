@@ -8,7 +8,7 @@ WorkingDirectory=/home/pi/Production/Run
 Restart=always
 RestartSec=5
 Type=idle
-ExecStart=/usr/bin/python3  /home/pi/Production/dragrace/python/sendMyIP.py -t /home/pi/Production/Run/pi0X_token.jwt
+ExecStart=/usr/bin/python3  /home/pi/Production/dragrace/python/sendMyIP.py -t /home/pi/Production/Run/pi_token.jwt
 
 [Install]
 WantedBy=default.target
