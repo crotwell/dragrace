@@ -1,6 +1,5 @@
 
 
-let wp = seisplotjs.waveformplot;
 let d3 = seisplotjs.d3;
 let moment = seisplotjs.moment;
 let datalink = seisplotjs.datalink
@@ -123,33 +122,32 @@ let loadSeismograms = function(result) {
   if (host === 'www.seis.sc.edu') {
     subdir = "dragrace";
   }
-  let mseedQ = new seisplotjs.seedlink.MSeedArchive(
+  let mseedQ = new seisplotjs.mseedarchive.MSeedArchive(
     `${protocol}//${host}/${subdir}`,
     "%n/%s/%Y/%j/%n.%s.%l.%c.%Y.%j.%H");
 
-  let net = new seisplotjs.model.Network("XX");
+  let net = new seisplotjs.stationxml.Network("XX");
   let LOC = "00";
   let chanTR = [];
   for (let sta of staList) {
-    let staObj = new seisplotjs.model.Station(net, sta);
+    let staObj = new seisplotjs.stationxml.Station(net, sta);
     for (let chan of chanList) {
-      let chanObj = new seisplotjs.model.Channel(staObj, chan, LOC);
-      chanTR.push({
-            channel: chanObj,
-            startTime: moment(result.Trigger_Info.startTime),
-            endTime: moment(result.Trigger_Info.endTime)
-          });
+      let chanObj = new seisplotjs.stationxml.Channel(staObj, chan, LOC);
+      let timeWindow = new seisplotjs.util.StartEndDuration(moment(result.Trigger_Info.startTime),
+          moment(result.Trigger_Info.endTime));
+      chanTR.push(seisplotjs.seismogram.SeismogramDisplayData.fromChannelAndTimeWindow(
+            chanObj, timeWindow));
     }
   }
-  mseedQ.loadTraces(chanTR)
-  .then(traceMap => {
-    let seisPlotConfig = new wp.SeismographConfig();
+  mseedQ.loadSeismograms(chanTR)
+  .then(sddList => {
+    let seisPlotConfig = new seisplotjs.seismographconfig.SeismographConfig();
     seisPlotConfig.doRMean = false;
     let maxaccsSeisPlotConfig = seisPlotConfig.clone();
     let seisDiv = seisplotjs.d3.select("div.seismograms");
 
-    traceMap.forEach((trace, key) => {
-      console.log(`traceMap: ${key}`);
+    sddList.forEach(sdd => {
+      console.log(`traceMap: ${sdd.channel.codes()}`);
       // let subDiv = seisDiv.append("div");
       // let seisPlot = new wp.CanvasSeismograph(subDiv,
       //     seisPlotConfig,
@@ -158,35 +156,27 @@ let loadSeismograms = function(result) {
       // seisPlot.draw();
     });
     let staVecMax = new Map();
-    let chanMax = new Map();
     let traceMax = 0;
     let maxaccMax = 0;
     for (let sta of staList) {
-      let m = traceMap.get(`XX.${sta}.00.HNM`);
+      let m = sddList.find(sdd => sdd.channel.station.stationCode === sta && sdd.channel.channelCode === "HNM");
       if (m) {
-        let mMinMax = wp.findMinMax(m);
-        maxaccMax = Math.max(maxaccMax, Math.abs(mMinMax[0]),Math.abs(mMinMax[1]));
-        chanMax.set(`${sta}.HNM`, mMinMax);
+        maxaccMax = Math.max(maxaccMax, Math.abs(m.min),Math.abs(m.max));
       }
-      let x = traceMap.get(`XX.${sta}.00.HNX`);
-      let y = traceMap.get(`XX.${sta}.00.HNY`);
-      let z = traceMap.get(`XX.${sta}.00.HNZ`);
+      let x = sddList.find(sdd => sdd.channel.station.stationCode === sta && sdd.channel.channelCode === "HNX");
+      let y = sddList.find(sdd => sdd.channel.station.stationCode === sta && sdd.channel.channelCode === "HNY");
+      let z = sddList.find(sdd => sdd.channel.station.stationCode === sta && sdd.channel.channelCode === "HNZ");
+
       let max = 0;
       if (x && y && z){
-        let xMinMax = wp.findMinMax(x);
-        let yMinMax = wp.findMinMax(y);
-        let zMinMax = wp.findMinMax(z);
-        traceMax = Math.max(traceMax, Math.abs(xMinMax[0]),Math.abs(xMinMax[1]));
-        chanMax.set(`${sta}.HNX`, xMinMax);
-        traceMax = Math.max(traceMax, Math.abs(yMinMax[0]),Math.abs(yMinMax[1]));
-        chanMax.set(`${sta}.HNY`, yMinMax);
-        traceMax = Math.max(traceMax, Math.abs(zMinMax[0]),Math.abs(zMinMax[1]));
-        chanMax.set(`${sta}.HNZ`, zMinMax);
-        for (let s=0; s<x.segments.length; s++) {
-          for (let i=0; i<x.segments[s].y.length; i++) {
-            let vec = x.segments[s].y[i]*x.segments[s].y[i]
-            +y.segments[s].y[i]*y.segments[s].y[i]
-            +z.segments[s].y[i]*z.segments[s].y[i];
+        traceMax = Math.max(traceMax,  Math.abs(x.min),Math.abs(x.max));
+        traceMax = Math.max(traceMax,  Math.abs(y.min),Math.abs(y.max));
+        traceMax = Math.max(traceMax,  Math.abs(z.min),Math.abs(z.max));
+        for (let s=0; s<x.seismogram.segments.length; s++) {
+          for (let i=0; i<x.seismogram.segments[s].y.length; i++) {
+            let vec = x.seismogram.segments[s].y[i]*x.seismogram.segments[s].y[i]
+            +y.seismogram.segments[s].y[i]*y.seismogram.segments[s].y[i]
+            +z.seismogram.segments[s].y[i]*z.seismogram.segments[s].y[i];
             if (vec > max) {
               max = vec;
             }
@@ -202,23 +192,24 @@ let loadSeismograms = function(result) {
       let staDiv = seisDiv.append("div").classed(sta, true);
       for (let chan of chanList) {
         let k = `XX.${sta}.00.${chan}`;
-        let trace = traceMap.get(k);
-        console.log(`${k}  trace: ${trace}`);
-        if (trace) {
+        let sdd = sddList.find(sdd => sdd.channel.station.stationCode === sta && sdd.channel.channelCode === chan);
+
+        console.log(`${k}  trace: ${sdd}`);
+        if (sdd) {
           let subDiv = staDiv.append("div").classed(chan, true);
           let seisPlotConfigClone = seisPlotConfig.clone();
-          let mychanMinMax = chanMax.get(`${sta}.${chan}`);
           if (chan.endsWith('HNM')) {
             seisPlotConfigClone = maxaccsSeisPlotConfig.clone();
-            seisPlotConfigClone.xLabel = `${sta} ${chan} chan:${mychanMinMax[1]} `;
+            seisPlotConfigClone.xLabel = `${sta} ${chan} chan:${sdd.max} `;
           } else {
-            seisPlotConfigClone.xLabel = `${sta} ${chan} chan:${mychanMinMax[1]} staVec:${staVecMax.get(sta)}`;
+            seisPlotConfigClone.xLabel = `${sta} ${chan} chan:${sdd.max} staVec:${staVecMax.get(sta)}`;
           }
-          let seisPlot = new wp.CanvasSeismograph(subDiv,
+          let seisPlot = new seisplotjs.seismograph.Seismograph(subDiv,
               seisPlotConfigClone,
-              trace, moment(result.Trigger_Info.startTime),
-              moment(result.Trigger_Info.endTime));
+              sdd);
           seisPlot.draw();
+          allSeisPlots.forEach(sp => seisPlot.linkXScaleTo(sp));
+          allSeisPlots.forEach(sp => seisPlot.linkYScaleTo(sp));
           allSeisPlots.push(seisPlot);
         }
       }
@@ -261,16 +252,16 @@ let plotTimeAdjust = function(adjType) {
   }
 };
 
-wp.d3.select("button#zoomLeft").on("click", function(d) {
+d3.select("button#zoomLeft").on("click", function(d) {
   plotTimeAdjust("zoomLeft")
 });
-wp.d3.select("button#zoomIn").on("click", function(d) {
+d3.select("button#zoomIn").on("click", function(d) {
   plotTimeAdjust("zoomIn")
 });
-wp.d3.select("button#zoomOut").on("click", function(d) {
+d3.select("button#zoomOut").on("click", function(d) {
   plotTimeAdjust("zoomOut")
 });
-wp.d3.select("button#zoomRight").on("click", function(d) {
+d3.select("button#zoomRight").on("click", function(d) {
   plotTimeAdjust("zoomRight")
 });
 
