@@ -182,7 +182,6 @@ d3.select("div.class2 button.heatcollapse").on("click", function(d) {
 let packetCount = 0;
 
 let handleMaxAccSeismogram = function(seismogram) {
-  console.log(`handleMaxAccSeismogram`)
   let codes = seismogram.codes();
   if (allSeisPlots.has(codes)) {
     if (allTraces.has(codes) && allTraces.get(codes)) {
