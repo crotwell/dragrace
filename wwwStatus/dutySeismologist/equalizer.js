@@ -10,17 +10,17 @@ class Equalizer{
     this.selector = selector;
     this.d3 = seisplotjs.d3
     this.margin = {top: 20, right: 10, bottom: 30, left: 30};
-    this.width = 330 - this.margin.left - this.margin.right;
+    this.width = 600 - this.margin.left - this.margin.right;  //330
     this.height = 400 - this.margin.top - this.margin.bottom;
     this.yScale = d3.scaleLinear()
-    .domain([0,(3.5)])
+    .domain([0,(2.0)])
     .range([this.height, 0]);
     console.log(`yscaletest ${this.yScale(1)}`)
     this.yAxis = d3.axisLeft(this.yScale).ticks(10, "0.1f");
     // this.yAxis = d3.axisLeft(this.yScale);
     // this.yAxis.ticks(10);
     this.barPadding = 1;
-    //test
+
 
     this.createEqualizer(selector);
     this.updateEqualizer(this.createZeros());
@@ -30,9 +30,9 @@ createZeros(){
   dataset.set("GAP",{'station':'GAP','maxacc':.0 });
   dataset.set("FL",{'station':'FL','maxacc':.0 });
   dataset.set("NL",{'station':'NL','maxacc':.0 });
-  dataset.set("CT",{'station':'CT','maxacc':.0 });
-  dataset.set("NR",{'station':'NR','maxacc':.0 });
-  dataset.set("FR",{'station':'FR','maxacc':.0 });
+  //dataset.set("CT",{'station':'CT','maxacc':.0 });
+  //dataset.set("NR",{'station':'NR','maxacc':.0 });
+  //dataset.set("FR",{'station':'FR','maxacc':.0 });
   dataset.set("FL0",{'station':'FL0','maxacc':.0 });
   dataset.set("FL60",{'station':'FL60','maxacc':.0 });
   dataset.set("FL330",{'station':'FL330','maxacc':.0 });
@@ -120,13 +120,13 @@ updateEqualizer(allmaxaccJson){
   let dataset = new Array();
   console.log(`update equalizer${dataset.length}`)
   for (let x of allmaxaccJson.values()){
-    // if( this.plotStations.includes(x.station)){
+    if( this.plotStations.includes(x.station)){
       dataset.push(x);
     }
     // if (x.station !== 'CT') {       // fix this with 'find' return if exists
     //   dataset.push(x);
 
-  // }
+  }
   //create a svg element before body taag and assigns a svg with height and width
 
 let svg = d3.select(this.selector).select("svg").select("g.main");

@@ -72,6 +72,11 @@ div.panel{
   overflow: hidden;
 }
 
+div.container {
+  position: relative;
+  text-align: center;
+  color: Red;
+}
 
 div.piStatus span div{
     width: 20px;
