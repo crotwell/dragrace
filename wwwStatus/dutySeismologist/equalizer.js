@@ -10,10 +10,10 @@ class Equalizer{
     this.selector = selector;
     this.d3 = seisplotjs.d3
     this.margin = {top: 20, right: 10, bottom: 30, left: 30};
-    this.width = 330 - this.margin.left - this.margin.right;
+    this.width = 600 - this.margin.left - this.margin.right;  //330
     this.height = 400 - this.margin.top - this.margin.bottom;
     this.yScale = d3.scaleLinear()
-    .domain([0,(3.5)])
+    .domain([0,(2.0)])
     .range([this.height, 0]);
     console.log(`yscaletest ${this.yScale(1)}`)
     this.yAxis = d3.axisLeft(this.yScale).ticks(10, "0.1f");
