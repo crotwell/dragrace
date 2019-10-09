@@ -12,7 +12,7 @@ const do1SPS = false
 
 let net = 'CO';
 //let staList = ['PI01', 'PI02', 'PI03', 'PI04', 'PI05', 'PI06', 'PI07', 'PI99'];
-let staList = ['FL', 'NL', 'CT', 'NR', 'FR','FL0','FL60','FL330','FL660','FL1K'];
+let staList = ['FL', 'NL', 'CT', 'NR', 'FR','FL0','FL60','FL330','FL660','FL1K','FL4G'];
 //monday = 1
 //friday = 5
 //saturday = 6
