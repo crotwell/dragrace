@@ -122,7 +122,6 @@ updateEqualizer(allmaxaccJson){
   for (let x of allmaxaccJson.values()){
     if( this.plotStations.includes(x.station)){
       dataset.push(x);
-      console.log(`I can plot ${x.station}`)
     }
     // if (x.station !== 'CT') {       // fix this with 'find' return if exists
     //   dataset.push(x);
