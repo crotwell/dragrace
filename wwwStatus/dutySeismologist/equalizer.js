@@ -27,8 +27,8 @@ class Equalizer{
   }
 createZeros(){
   let dataset=new Map();
-  dataset.set("GAP",{'station':'GAP','maxacc':.0 });
   dataset.set("FL",{'station':'FL','maxacc':.0 });
+  dataset.set("FL4G",{'station':'FL','maxacc':.0 });
   dataset.set("NL",{'station':'NL','maxacc':.0 });
   //dataset.set("CT",{'station':'CT','maxacc':.0 });
   //dataset.set("NR",{'station':'NR','maxacc':.0 });
@@ -60,21 +60,22 @@ columnForStation(d) {
   let i = 99;
 
   if (d.station === "FL") {
-    i = 0;
-  }else if (d.station === "NL") {
-    i = 1;
-  }else if (d.station === "FL0") {
-    i = 7;
-  }else if (d.station === "FL60") {
-    i = 6;
-  } else if (d.station === "FL330") {
-    i = 5;
-  }else if (d.station === "FL660") {
     i = 4;
-  }else if (d.station === "FL1K") {
-    i = 3;
-  }else if (d.station === "GAP") {
+  }else if (d.station === "FL4G") {
+    i = 5;
+  }else if (d.station === "NL") {
+    i = 7;
+  }else if (d.station === "FL0") {
+    i = 6;
+  }else if (d.station === "FL60") {
+    i = 3
+  } else if (d.station === "FL330") {
     i = 2;
+  }else if (d.station === "FL660") {
+    i = 1;
+  }else if (d.station === "FL1K") {
+    i = 0;
+
                              //make FL equalizer
 
   // }else if (d.station === "NR") {
@@ -95,11 +96,13 @@ titleForStation(d) {
   let i = 'title';
 
   if (d.station === "FL") {
-    i = 'Lane 1';
+    i = 'Start';
+  }if (d.station === "FL4G") {
+    i = 'Start4G';
   }else if (d.station === "NL") {
     i = 'Lane 2';
   }else if (d.station === "FL0") {
-    i = 'Start';
+    i = 'Lane 1';
   }else if (d.station === "FL60") {
     i = '60 ft';
   } else if (d.station === "FL330") {
@@ -108,8 +111,6 @@ titleForStation(d) {
     i = '660 ft';
   }else if (d.station === "FL1K") {
     i = '1,000 ft';
-  }else if (d.station === "GAP") {
-    i = ' ';
   }else {
        console.log(`no station found ${d.station}`);
   }
@@ -122,6 +123,7 @@ updateEqualizer(allmaxaccJson){
   for (let x of allmaxaccJson.values()){
     if( this.plotStations.includes(x.station)){
       dataset.push(x);
+      console.log(`I can plot ${x.station}`)
     }
     // if (x.station !== 'CT') {       // fix this with 'find' return if exists
     //   dataset.push(x);
@@ -170,7 +172,7 @@ bars.selectAll("rect")//select in the page and correspond to data
 
     })
   .attr("fill",function(d){
-    return "rgb( " + (Math.round(d.maxacc * 255/0.2)) + " , 0, 0 )";//255/0.2
+    return "rgb( " + (Math.round(d.maxacc * 200/0.2)) + " , 0, 0 )";//255/0.2
   });
   }
 }
