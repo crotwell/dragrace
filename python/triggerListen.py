@@ -63,7 +63,6 @@ async def doTest(loop):
     dali = await doReconnect(None)
     while(keepGoing):
         try:
-            c =
             if dali is None or dali.isClosed():
                 print("dali closed, reconnecting")
                 dali = await doReconnect(dali)
