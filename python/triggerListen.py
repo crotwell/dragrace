@@ -60,9 +60,10 @@ async def doReconnect(dali):
 
 async def doTest(loop):
     global maxAccPacket_list
-    dali = doReconnect(None)
+    dali = await doReconnect(None)
     while(keepGoing):
         try:
+            c =
             if dali is None or dali.isClosed():
                 print("dali closed, reconnecting")
                 dali = await doReconnect(dali)
