@@ -42,7 +42,14 @@ def peakAccelerationCalculation(x,y,z,theta,alpha,station,start_time,end_time):
     rotate_array_y = r[1]
     rotate_array_z = r[2]
 
-    countToGravity = 4096 # may need to be -4096, counts not g
+    # gain 2 => 4096 count per g
+    # gain 4 => 2048 count per g
+    if gain == 4:
+        countToGravity = 2048
+    elif gain == 8:
+        countToGravity = 1024
+    else:
+        countToGravity = 4096 # may need to be -4096, counts not g
     new_array_z = subtractGravity(rotate_array_z, countToGravity)
 
     vmag = Magnitude_ThreeC_TimeSeries_jake(rotate_array_x, rotate_array_y, new_array_z)

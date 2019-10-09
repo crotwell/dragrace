@@ -28,7 +28,7 @@ class MaxAccArchive:
         self.architecture="python"
 
 
-        self.staList= ['FL', 'NL', 'CT', 'NR', 'FR']
+        self.staList= ['FL', 'NL', 'CT', 'NR', 'FR', 'FL0', 'FL60', 'FL330', 'FL660', 'FL1K', 'FL4G' ]
         self.net = "XX"
         self.loc = "00"
         self.chan = 'HNM'
@@ -95,7 +95,11 @@ class MaxAccArchive:
                     if abs(sps-bufSps) > 1 :
                         self.initBuffer(maxJson['station'], sps)
                     start = dateutil.parser.parse(maxJson['start_time']).replace(tzinfo=timezone.utc)
-                    zData =  math.trunc( maxJson['maxacc'] * 4096 ) # back to counts
+                    if maxJson['station'] == 'FL4G':
+                        gain = 2048
+                    else:
+                        gain = 4096
+                    zData =  math.trunc( maxJson['maxacc'] * gain ) # back to counts
                     self.miniseedBuffers[maxJson['station']].push(start, [ zData ])
             except Exception:
                 print(traceback.format_exc())
