@@ -46,5 +46,6 @@ fetchCurrentResult()
       dataset.set("FL330",{'station':'FL330','maxacc':result.peakACC_FL330});
       dataset.set("FL60",{'station':'FL60','maxacc':result.peakACC_FL60});
       dataset.set("FL0",{'station':'FL0','maxacc':result.peakACC_FL0});
+      dataset.set("FL4G",{'station':'FL4G','maxacc':result.peakACC_FL4G});
       return dataset;
     }
