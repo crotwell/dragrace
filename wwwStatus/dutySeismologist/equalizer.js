@@ -119,7 +119,6 @@ titleForStation(d) {
 
 updateEqualizer(allmaxaccJson){
   let dataset = new Array();
-  console.log(`update equalizer${dataset.length}`)
   for (let x of allmaxaccJson.values()){
     if( this.plotStations.includes(x.station)){
       dataset.push(x);
@@ -146,7 +145,6 @@ bars.selectAll("text")
   })
   .attr("y", function(d){
 
-      console.log(`text y ${that.height} ${that.margin.top}`);
     return that.height+that.margin.top+10; //height minus data value
   })
   .text(d => that.titleForStation(d));

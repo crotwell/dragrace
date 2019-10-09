@@ -45,6 +45,7 @@ import simpleDali
 import dataBuffer
 import decimate
 
+verbose = False
 
 daliHost="129.252.35.36"
 daliPort=15003
@@ -352,13 +353,14 @@ def sendToMseed(last_sample_time, status, samplesAvail, data, dali):
             yData = decimateMap["Y"].process(yData)
             zData = decimateMap["Z"].process(zData)
 
-    freshJson = peakAccelerationCalculation(xData,yData,zData,theta,alpha,sta,start,last_sample_time)
+    freshJson = peakAccelerationCalculation(xData,yData,zData,theta,alpha,sta,start,last_sample_time,gain)
     establishedJson = compareSendPeakAccel(establishedJson, freshJson, dali, maxWindow)
 
     miniseedBuffers[chanMap["Z"]].push(start, zData)
     miniseedBuffers[chanMap["Y"]].push(start, yData)
     miniseedBuffers[chanMap["X"]].push(start, xData)
-    print("sendToMseed {} {} {}".format(sta, start, len(xData)))
+    if verbose:
+        print("sendToMseed {} {} {}".format(sta, start, len(xData)))
 
 def initDali(daliUri):
     print("Init Dali at {0}".format(daliUri))
