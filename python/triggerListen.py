@@ -44,9 +44,11 @@ def handleSignal(sigNum, stackFrame):
 signal.signal(signal.SIGINT, handleSignal)
 signal.signal(signal.SIGTERM, handleSignal)
 
-async def doTest(loop):
-    global maxAccPacket_list
-    dali = simpleDali.WebSocketDataLink(uri)
+async def doReconnect(dali):
+    if dali is None:
+        #dali = simpleDali.WebSocketDataLink(uri)
+        dali = simpleDali.SocketDataLink(host, port)
+    await dali.reconnect()
     serverId = await dali.id(programname, username, processid, architecture)
     print("Resp: {}".format(serverId))
     serverInfo = await dali.info("STATUS")
@@ -54,20 +56,31 @@ async def doTest(loop):
     r = await dali.match(".*/(MAXACC|MTRIG)")
     print("match() Resonse {}".format(r))
     r = await dali.stream()
+    return dali
 
+async def doTest(loop):
+    global maxAccPacket_list
+    dali = doReconnect(None)
     while(keepGoing):
-        packet = await dali.parseResponse()
+        try:
+            if dali is None or dali.isClosed():
+                print("dali closed, reconnecting")
+                dali = await doReconnect(dali)
+            packet = await dali.parseResponse()
 
-        if packet.streamId.endswith("MAXACC"):
-            HandleMaxACC_Packet(packet)
+            if packet.streamId.endswith("MAXACC"):
+                HandleMaxACC_Packet(packet)
 
-        elif packet.streamId.endswith("MTRIG"):
-            HandleTriggerPacket(packet)
-            ProcessHoldingPen()
-        else:
-            print("Packet is not a MaxACC or a Trigger")
-            continue
-
+            elif packet.streamId.endswith("MTRIG"):
+                HandleTriggerPacket(packet)
+                ProcessHoldingPen()
+            else:
+                print("Packet is not a MaxACC or a Trigger")
+                continue
+        except Exception as e:
+            print("error while streaming: ".format(e))
+            await dali.close()
+    print("doTest, end while keepGoing={}".format(keepGoing))
     await dali.close()
 
 def HandleMaxACC_Packet(packet):
@@ -146,7 +159,8 @@ def ProcessHoldingPen():
             elif maxAccJson["station"] == "FL4G":
                 FL4G_acc.append(maxAccJson["maxacc"])
             else:
-                print("maxACC Packet doesn't contain a station")
+                #print("maxACC Packet doesn't contain a station: {}".format(maxAccJson))
+                pass
     d = datetime.now(timezone.utc)
     edt = timezone(timedelta(hours=-4), name="EDT")
     d_edt = d.astimezone(tz=edt)
@@ -191,6 +205,8 @@ def ProcessHoldingPen():
     with open("mseed/www/results/MostRecentResult.json","w") as f:
         if f is not None:
             json.dump(MostRecentResult,f)
+        else:
+            print("can't save results to mseed/www/results/MostRecentResult.json for {}".format(MostRecentResult))
 
 def SendResultsJson(ResultsJson):
     day = ResultsJson["Day_Name"]
@@ -219,6 +235,8 @@ def SendResultsJson(ResultsJson):
     with open(resultsFile,"w") as f:
         if f is not None:
             json.dump(ResultsJson,f)
+        else:
+            print("can't save results to {}".format(resultsFile))
 
     # read in classnames.json
     try:
@@ -271,6 +289,7 @@ def loopHoldingPen():
     while True:
         ProcessHoldingPen()
         time.sleep(1)
+    print("holding pen quit")
 
 sendThread = Thread(target = loopHoldingPen)
 sendThread.daemon=True
