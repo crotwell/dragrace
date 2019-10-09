@@ -30,7 +30,7 @@ import simpleDali
 # magnitude over a small amount of time (depends on len of arrays given),
 # and sends this mag to ring server
 
-def peakAccelerationCalculation(x,y,z,theta,alpha,station,start_time,end_time):
+def peakAccelerationCalculation(x,y,z,theta,alpha,station,start_time,end_time,gain):
     # rotation correction
     # First, do coordiate rotation about the y-axis (downtrack). Note the...
     #  Rotate_2D_TimeSeries function has rotation about z, but can put...
@@ -42,7 +42,14 @@ def peakAccelerationCalculation(x,y,z,theta,alpha,station,start_time,end_time):
     rotate_array_y = r[1]
     rotate_array_z = r[2]
 
-    countToGravity = 4096 # may need to be -4096, counts not g
+    # gain 2 => 4096 count per g
+    # gain 4 => 2048 count per g
+    if gain == 4:
+        countToGravity = 2048
+    elif gain == 8:
+        countToGravity = 1024
+    else:
+        countToGravity = 4096 # may need to be -4096, counts not g
     new_array_z = subtractGravity(rotate_array_z, countToGravity)
 
     vmag = Magnitude_ThreeC_TimeSeries_jake(rotate_array_x, rotate_array_y, new_array_z)
@@ -156,19 +163,6 @@ def Magnitude_ThreeC_TimeSeries_jake(x,y,z):
         i += 1
     return vmag
 
-# Divide vmag list by 4096 to convert counts to g's
-# input = vmag
-# output = peakAccel
-def countsTog(vmag):
-    npts = len(vmag)
-    peakAccel = []
-    i = 0
-    countsIng = 4096
-    while i < npts:
-        peakAccel.append(vmag[i]/countsIng)
-        i += 1
-    return peakAccel
-
 # rest state correction
 # function to correct rotate_array_z for the rest state correction of -1
 # input = rotate_array_z
@@ -195,6 +189,7 @@ if __name__ == "__main__":
     array_x = [1,2,3,4,500,15,25]
     array_y = [5,6,7,8,32,69,70]
     array_z = [9,10,11,12,47,100,0]
+    gain = 2
     theta = 20.0
     alpha = 0
     station = 'PI01'
@@ -208,29 +203,29 @@ if __name__ == "__main__":
     # print(sendPeakAccel(newJson))
     # timedelta should be about 0.25-0.5 s
 
-    establishedJson = peakAccelerationCalculation(array_x,array_y,array_z,theta, alpha,station,start_time,end_time)
+    establishedJson = peakAccelerationCalculation(array_x,array_y,array_z,theta, alpha,station,start_time,end_time,gain)
     print("first: "+jsonToString(establishedJson))
     start_time = start_time + timedelta(seconds=0.10)
     end_time = start_time + time_diff
-    freshJson = peakAccelerationCalculation(array_x,array_y,array_z,theta, alpha,station,start_time,end_time)
+    freshJson = peakAccelerationCalculation(array_x,array_y,array_z,theta, alpha,station,start_time,end_time,gain)
     establishedJson = compareSendPeakAccel(establishedJson, freshJson, None, maxWindow)
     print("second: "+jsonToString(establishedJson))
 
     start_time = start_time + timedelta(seconds=0.10)
     end_time = start_time + time_diff
-    freshJson = peakAccelerationCalculation(array_x,array_y,array_z,theta, alpha,station,start_time,end_time)
+    freshJson = peakAccelerationCalculation(array_x,array_y,array_z,theta, alpha,station,start_time,end_time,gain)
     establishedJson = compareSendPeakAccel(establishedJson, freshJson, None, maxWindow)
     print("third: "+jsonToString(establishedJson))
 
     start_time = start_time + timedelta(seconds=0.10)
     end_time = start_time + time_diff
-    freshJson = peakAccelerationCalculation(array_x,array_y,array_z,theta, alpha,station,start_time,end_time)
+    freshJson = peakAccelerationCalculation(array_x,array_y,array_z,theta, alpha,station,start_time,end_time,gain)
     establishedJson = compareSendPeakAccel(establishedJson, freshJson, None, maxWindow)
     print("forth: "+jsonToString(establishedJson))
 
     start_time = start_time + timedelta(seconds=0.10)
     end_time = start_time + time_diff
-    freshJson = peakAccelerationCalculation(array_x,array_y,array_z,theta, alpha,station,start_time,end_time)
+    freshJson = peakAccelerationCalculation(array_x,array_y,array_z,theta, alpha,station,start_time,end_time,gain)
     establishedJson = compareSendPeakAccel(establishedJson, freshJson, None, maxWindow)
 
     print("last: "+jsonToString(establishedJson))

@@ -353,7 +353,7 @@ def sendToMseed(last_sample_time, status, samplesAvail, data, dali):
             yData = decimateMap["Y"].process(yData)
             zData = decimateMap["Z"].process(zData)
 
-    freshJson = peakAccelerationCalculation(xData,yData,zData,theta,alpha,sta,start,last_sample_time)
+    freshJson = peakAccelerationCalculation(xData,yData,zData,theta,alpha,sta,start,last_sample_time,gain)
     establishedJson = compareSendPeakAccel(establishedJson, freshJson, dali, maxWindow)
 
     miniseedBuffers[chanMap["Z"]].push(start, zData)
