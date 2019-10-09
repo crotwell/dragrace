@@ -110,6 +110,12 @@ def ProcessHoldingPen():
     CT_acc = [0]
     NR_acc = [0]
     FR_acc = [0]
+    FL0_acc = [0]
+    FL4G_acc = [0]
+    FL60_acc = [0]
+    FL330_acc = [0]
+    FL660_acc = [0]
+    FL1K_acc = [0]
     m = maxAccPacket_list[0]
     # print("maxAccPacket_list {} {} {}".format(m["start_time"], m["end_time"],m["station"]))
     # print("trig  {} {}".format(trig["startTime"], trig["endTime"]))
@@ -127,6 +133,18 @@ def ProcessHoldingPen():
                 NR_acc.append(maxAccJson["maxacc"])
             elif maxAccJson["station"] == "FR":
                 FR_acc.append(maxAccJson["maxacc"])
+            elif maxAccJson["station"] == "FL0":
+                FL0_acc.append(maxAccJson["maxacc"])
+            elif maxAccJson["station"] == "FL60":
+                FL60_acc.append(maxAccJson["maxacc"])
+            elif maxAccJson["station"] == "FL330":
+                FL330_acc.append(maxAccJson["maxacc"])
+            elif maxAccJson["station"] == "FL660":
+                FL660_acc.append(maxAccJson["maxacc"])
+            elif maxAccJson["station"] == "FL1K":
+                FL1K_acc.append(maxAccJson["maxacc"])
+            elif maxAccJson["station"] == "FL4G":
+                FL4G_acc.append(maxAccJson["maxacc"])
             else:
                 print("maxACC Packet doesn't contain a station")
     d = datetime.now(timezone.utc)
@@ -157,6 +175,12 @@ def ProcessHoldingPen():
         "peakACC_CT": max(CT_acc),
         "peakACC_NR": max(NR_acc),
         "peakACC_FR": max(FR_acc),
+        "peakACC_FL0": max(FL0_acc),
+        "peakACC_FL60": max(FL60_acc),
+        "peakACC_FL330": max(FL330_acc),
+        "peakACC_FL660": max(FL660_acc),
+        "peakACC_FL1K": max(FL1K_acc),
+        "peakACC_FL4G": max(FL4G_acc),
     }
     SendResultsJson(ResultsJson)
     MostRecentResult = {
