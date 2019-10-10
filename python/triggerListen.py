@@ -115,6 +115,7 @@ def ProcessHoldingPen():
     global trig_HoldingPen
     tooYoungTriggers = []
     trig = trig_HoldingPen.get()
+    print("got a trigger: {} {} end: {}".format(trig["class"], trig["heat"], trig["endTime"]))
     while trig["endTime"] > simpleDali.utcnowWithTz():
         time.sleep(1)
     FL_acc = [0]
@@ -282,7 +283,7 @@ def SendResultsJson(ResultsJson):
         heatNames = [heat]
         with open(heatNamesFile,'w') as f:
             json.dump(heatNames,f)
-    print('I succesffuly sent results to results directory!')
+    print('I succesffuly sent results to results directory! {}'.format(resultsPath))
 
 def loopHoldingPen():
     while True:
