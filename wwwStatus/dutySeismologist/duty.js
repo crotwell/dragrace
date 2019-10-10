@@ -6,6 +6,19 @@ let seisGraphMax = 2.0;   //max
 // this global comes from the seisplotjs_waveformplot standalone js
 let d3 = seisplotjs.d3;
 let moment = seisplotjs.moment;
+let util = seisplotjs.util; // make sure util rsvp error handler already registered
+
+seisplotjs.RSVP.on('error', function(reason, label) {
+  if (label) {
+    console.error(label);
+  }
+
+  console.assert(false, reason);
+  // eslint-disable-next-line no-console
+  console.assert(false, reason);
+  d3.select("#errormessage span").text(`${label?label:""} ${reason} ${reason.name} ${reason.message}`);
+  d3.select("div.triggers").append("p").text(`Error: ${reason.name} ${reason.message}`);
+});
 
 const doReplay = false
 const do1SPS = false
@@ -364,6 +377,8 @@ let dlCallback = function(dlPacket) {
     dlPacketConfigCallback(dlPacket);
   } else if (dlPacket.streamId.endsWith("IP")) {
     dlPacketIPCallback(dlPacket);
+  } else {
+    console.log(`Unknown datalink stream id: ${dlPacket.streamId}`);
   }
 };
 
@@ -379,7 +394,7 @@ let doDatalinkConnect = function() {
   }
   if ( ! dlConn) {
     console.log(`doDatalinkConnect dlConn is null`);
-    dlConn = new datalink.DataLinkConnection(datalinkUrl, dlCallback, errorFn);
+    dlConn = new datalink.DataLinkConnection(datalinkUrl, dlCallback, handleError);
     dlPromise = dlConn.connect();
   } else {
     console.log(`doDatalinkConnect dlConn exists, reuse`);
@@ -392,7 +407,7 @@ let doDatalinkConnect = function() {
         dlPromise = dlConn.connect();
       }
     } catch (err) {
-      dlConn = new datalink.DataLinkConnection(datalinkUrl, dlCallback, errorFn);
+      dlConn = new datalink.DataLinkConnection(datalinkUrl, dlCallback, handleError);
       dlPromise = dlConn.connect();
     }
   }
@@ -446,6 +461,7 @@ doplot = function(sta) {
 
 
 d3.select("button#trigger").on("click", function(d) {
+  d3.select("#errormessage span").text("");// clear old error
   let trigtime = moment.utc()
   let dutyOfficer = document.getElementsByName('dutyofficer')[0].value;
   dutyOfficer = dutyOfficer.replace(/\W/, '');
@@ -475,7 +491,7 @@ d3.select("button#trigger").on("click", function(d) {
   // update heat to next number
     updateHeatNumber(heatE);
 
-  let dlTriggerConn = new datalink.DataLinkConnection(writeDatalinkUrl, dlTriggerCallback, errorFn);
+  let dlTriggerConn = new datalink.DataLinkConnection(writeDatalinkUrl, dlTriggerCallback, handleError);
   dlTriggerConn.connect().then(serverId => {
     d3.select("div.triggers").append("p").text(`Connect to ${serverId}`);
     if (jwtTokenPromise === null && jwtToken) {
@@ -497,7 +513,7 @@ d3.select("button#trigger").on("click", function(d) {
   }).then(ack => {
     dlTriggerConn.close();
     d3.select("div.triggers").append("p").text(`Send trigger ack: ${ack}`);
-  });
+  }).catch(err => handleError(err));
 });
 
 d3.select("button#pause").on("click", function(d) {
@@ -505,6 +521,7 @@ d3.select("button#pause").on("click", function(d) {
 });
 
 d3.select("button#disconnect").on("click", function(d) {
+  d3.select("#errormessage span").text("");// clear old error
   doDisconnect( ! stopped);
 });
 
@@ -573,13 +590,14 @@ function makeString(dataView , offset , length )  {
   return out.trim();
 }
 
-let errorFn = function(error) {
+let handleError = function(error) {
   if (console.error) {
-    console.error(error, error.stack);
+    console.error(`${error.name} ${error.message}`, error.stack);
   } else {
     alert(error.message);
   }
-  d3.select("div.triggers").append("p").text(`Error: ${error}`);
+  d3.select("#errormessage span").text(`${error.name} ${error.message}`);
+  d3.select("div.triggers").append("p").text(`Error: ${error.name} ${error.message}`);
   doDisconnect(true);
   dlConn = null; // force a complete reconnection next time
 };
