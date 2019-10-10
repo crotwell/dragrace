@@ -78,7 +78,7 @@ async def doTest(loop):
                 print("Packet is not a MaxACC or a Trigger")
                 continue
         except Exception as e:
-            print("error while streaming: ".format(e))
+            print("error while streaming: {}".format(e))
             await dali.close()
     print("doTest, end while keepGoing={}".format(keepGoing))
     await dali.close()
