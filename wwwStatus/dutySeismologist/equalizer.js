@@ -27,17 +27,18 @@ class Equalizer{
   }
 createZeros(){
   let dataset=new Map();
-  dataset.set("FL",{'station':'FL','maxacc':.0 });
-  dataset.set("FL4G",{'station':'FL','maxacc':.0 });
-  dataset.set("NL",{'station':'NL','maxacc':.0 });
-  //dataset.set("CT",{'station':'CT','maxacc':.0 });
-  //dataset.set("NR",{'station':'NR','maxacc':.0 });
-  //dataset.set("FR",{'station':'FR','maxacc':.0 });
-  dataset.set("FL0",{'station':'FL0','maxacc':.0 });
-  dataset.set("FL60",{'station':'FL60','maxacc':.0 });
-  dataset.set("FL330",{'station':'FL330','maxacc':.0 });
-  dataset.set("FL660",{'station':'FL660','maxacc':.0 });
-  dataset.set("FL1K",{'station':'FL1K','maxacc':.0 });
+  let oldTime = seisplotjs.moment.utc().subtract(1, 'year');
+  dataset.set("FL",{'station':'FL','maxacc':.0 , 'end_time': oldTime});
+  dataset.set("FL4G",{'station':'FL','maxacc':.0, 'end_time': oldTime });
+  dataset.set("NL",{'station':'NL','maxacc':.0, 'end_time': oldTime });
+  //dataset.set("CT",{'station':'CT','maxacc':.0, 'end_time': oldTime });
+  //dataset.set("NR",{'station':'NR','maxacc':.0, 'end_time': oldTime });
+  //dataset.set("FR",{'station':'FR','maxacc':.0, 'end_time': oldTime });
+  dataset.set("FL0",{'station':'FL0','maxacc':.0, 'end_time': oldTime });
+  dataset.set("FL60",{'station':'FL60','maxacc':.0, 'end_time': oldTime });
+  dataset.set("FL330",{'station':'FL330','maxacc':.0, 'end_time': oldTime });
+  dataset.set("FL660",{'station':'FL660','maxacc':.0, 'end_time': oldTime });
+  dataset.set("FL1K",{'station':'FL1K','maxacc':.0, 'end_time': oldTime });
   return dataset;
 }
 
