@@ -36,14 +36,26 @@ let prevHeat= "";
 
 let today = moment()
   if(today.weekday() === 5){
-    classList = ['FRIDAY','Funny-Car','Sportsman-Qualifying','Competition-Eliminator-Qualifying Sessions','Midway-Open','Top-Alcohol-Qualifying-Session','Factory-Stock-Showdown-Qualifying','Mountain-Motor-Pro-Stock-Qualifying-Session','Pro-Mod-Qualifying-Session','Pro-Stock-Motorcycle-Qualifying-Session','Nitro-Qualifying-Session','Top-Alcohol-Qualifying-Session','Factory-Stock-Showdown-Qualifying','Mountain-Motor-Pro-Stock-Qualifying-Session','Pro-Mod-Qualifying-Session','Pro-Stock-Motorcycle-Qualifying Session','Nitro-Qualifying-Session','Secure-Track'];
+    classList = ['FRIDAY','Sportsman-Qualifying','Top-Alcohol-Qualifying-Session',
+    'Midway-Open','Competition-Qualifying-Session','Top-Alcohol-Qualifying-Session',
+    'Pro-Mod-Qualifying-Session','Pro-Stock-Qualifying-Session','Nitro-Qualifying-Session',
+    'Pro-Mod-Qualifying-Session','Pro-Stock-Qualifying Session','Nitro-Qualifying-Session','Secure-Track'];
   }else if(today.weekday() === 6){
-    classList=['SATURDAY','Sportsman-Eliminations','Midway-Open','Competition-Eliminator','Super-Comp','Super-Gas','Super-Stock','Top-Sportsman-R-2','Top-Alcohol-Funny-Car-Q1','Top-Alcohol-Dragster-Q1','Competition','Stock-R3','Super-Comp-R3','Super-Gas-R3','Super-Stock-R3','Factory-Stock-Showdown-Q2','Mountain-Motor-Pro-Stock-Q2','Pro-Mod-Q2','Pro-Stock-Motorcycle-Q2','Funny-Car-Q3','Top-Fuel-Nitro-Q2','Top-Alcohol-Funny-Car-Q2','Top-Alcohol-Dragster-Q2','Factory-Stock-Showdown-R1','Pro-Mod-Q3','Pro-Stock-Motorcycle-Q3','Funny-Car-Q4','Top-Fuel-Nitro-Q3','Mountain Motor-Pro-Stock-Q3','Top-Alcohol-Funny-Car-R1','Top-Alcohol-Dragster-R1']////Session','Top-Alcohol-Eliminations','Secure-Track'];
+    classList=['SATURDAY','Sportsman-Eliminations','Midway-Open','Competition-Qualifying-Session',
+    'Top-Alcohol-Eliminations-R1','Competition-Eliminations-R1','Pro-Mod-Qualifying-Session',
+    'Pro-Stock-Qualifying-Session','Nitro-Qualifying-Session','Pro-Mod-Qualifying Session',
+    'Pro-Stock-Qualifying-Session','Nitro-Qualifying-Session','Top-Alcohol-Eliminations-R2',
+    'Competition-Eliminations-R2','Sportsman-Eliminations','Competition-Eliminations-R3',
+    'Sportsman-Eliminations','Secure-Track')
   }else if(today.weekday() === 7){
-    classList=['SUNDAY','Top-Fuel-Nitro-R1','Funny-Car-R1','Pro-Stock-Motorcycle-R1','Pro-Mod-R1','Top-Alcohol-Funny-Car-R2','Top-Alcohol-Dragster-R2','Mountain-Motor-Pro-Stock-R1','Factory-Stock-Showdown-R2','Top-Sportsman-R3','Competition-R3','Stock-R4','Super-Comp-R4','Super-Stock-R4','Factory-Stock-Showdown-R3','Top-Sportsman-R4','Competition-R4','Stock-R5','Super-Comp-R5','Super-Stock-R5','Super-Gas-R5','Junior-Dragster','Top-Alcohol-Funny-Car-R3','Top-Alcohol-Dragster-R3','Top-Fuel-R2','Funny-Car-R2','Pro-Stock-Motorcycle-R2','Pro-Mod-R2','Mountain-Motor-Stock-R2','Stock-Final','Super-Comp-Final','Super-Stock-Final','Super-Gas-Final','Top-Sportsman-Final','Competition-Final','Factory-Stock-Showdown-Final','Top-Alcohol-Funny-Car-Final','Top-Alcohol-Dragster-Final','Pro-Mod-Final','Mountain-Motor-Pro-Stock-Final','Pro-Stock-Motorcycle-Final','Funny-Car-Final','Top-Fuel-Final','GO-HOME'];
+    classList=['SUNDAY','Midway-Open','Pre-Race-Walk','Nitro-Eliminations-R1','Pro-Stock-Eliminations-R1',
+    'Pro-Mod-Eliminations-R1','Nitro-Eliminations-R2','Pro-Stock-Eliminations-R2','Pro-Mod-Eliminations-R2',
+    'Top-Alcohol-Eliminations-Semi-Final','Competition-Eliminations-Semi-Final','Sportsman-Eliminations-Semi-Final',
+    'Nitro-Elimination-Semi-Final','Pro-Stock-Elimination-Semi-Final','Pro-Mod-Eliminations-Semi-Final',
+    'Sportsman Eliminations-Finals','Competition-Eliminations-Final','Top-Alcohol-Eliminations-Finals','Jr-Dragsters',
+    'Parade-of-Champions','Pro-Mod-Eliminations-Final','Pro-Stock-Eliminations-Final','Nitro-Elimination-Final')
   }else{
-    classList=['SUNDAY','Top-Fuel-Nitro-R1','Funny-Car-R1','Pro-Stock-Motorcycle-R1','Pro-Mod-R1','Top-Alcohol-Funny-Car-R2','Top-Alcohol-Dragster-R2','Mountain-Motor-Pro-Stock-R1','Factory-Stock-Showdown-R2','Top-Sportsman-R3','Competition-R3','Stock-R4','Super-Comp-R4','Super-Stock-R4','Factory-Stock-Showdown-R3','Top-Sportsman-R4','Competition-R4','Stock-R5','Super-Comp-R5','Super-Stock-R5','Super-Gas-R5','Junior-Dragster','Top-Alcohol-Funny-Car-R3','Top-Alcohol-Dragster-R3','Top-Fuel-R2','Funny-Car-R2','Pro-Stock-Motorcycle-R2','Pro-Mod-R2','Mountain-Motor-Stock-R2','Stock-Final','Super-Comp-Final','Super-Stock-Final','Super-Gas-Final','Top-Sportsman-Final','Competition-Final','Factory-Stock-Showdown-Final','Top-Alcohol-Funny-Car-Final','Top-Alcohol-Dragster-Final','Pro-Mod-Final','Mountain-Motor-Pro-Stock-Final','Pro-Stock-Motorcycle-Final','Funny-Car-Final','Top-Fuel-Final','GO-HOME'];
-console.log("we have wrong dates")
+    classList=['Not Race Day','Test1','Test2','Test3')
 }
 
 let config = null;
