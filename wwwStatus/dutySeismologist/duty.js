@@ -46,16 +46,16 @@ let today = moment()
     'Pro-Stock-Qualifying-Session','Nitro-Qualifying-Session','Pro-Mod-Qualifying Session',
     'Pro-Stock-Qualifying-Session','Nitro-Qualifying-Session','Top-Alcohol-Eliminations-R2',
     'Competition-Eliminations-R2','Sportsman-Eliminations','Competition-Eliminations-R3',
-    'Sportsman-Eliminations','Secure-Track')
+    'Sportsman-Eliminations','Secure-Track'];
   }else if(today.weekday() === 7){
     classList=['SUNDAY','Midway-Open','Pre-Race-Walk','Nitro-Eliminations-R1','Pro-Stock-Eliminations-R1',
     'Pro-Mod-Eliminations-R1','Nitro-Eliminations-R2','Pro-Stock-Eliminations-R2','Pro-Mod-Eliminations-R2',
     'Top-Alcohol-Eliminations-Semi-Final','Competition-Eliminations-Semi-Final','Sportsman-Eliminations-Semi-Final',
     'Nitro-Elimination-Semi-Final','Pro-Stock-Elimination-Semi-Final','Pro-Mod-Eliminations-Semi-Final',
     'Sportsman Eliminations-Finals','Competition-Eliminations-Final','Top-Alcohol-Eliminations-Finals','Jr-Dragsters',
-    'Parade-of-Champions','Pro-Mod-Eliminations-Final','Pro-Stock-Eliminations-Final','Nitro-Elimination-Final')
+    'Parade-of-Champions','Pro-Mod-Eliminations-Final','Pro-Stock-Eliminations-Final','Nitro-Elimination-Final'];
   }else{
-    classList=['Not Race Day','Test1','Test2','Test3')
+    classList=['Not Race Day','Test1','Test2','Test3'];
 }
 
 let config = null;
