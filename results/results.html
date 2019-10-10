@@ -2,7 +2,6 @@
 <html lang="en">
 <title>Ground Motion Experiment Results</title>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-black.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
@@ -52,10 +51,10 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 <div class="w3-main" style="margin-left:250px">
 
   <div class="w3-row w3-padding-64">
-    <div class="w3-twothird w3-container">
-      <div class="container">
-         <img src="car.jpeg" alt="car" style="width:100%;">
-         <h1 class="w3-text-red">NTK NHRA CAROLINA NATIONALS</h1>
+    <div class=" w3-container">
+      <div class="container carimagediv">
+         <img src="car.jpeg" alt="car" class="carimage" >
+         <h1>NTK NHRA CAROLINA NATIONALS</h1>
      </div>
       <!-- <h1 class="w3-text-red">NTK NHRA CAROLINA NATIONALS</h1> -->
       <p>Friday October 11 - Sunday October 13. NHRA Mello Yello Drag Racing Series <p>
@@ -65,20 +64,20 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 
 
   <div class="w3-row">
-    <div class="w3-twothird w3-container ">
+    <div class=" w3-container ">
       <h1 class="w3-text-red">Live Stream</h1>
       <p>Live ground acceleration measured in g's</p>
-      <div align="left" class="w3-twothird w3-container">Equalizer
+      <div align="left" class=" w3-container">Equalizer
         <div align="left" class="liveEqualizer"></div>
       </div>
 
     </div>
-    <div class="w3-twothird w3-container currentRace">
+    <div class=" w3-container currentRace">
       <span>
         <h1 class="w3-text-red">Current Race</h1>
         <p>Results from the most recent race on <span class="dayName"></span>.</p>
 
-        <div align="left" class="w3-twothird w3-container">Equalizer
+        <div align="left" class=" w3-container">Equalizer
           <div align="left" id="lastRaceEqualizer"></div>
         </div>
       </span>

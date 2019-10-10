@@ -2,6 +2,37 @@ div.realtime {
   height: 600px;
 }
 
+div#errormessage {
+  margin-top: 5px;
+}
+
+div#errormessage span {
+  background-color: red;
+  color: white;
+  font-size: large;
+}
+
+.carimagediv {
+  width: 100%;
+    height: 150px;
+    overflow: hidden;
+}
+
+.carimagediv .carimage {
+
+    width: 800px;
+    height: auto;
+    margin-top: -250px;
+}
+
+
+.carimagediv h1 {
+    position: absolute;
+    top: 50%;
+    left: 30%;
+  color: yellow;
+}
+
 @media (min-width: 500px) {
     .top {
         display: grid;
@@ -12,12 +43,11 @@ div.realtime {
             "control equalizer"
             "bottom bottom";
         grid-gap: 20px;
-        margin-bottom: 4em;
     }
     .top > .top {
         grid-column-start: 1;
     }
-    .equalizer {
+    .liveEqualizer {
         grid-area: equalizer;
     }
 
