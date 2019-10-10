@@ -163,7 +163,7 @@ d3.select('#classChoice')
 
 d3.selectAll('.textHost').text(host);
 
-let accelMaxValues = new Map();
+let accelMaxValues = liveEqualizer.createZeros();
 let prevAccelValue = new Map();
 let dlConn = null;
 let allSeisPlots = new Map();
