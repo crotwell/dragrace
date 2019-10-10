@@ -73,7 +73,6 @@ async def doTest(loop):
 
             elif packet.streamId.endswith("MTRIG"):
                 HandleTriggerPacket(packet)
-                ProcessHoldingPen()
             else:
                 print("Packet is not a MaxACC or a Trigger")
                 continue
