@@ -1,8 +1,9 @@
 
 
 let fetchCurrentResult = function() {
-  return fetch(`https://www.seis.sc.edu/dragrace/www/results/MostRecentResult.json`)
-  .then(function(response){
+  return fetch(`https://www.seis.sc.edu/dragrace/www/results/MostRecentResult.json`,
+      {cache: "no-cache"}
+    ).then(function(response){
     if(response.ok) {
       return response.json();
     }
@@ -18,8 +19,9 @@ let fetchCurrentResult = function() {
 };
 
 let fetchClassnames = function(day) {
-    return fetch(`https://www.seis.sc.edu/dragrace/www/results/${day}/classnames.json`)
-    .then(function(response){
+    return fetch(`https://www.seis.sc.edu/dragrace/www/results/${day}/classnames.json`,
+        {cache: "no-cache"}
+      ).then(function(response){
         if(response.ok) {
           return response.json();
         }
@@ -28,8 +30,9 @@ let fetchClassnames = function(day) {
 };
 
 let fetchHeatnames = function(day, classname) {
-    return fetch(`https://www.seis.sc.edu/dragrace/www/results/${day}/${classname}/heatnames.json`)
-    .then(function(response){
+    return fetch(`https://www.seis.sc.edu/dragrace/www/results/${day}/${classname}/heatnames.json`,
+        {cache: "no-cache"}
+      ).then(function(response){
         if(response.ok) {
           return response.json();
         }
@@ -59,9 +62,6 @@ createEqualizerMap = function(result){
   dataset.set("FL660",{'station':'FL660','maxacc':result.peakACC_FL660});
   dataset.set("FL1K",{'station':'FL1K','maxacc':result.peakACC_FL1K});
   dataset.set("FL4G",{'station':'FL4G','maxacc':result.peakACC_FL4G});
-
-
-
 
   return dataset;
 }
