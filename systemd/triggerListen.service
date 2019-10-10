@@ -5,7 +5,7 @@ After=multi-user.target
 User=geo
 Group=geo
 WorkingDirectory=/home/geo/Production/Run
-Restart=yes
+Restart=always
 Type=idle
 ExecStart=/usr/bin/python3 /home/geo/Production/dragrace/python/triggerListen.py
 
