@@ -46,8 +46,11 @@ let updateClassHeat = function(day, classname, heatname) {
             let heatDiv = cR.select("div.race_heat");
             heatDiv.select("span").text(`${result.Trigger_Info.heat}`);
             cR.select("div.dutyOfficer").select("span").text(`${result.Trigger_Info.dutyOfficer}`);
-            let datasetNow = [result.peakACC_FL,result.peakACC_NL,result.peakACC_NR,result.peakACC_FR];
-            let accText = `max: ${floatFormat(Math.max(...datasetNow))} of ${floatFormat(result.peakACC_FL)}, ${floatFormat(result.peakACC_NL)}, ${floatFormat(result.peakACC_NR)}, ${floatFormat(result.peakACC_FR)}`
+            let max = Math.max(...result.peakACC.values());
+            console.log(`max peakAcc: ${max}`)
+            let staList = Array.from(result.peakACC.keys());
+            let accText = staList.reduce((acc,s) => acc+` ${s}:${floatFormat(result.peakACC[s])}`, "")
+            accText = `max: ${floatFormat(Math.max(...result.peakACC.values()))} of ${accText}}`
             cR.select("div.maxacc").select("span").text(accText);
 
             let equalizer = new Equalizer("div.equalizer");

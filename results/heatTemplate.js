@@ -16,8 +16,8 @@ fetchCurrentResult()
       let heatDiv = cR.select("div.race_heat");
       heatDiv.select("span").text(`${result.Trigger_Info.heat}`);
       cR.select("div.dutyOfficer").select("span").text(`${result.Trigger_Info.dutyOfficer}`);
-      let datasetNow = [result.peakACC_FL,result.peakACC_NL,result.peakACC_NR,result.peakACC_FR];
-      let accText = `max: ${floatFormat(Math.max(...datasetNow))} of ${floatFormat(result.peakACC_FL)}, ${floatFormat(result.peakACC_NL)}, ${floatFormat(result.peakACC_NR)}, ${floatFormat(result.peakACC_FR)}`
+      let staList = Array.from(Object.keys(result.peakACC));
+      let accText = staList.reduce((acc,s) => acc+` ${s}:${floatFormat(result.peakACC[s])}`, "");
       cR.select("div.maxacc").select("span").text(accText);
 
       let lastRaceEqualizer = new Equalizer("#lastRaceEqualizer");
@@ -34,18 +34,3 @@ fetchCurrentResult()
       d3.select("div.currentRace").select("div.maxacc").select("span").text("");
 
     });
-
-    createEqualizerMap = function(result){
-      let dataset=new Map();
-      dataset.set("FL",{'station':'FL','maxacc':result.peakACC_FL});
-      dataset.set("NL",{'station':'NL','maxacc':result.peakACC_NL});
-      dataset.set("NR",{'station':'NR','maxacc':result.peakACC_NR});
-      dataset.set("FR",{'station':'FR','maxacc':result.peakACC_FR});
-      dataset.set("FL1K",{'station':'FL1K','maxacc':result.peakACC_FL1K});
-      dataset.set("FL660",{'station':'FL660','maxacc':result.peakACC_FL660});
-      dataset.set("FL330",{'station':'FL330','maxacc':result.peakACC_FL330});
-      dataset.set("FL60",{'station':'FL60','maxacc':result.peakACC_FL60});
-      dataset.set("FL0",{'station':'FL0','maxacc':result.peakACC_FL0});
-      dataset.set("FL4G",{'station':'FL4G','maxacc':result.peakACC_FL4G});
-      return dataset;
-    }

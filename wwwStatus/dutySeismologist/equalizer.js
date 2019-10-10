@@ -88,7 +88,7 @@ columnForStation(d) {
   // }else if (d.station === "FR") {
   //   i = 4;
   }else {
-       console.log(`no station found ${d.station}`);
+       console.log(`no station found '${d.station}'`);
   }
   return i;
 }
@@ -98,7 +98,7 @@ titleForStation(d) {
 
   if (d.station === "FL") {
     i = 'Start';
-  }if (d.station === "FL4G") {
+  }else if (d.station === "FL4G") {
     i = 'Start4G';
   }else if (d.station === "NL") {
     i = 'Lane 2';
@@ -113,12 +113,13 @@ titleForStation(d) {
   }else if (d.station === "FL1K") {
     i = '1,000 ft';
   }else {
-       console.log(`no station found ${d.station}`);
+       console.log(`no station found for title ${d.station}`);
   }
   return i;
 }
 
 updateEqualizer(allmaxaccJson){
+  console.log(`updateEqual: ${JSON.stringify(allmaxaccJson)}`)
   let dataset = new Array();
   for (let x of allmaxaccJson.values()){
     if( this.plotStations.includes(x.station)){
