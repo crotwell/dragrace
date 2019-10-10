@@ -595,6 +595,10 @@ let dlPacketConfigCallback = function(dlPacket) {
     let statpi = d3.select("div.piStatus");
     for (let [PIkey,PILoc] of Object.entries(currConfig.Loc)) {
       if (PILoc !== "NO"){
+        if ( ! currConfig.LocInfo[PILoc]) {
+          console.warn(`missing station for config update: ${PILoc}, skipping...`);
+          continue;
+        }
         let oldTheta = null;
         if (config && config.LocInfo[PILoc]) {
           oldTheta = config.LocInfo[PILoc].Angles.Theta;
@@ -622,7 +626,7 @@ let dlPacketIPCallback = function(dlPacket) {
         let PIkey = ipjson.station;
         let PILoc = config.Loc[ipjson.station]
         let theta = 0;
-        if (PILoc !== "NO"){
+        if (PILoc !== "NO" && config.LocInfo[PILoc]){
           theta = config.LocInfo[PILoc].Angles.Theta;
         }
         let statpi = d3.select("div.piStatus");
