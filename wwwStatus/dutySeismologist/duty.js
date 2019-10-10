@@ -683,6 +683,13 @@ updateCurrentResult = function(result) {
   cR.select("div.dutyOfficer").select("span").text(`${result.Trigger_Info.dutyOfficer}`);
   let accText = staList.reduce((acc,s) => acc+` ${s}:${floatFormat(result.peakACC[s])}`, "")
   cR.select("div.maxacc").select("span").text(accText);
+
+  if ( ! d3.select(".raceEqualizer").empty()) {
+    d3.select(".raceEqualizer").select("svg").remove();
+    let lastRaceEqualizer = new Equalizer(".raceEqualizer");
+    let eqMap = createEqualizerMap(result)
+    lastRaceEqualizer.updateEqualizer(eqMap);
+  }
   return result;
 }
 

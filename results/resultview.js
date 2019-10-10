@@ -46,14 +46,15 @@ let updateClassHeat = function(day, classname, heatname) {
             let heatDiv = cR.select("div.race_heat");
             heatDiv.select("span").text(`${result.Trigger_Info.heat}`);
             cR.select("div.dutyOfficer").select("span").text(`${result.Trigger_Info.dutyOfficer}`);
-            let max = Math.max(...result.peakACC.values());
+
+            let max = Math.max(...Object.values(result.peakACC));
             console.log(`max peakAcc: ${max}`)
-            let staList = Array.from(result.peakACC.keys());
+            let staList = Array.from(Object.keys(result.peakACC));
             let accText = staList.reduce((acc,s) => acc+` ${s}:${floatFormat(result.peakACC[s])}`, "")
-            accText = `max: ${floatFormat(Math.max(...result.peakACC.values()))} of ${accText}}`
+            accText = `max: ${floatFormat(max)} of ${accText}}`
             cR.select("div.maxacc").select("span").text(accText);
 
-            let equalizer = new Equalizer("div.equalizer");
+            let equalizer = new Equalizer("div.raceEqualizer");
             let eqMap = createEqualizerMap(result)
             equalizer.updateEqualizer(eqMap);
             loadSeismograms(result);
