@@ -92,7 +92,7 @@ def HandleMaxACC_Packet(packet):
     maxAccPacket["end_time"] = dateutil.parser.parse(maxAccPacket["end_time"])
     maxAccPacket["end_time"].replace(tzinfo = timezone.utc)
     maxAccPacket_list.append(maxAccPacket)
-    if len(maxAccPacket_list) > 2000: # list reaches max length after 1 min, 25 secs.
+    if len(maxAccPacket_list) > 4000: # list reaches max length after 1 min, 25 secs.
         maxAccPacket_list = maxAccPacket_list[1:]
 
     else:
