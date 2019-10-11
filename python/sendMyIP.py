@@ -33,7 +33,7 @@ class SendMyIP:
         self.host="74.207.233.105"
         self.port=6382
         #self.uri = "wss://www.seis.sc.edu/dragracews/datalink"
-        self.uri = "wss://74.207.233.105/datalink"
+        self.uri = "wss://li75-105.members.linode.com/datalink"
 
         self.programname="sendMyIP"
         self.username="dragrace"
