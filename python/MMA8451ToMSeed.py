@@ -470,6 +470,7 @@ if doDali:
         else:
             print("host not in config, keep default name {}".format(sta))
 
+        token=None
         # load token
 ##        with open("pi_token.jwt") as f:
 #            token = f.readline().strip()
