@@ -1,7 +1,7 @@
 
 
 let fetchCurrentResult = function() {
-  return fetch(`https://www.seis.sc.edu/dragrace/www/results/MostRecentResult.json`,
+  return fetch(`https://li75-105.members.linode.com/www/results/MostRecentResult.json`,
       {cache: "no-cache"}
     ).then(function(response){
     if(response.ok) {
@@ -19,7 +19,7 @@ let fetchCurrentResult = function() {
 };
 
 let fetchClassnames = function(day) {
-    return fetch(`https://www.seis.sc.edu/dragrace/www/results/${day}/classnames.json`,
+    return fetch(`https://li75-105.members.linode.com/www/results/${day}/classnames.json`,
         {cache: "no-cache"}
       ).then(function(response){
         if(response.ok) {
@@ -30,7 +30,7 @@ let fetchClassnames = function(day) {
 };
 
 let fetchHeatnames = function(day, classname) {
-    return fetch(`https://www.seis.sc.edu/dragrace/www/results/${day}/${classname}/heatnames.json`,
+    return fetch(`https://li75-105.members.linode.com/www/results/${day}/${classname}/heatnames.json`,
         {cache: "no-cache"}
       ).then(function(response){
         if(response.ok) {
@@ -41,7 +41,7 @@ let fetchHeatnames = function(day, classname) {
 };
 
 let fetchHeatResult = function(day, classname, heatname) {
-    return fetch(`https://www.seis.sc.edu/dragrace/www/results/${day}/${classname}/${heatname}/results.json`)
+    return fetch(`https://li75-105.members.linode.com/www/results/${day}/${classname}/${heatname}/results.json`)
     .then(function(response){
       if(response.ok) {
         return response.json();
