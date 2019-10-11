@@ -19,6 +19,8 @@ logging.warning("logging configured")
 
 host = "129.252.35.36"
 port = 15003
+host="74.207.233.105"
+port=6382
 #host = "129.252.35.20"
 #host = "127.0.0.1"
 #port = 6382
