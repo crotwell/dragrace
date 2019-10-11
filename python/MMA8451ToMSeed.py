@@ -49,7 +49,7 @@ verbose = False
 
 #daliHost="129.252.35.36"
 daliHost="74.207.233.105"
-daliPort=6383
+daliPort=6382
 dali=None
 #daliUri = "wss://www.seis.sc.edu/dragracews/datalink"
 daliUri = "wss://74.207.233.105/datalink"
