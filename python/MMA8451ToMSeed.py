@@ -47,8 +47,9 @@ import decimate
 
 verbose = False
 
-daliHost="129.252.35.36"
-daliPort=15003
+#daliHost="129.252.35.36"
+daliHost=74.207.233.105
+daliPort=6383
 dali=None
 #daliUri = "wss://www.seis.sc.edu/dragracews/datalink"
 daliUri = "wss://74.207.233.105/datalink"
@@ -365,7 +366,8 @@ def sendToMseed(last_sample_time, status, samplesAvail, data, dali):
 
 def initDali(daliUri):
     print("Init Dali at {0}".format(daliUri))
-    dl = simpleDali.WebSocketDataLink(daliUri)
+    #dl = simpleDali.WebSocketDataLink(daliUri)
+    dl = simpleDali.DataLink(daliHost, daliPort)
     return dl
 
 
