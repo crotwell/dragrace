@@ -216,6 +216,13 @@ d3.select("button#halfG").on("click", function(d) {
     lastRaceEqualizer.updateMaxG(0.5);
   }
 });
+d3.select("button#oneAndHalfG").on("click", function(d) {
+  console.log("buttonclick "+d);
+  liveEqualizer.updateMaxG(1.5);
+  if (lastRaceEqualizer) {
+    lastRaceEqualizer.updateMaxG(1.5);
+  }
+});
 d3.select("button#twoG").on("click", function(d) {
   console.log("buttonclick "+d);
   liveEqualizer.updateMaxG(2.0);
