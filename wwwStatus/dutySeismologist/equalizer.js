@@ -29,7 +29,7 @@ createZeros(){
   let dataset=new Map();
   let oldTime = seisplotjs.moment.utc().subtract(1, 'year');
   dataset.set("FL",{'station':'FL','maxacc':.0 , 'end_time': oldTime});
-  dataset.set("FL4G",{'station':'FL','maxacc':.0, 'end_time': oldTime });
+  dataset.set("FL4G",{'station':'FL4G','maxacc':.0, 'end_time': oldTime });
   dataset.set("NL",{'station':'NL','maxacc':.0, 'end_time': oldTime });
   //dataset.set("CT",{'station':'CT','maxacc':.0, 'end_time': oldTime });
   //dataset.set("NR",{'station':'NR','maxacc':.0, 'end_time': oldTime });
