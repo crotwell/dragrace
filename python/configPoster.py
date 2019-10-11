@@ -45,8 +45,11 @@ class SendConfig:
 
         self.interval = intervalSecs # sleep in seconds
 
-        self.host = "129.252.35.36"
-        self.port = 15003
+        #self.host = "129.252.35.36"
+        #self.port = 15003
+
+        self.host ="74.207.233.105"
+        self.port = 6382
         self.uri = "ws://www.seis.sc.edu/dragracews/datalink"
 
         self.programname="sendConfig"
