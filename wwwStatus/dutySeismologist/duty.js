@@ -155,6 +155,7 @@ if (protocol == 'https:') {
 }
 
 let liveEqualizer = new Equalizer("div.liveEqualizer");
+let lastRaceEqualizer = null;
 
 d3.select('#classChoice')
   .selectAll("option")
@@ -206,6 +207,29 @@ d3.select("div.class2 button.heatcollapse").on("click", function(d) {
 });
 
 //end trying to make heat buttons work
+
+// equalizer scale buttons
+d3.select("button#halfG").on("click", function(d) {
+  console.log("buttonclick "+d);
+  liveEqualizer.updateMaxG(0.5);
+  if (lastRaceEqualizer) {
+    lastRaceEqualizer.updateMaxG(0.5);
+  }
+});
+d3.select("button#twoG").on("click", function(d) {
+  console.log("buttonclick "+d);
+  liveEqualizer.updateMaxG(2.0);
+  if (lastRaceEqualizer) {
+    lastRaceEqualizer.updateMaxG(2.0);
+  }
+});
+d3.select("button#threeG").on("click", function(d) {
+  console.log("buttonclick "+d);
+  liveEqualizer.updateMaxG(3.0);
+  if (lastRaceEqualizer) {
+    lastRaceEqualizer.updateMaxG(3.0);
+  }
+});
 
 let packetCount = 0;
 
@@ -689,7 +713,7 @@ updateCurrentResult = function(result) {
 
   if ( ! d3.select(".raceEqualizer").empty()) {
     d3.select(".raceEqualizer").select("svg").remove();
-    let lastRaceEqualizer = new Equalizer(".raceEqualizer");
+    lastRaceEqualizer = new Equalizer(".raceEqualizer");
     let eqMap = createEqualizerMap(result)
     lastRaceEqualizer.updateEqualizer(eqMap);
   }
@@ -705,7 +729,7 @@ updateHeatNumber = function(heatE) {
       let num = parseInt(matchinfo[2]) +1;
       console.log(`updateHeatNumber prefix: ${prefix}  num: ${num}`)
       heatE = `${prefix}${num}`
-      d3.select('#heatE').text(heatE);
+      d3.select('#heatE').attr("value", heatE).text(heatE);
     }
 }
 
