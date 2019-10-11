@@ -50,7 +50,8 @@ verbose = False
 daliHost="129.252.35.36"
 daliPort=15003
 dali=None
-daliUri = "wss://www.seis.sc.edu/dragracews/datalink"
+#daliUri = "wss://www.seis.sc.edu/dragracews/datalink"
+daliUri = "wss://74.207.233.105/datalink"
 
 pin = 18  # GPIO interrupt
 #MAX_SAMPLES = 2000
