@@ -354,7 +354,6 @@ let animationDrawLoop = function() {
 window.requestAnimationFrame(animationDrawLoop);
 
 let dlMaxAccelerationCallback = function(dlPacket) {
-console.log(`dlMaxAccelerationCallback ${dlPacket}`)
     let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
     let maxaccJson = JSON.parse(s);
 
