@@ -135,7 +135,8 @@ if (protocol == 'https:') {
     writeDatalinkUrl = datalinkUrl;
   }
   jwtTokenPromise = fetch(jwtTokenUrl, {
-    credentials: 'same-origin'
+    credentials: 'same-origin',
+    cache: "no-cache"
   }).then(function(response) {
     if(response.ok) {
       return response.text();
