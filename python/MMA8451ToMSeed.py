@@ -367,7 +367,7 @@ def sendToMseed(last_sample_time, status, samplesAvail, data, dali):
 def initDali(daliUri):
     print("Init Dali at {0}".format(daliUri))
     #dl = simpleDali.WebSocketDataLink(daliUri)
-    dl = simpleDali.DataLink(daliHost, daliPort)
+    dl = simpleDali.SocketDataLink(daliHost, daliPort)
     return dl
 
 
