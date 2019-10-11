@@ -92,9 +92,11 @@ const REPLAY_PATH = '/replayracews/datalink';
 const REPLAY_INTERNAL_PATH = '/datalink';
 const AUTH_PATH = '/authracews/datalink'
 const AUTH_1SPS_PATH = '/auth1spsws/datalink'
-let host = EXTERNAL_HOST;
+const LINODE_HOST = 'li75-105.members.linode.com'
+const LINODE_PATH = '/dragracews/datalink';
+let host = LINODE_HOST;
 let port = EXTERNAL_PORT;
-let path = EXTERNAL_PATH;
+let path = LINODE_PATH;
 if (do1SPS) {
   path = AUTH_1SPS_PATH;
 }
@@ -320,7 +322,7 @@ let animationDrawLoop = function() {
 window.requestAnimationFrame(animationDrawLoop);
 
 let dlMaxAccelerationCallback = function(dlPacket) {
-
+console.log(`dlMaxAccelerationCallback ${dlPacket}`)
     let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
     let maxaccJson = JSON.parse(s);
 
