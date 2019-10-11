@@ -45,7 +45,7 @@ import simpleDali
 import dataBuffer
 import decimate
 
-verbose = False
+verbose = True
 
 #daliHost="129.252.35.36"
 daliHost="74.207.233.105"
@@ -471,8 +471,8 @@ if doDali:
             print("host not in config, keep default name {}".format(sta))
 
         # load token
-        with open("pi_token.jwt") as f:
-            token = f.readline().strip()
+##        with open("pi_token.jwt") as f:
+#            token = f.readline().strip()
         print("init DataLink at {0}".format(daliUri))
     except ValueError as err:
         raise Exception("Unable to init DataLink at {0}  {2}".format(daliUri, err))
