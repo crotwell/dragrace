@@ -21,10 +21,12 @@ const EXTERNAL_PORT = 80;
 const EXTERNAL_PATH = '/dragracews/datalink';
 const REPLAY_PATH = '/replayracews/datalink';
 const REPLAY_INTERNAL_PATH = '/datalink';
-const AUTH_PATH = '/authracews/datalink'
-let host = EXTERNAL_HOST;
+const AUTH_PATH = '/authracews/datalink';
+const LINODE_HOST = 'li75-105.members.linode.com';
+const LINODE_PATH = '/datalinkws';
+let host = LINODE_HOST;
 let port = EXTERNAL_PORT;
-let path = EXTERNAL_PATH;
+let path = LINODE_PATH;
 
 let protocol = 'http:';
 if ("https:" == document.location.protocol) {
