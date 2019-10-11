@@ -719,8 +719,13 @@ updateCurrentResult = function(result) {
   cR.select("div.maxacc").select("span").text(accText);
 
   if ( ! d3.select(".raceEqualizer").empty()) {
+    let maxG = 2.0;
+    if (lastRaceEqualizer) {
+      maxG = lastRaceEqualizer.maxG;
+    }
     d3.select(".raceEqualizer").select("svg").remove();
     lastRaceEqualizer = new Equalizer(".raceEqualizer");
+    lastRaceEqualizer.updateMaxG(maxG);
     let eqMap = createEqualizerMap(result)
     lastRaceEqualizer.updateEqualizer(eqMap);
   }
