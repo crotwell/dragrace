@@ -705,7 +705,7 @@ updateHeatNumber = function(heatE) {
       let num = parseInt(matchinfo[2]) +1;
       console.log(`updateHeatNumber prefix: ${prefix}  num: ${num}`)
       heatE = `${prefix}${num}`
-      d3.select('heatE').text(heatE);
+      d3.select('#heatE').text(heatE);
     }
 }
 
