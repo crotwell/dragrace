@@ -39,7 +39,7 @@ let today = moment()
     classList = ['FRIDAY','Sportsman-Qualifying','Top-Alcohol-Qualifying-Session',
     'Midway-Open','Competition-Qualifying-Session','Top-Alcohol-Qualifying-Session',
     'Pro-Mod-Qualifying-Session','Pro-Stock-Qualifying-Session','Nitro-Qualifying-Session',
-    'Pro-Mod-Qualifying-Session','Pro-Stock-Qualifying Session','Nitro-Qualifying-Session','Secure-Track'];
+    'Pro-Mod-Qualifying-Session','Pro-Stock-Qualifying Session','Nitro-Qualifying-Funny-Car','Nitro-Qualifying-Top-Fuel','Secure-Track'];
   }else if(today.weekday() === 6){
     classList=['SATURDAY','Sportsman-Eliminations','Midway-Open','Competition-Qualifying-Session',
     'Top-Alcohol-Eliminations-R1','Competition-Eliminations-R1','Pro-Mod-Qualifying-Session',
