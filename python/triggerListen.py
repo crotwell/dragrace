@@ -188,9 +188,9 @@ def ProcessHoldingPen():
         "peakACC": {
             "FL": max(FL_acc),
             "NL": max(NL_acc),
-            "CT": max(CT_acc),
-            "NR": max(NR_acc),
-            "FR": max(FR_acc),
+        #    "CT": max(CT_acc),
+        #    "NR": max(NR_acc),
+        #    "FR": max(FR_acc),
             "FL0": max(FL0_acc),
             "FL60": max(FL60_acc),
             "FL330": max(FL330_acc),
