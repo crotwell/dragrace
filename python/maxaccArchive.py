@@ -18,10 +18,11 @@ class MaxAccArchive:
 
     def __init__(self):
         self.verbose = False
-        self.host = "129.252.35.36"
-        self.port = 15003
+        #self.host = "129.252.35.36"
+        #self.port = 15003
         self.uri = "ws://www.seis.sc.edu/dragracews/datalink"
-
+        self.host = "74.207.233.105"
+        self.port = 6382
         self.programname="triggerListen"
         self.username="dragrace"
         self.processid=0
