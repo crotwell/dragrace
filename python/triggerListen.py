@@ -13,7 +13,8 @@ from threading import Thread
 import time
 import queue
 
-# logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
+logging.warning("logging configured")
 
 
 host = "129.252.35.36"
@@ -29,15 +30,18 @@ processid=0
 architecture="python"
 
 keepGoing = True
+loop = None
 
 maxAccPacket_list = []
 trig_HoldingPen = queue.Queue()
 
 def handleSignal(sigNum, stackFrame):
-    print("############ handleSignal {} ############".format(sigNum))
+    logging.warning("############ handleSignal {} ############".format(sigNum))
     global keepGoing
     if keepGoing:
         keepGoing = False
+        if loop is not None:
+            loop.stop()
     else:
         sys.exit(0)
 
@@ -50,11 +54,11 @@ async def doReconnect(dali):
         dali = simpleDali.SocketDataLink(host, port)
     await dali.reconnect()
     serverId = await dali.id(programname, username, processid, architecture)
-    print("Resp: {}".format(serverId))
+    logging.info("Resp: {}".format(serverId))
     serverInfo = await dali.info("STATUS")
-    print("Info: {} ".format(serverInfo.message))
+    logging.info("Info: {} ".format(serverInfo.message))
     r = await dali.match(".*/(MAXACC|MTRIG)")
-    print("match() Resonse {}".format(r))
+    logging.info("match() Resonse {}".format(r))
     r = await dali.stream()
     return dali
 
@@ -64,7 +68,7 @@ async def doTest(loop):
     while(keepGoing):
         try:
             if dali is None or dali.isClosed():
-                print("dali closed, reconnecting")
+                logging.warning("dali closed, reconnecting")
                 dali = await doReconnect(dali)
             packet = await dali.parseResponse()
 
@@ -74,12 +78,12 @@ async def doTest(loop):
             elif packet.streamId.endswith("MTRIG"):
                 HandleTriggerPacket(packet)
             else:
-                print("Packet is not a MaxACC or a Trigger")
+                logging.warning("Packet is not a MaxACC or a Trigger")
                 continue
         except Exception as e:
-            print("error while streaming: {}".format(e))
+            logging.warning("error while streaming: {}".format(e))
             await dali.close()
-    print("doTest, end while keepGoing={}".format(keepGoing))
+    logging.info("doTest, end while keepGoing={}".format(keepGoing))
     await dali.close()
 
 def HandleMaxACC_Packet(packet):
@@ -101,8 +105,8 @@ def HandleTriggerPacket(packet):
     global maxAccPacket_list
     global trig_HoldingPen
     trig = json.loads(packet.data.decode("'UTF-8'"))
-    print("trig start {}".format(trig["startTime"]))
-    print("trig end {}".format(trig["endTime"]))
+    logging.info("trig start {}".format(trig["startTime"]))
+    logging.info("trig end {}".format(trig["endTime"]))
 
     trig["startTime"] = dateutil.parser.parse(trig["startTime"])
     trig["startTime"].replace(tzinfo = timezone.utc)
@@ -115,7 +119,7 @@ def ProcessHoldingPen():
     global trig_HoldingPen
     tooYoungTriggers = []
     trig = trig_HoldingPen.get()
-    print("got a trigger: {} {} end: {}".format(trig["class"], trig["heat"], trig["endTime"]))
+    logging.info("got a trigger: {} {} end: {}".format(trig["class"], trig["heat"], trig["endTime"]))
     while trig["endTime"] > simpleDali.utcnowWithTz():
         time.sleep(1)
     FL_acc = [0]
@@ -129,9 +133,6 @@ def ProcessHoldingPen():
     FL330_acc = [0]
     FL660_acc = [0]
     FL1K_acc = [0]
-    m = maxAccPacket_list[0]
-    # print("maxAccPacket_list {} {} {}".format(m["start_time"], m["end_time"],m["station"]))
-    # print("trig  {} {}".format(trig["startTime"], trig["endTime"]))
     count = 0
     for maxAccJson in maxAccPacket_list:
         if maxAccJson["start_time"] > trig["startTime"] and maxAccJson["end_time"] < trig["endTime"]:
@@ -159,7 +160,7 @@ def ProcessHoldingPen():
             elif maxAccJson["station"] == "FL4G":
                 FL4G_acc.append(maxAccJson["maxacc"])
             else:
-                #print("maxACC Packet doesn't contain a station: {}".format(maxAccJson))
+                #logging.info("maxACC Packet doesn't contain a station: {}".format(maxAccJson))
                 pass
     d = datetime.now(timezone.utc)
     edt = timezone(timedelta(hours=-4), name="EDT")
@@ -184,17 +185,19 @@ def ProcessHoldingPen():
     ResultsJson = {
         "Day_Name": dayName,
         "Trigger_Info": trig,
-        "peakACC_FL": max(FL_acc),
-        "peakACC_NL": max(NL_acc),
-        "peakACC_CT": max(CT_acc),
-        "peakACC_NR": max(NR_acc),
-        "peakACC_FR": max(FR_acc),
-        "peakACC_FL0": max(FL0_acc),
-        "peakACC_FL60": max(FL60_acc),
-        "peakACC_FL330": max(FL330_acc),
-        "peakACC_FL660": max(FL660_acc),
-        "peakACC_FL1K": max(FL1K_acc),
-        "peakACC_FL4G": max(FL4G_acc),
+        "peakACC": {
+            "FL": max(FL_acc),
+            "NL": max(NL_acc),
+        #    "CT": max(CT_acc),
+        #    "NR": max(NR_acc),
+        #    "FR": max(FR_acc),
+            "FL0": max(FL0_acc),
+            "FL60": max(FL60_acc),
+            "FL330": max(FL330_acc),
+            "FL660": max(FL660_acc),
+            "FL1K": max(FL1K_acc),
+            "FL4G": max(FL4G_acc),
+        }
     }
     SendResultsJson(ResultsJson)
     MostRecentResult = {
@@ -206,7 +209,7 @@ def ProcessHoldingPen():
         if f is not None:
             json.dump(MostRecentResult,f)
         else:
-            print("can't save results to mseed/www/results/MostRecentResult.json for {}".format(MostRecentResult))
+            logging.warning("can't save results to mseed/www/results/MostRecentResult.json for {}".format(MostRecentResult))
 
 def SendResultsJson(ResultsJson):
     day = ResultsJson["Day_Name"]
@@ -236,7 +239,7 @@ def SendResultsJson(ResultsJson):
         if f is not None:
             json.dump(ResultsJson,f)
         else:
-            print("can't save results to {}".format(resultsFile))
+            logging.warning("can't save results to {}".format(resultsFile))
 
     # read in classnames.json
     try:
@@ -283,17 +286,19 @@ def SendResultsJson(ResultsJson):
         heatNames = [heat]
         with open(heatNamesFile,'w') as f:
             json.dump(heatNames,f)
-    print('I succesffuly sent results to results directory! {}'.format(resultsPath))
+    logging.info('I succesffuly sent results to results directory! {}'.format(resultsPath))
 
 def loopHoldingPen():
     while True:
         ProcessHoldingPen()
         time.sleep(1)
-    print("holding pen quit")
+    logging.info("holding pen quit")
+
+logging.info("starting triggerListen");
 
 sendThread = Thread(target = loopHoldingPen)
 sendThread.daemon=True
-print("thread start")
+logging.info("thread start")
 sendThread.start()
 
 loop = asyncio.get_event_loop()

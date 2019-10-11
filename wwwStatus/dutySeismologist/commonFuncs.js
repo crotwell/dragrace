@@ -52,16 +52,9 @@ let fetchHeatResult = function(day, classname, heatname) {
 
 createEqualizerMap = function(result){
   let dataset=new Map();
-  dataset.set("FL",{'station':'FL','maxacc':result.peakACC_FL});
-  dataset.set("NL",{'station':'NL','maxacc':result.peakACC_NL});
-  // dataset.set("FL",{'station':'NR','maxacc':result.peakACC_NR});
-  // dataset.set("FR",{'station':'FR','maxacc':result.peakACC_FR});
-  dataset.set("FL0",{'station':'FL0','maxacc':result.peakACC_FL0});
-  dataset.set("FL60",{'station':'FL60','maxacc':result.peakACC_FL60});
-  dataset.set("FL330",{'station':'FL330','maxacc':result.peakACC_FL330});
-  dataset.set("FL660",{'station':'FL660','maxacc':result.peakACC_FL660});
-  dataset.set("FL1K",{'station':'FL1K','maxacc':result.peakACC_FL1K});
-  dataset.set("FL4G",{'station':'FL4G','maxacc':result.peakACC_FL4G});
-
+  for (let [s, value] of Object.entries(result.peakACC)) {
+    dataset.set(s, {'station':s,'maxacc':value});
+  }
+console.log(`createEqualizerMap  ${dataset}`)
   return dataset;
 }

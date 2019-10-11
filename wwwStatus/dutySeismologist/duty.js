@@ -25,7 +25,7 @@ const do1SPS = false
 
 let net = 'CO';
 //let staList = ['PI01', 'PI02', 'PI03', 'PI04', 'PI05', 'PI06', 'PI07', 'PI99'];
-let staList = ['FL', 'NL', 'CT', 'NR', 'FR','FL0','FL60','FL330','FL660','FL1K','FL4G'];
+let staList = ['FL', 'NL', 'FL0','FL60','FL330','FL660','FL1K','FL4G'];
 //monday = 1
 //friday = 5
 //saturday = 6
@@ -163,7 +163,7 @@ d3.select('#classChoice')
 
 d3.selectAll('.textHost').text(host);
 
-let accelMaxValues = new Map();
+let accelMaxValues = liveEqualizer.createZeros();
 let prevAccelValue = new Map();
 let dlConn = null;
 let allSeisPlots = new Map();
@@ -681,9 +681,15 @@ updateCurrentResult = function(result) {
   heatDiv.select("a").attr("href", `https://www.seis.sc.edu/dragrace/www/results/${day}/${c}/${h}/results.json`);
   //d3.select("div.currentRace").select("div.race_heat").text(`Heat = ${result.Trigger_Info.heat}`);
   cR.select("div.dutyOfficer").select("span").text(`${result.Trigger_Info.dutyOfficer}`);
-  let datasetNow = [result.peakACC_FL,result.peakACC_NL,result.peakACC_NR,result.peakACC_FR];
-  let accText = `${floatFormat(result.peakACC_FL)}, ${floatFormat(result.peakACC_NL)}, ${floatFormat(result.peakACC_NR)}, ${floatFormat(result.peakACC_FR)}`
+  let accText = staList.reduce((acc,s) => acc+` ${s}:${floatFormat(result.peakACC[s])}`, "")
   cR.select("div.maxacc").select("span").text(accText);
+
+  if ( ! d3.select(".raceEqualizer").empty()) {
+    d3.select(".raceEqualizer").select("svg").remove();
+    let lastRaceEqualizer = new Equalizer(".raceEqualizer");
+    let eqMap = createEqualizerMap(result)
+    lastRaceEqualizer.updateEqualizer(eqMap);
+  }
   return result;
 }
 
