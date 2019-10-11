@@ -48,7 +48,7 @@ import decimate
 verbose = False
 
 #daliHost="129.252.35.36"
-daliHost=74.207.233.105
+daliHost="74.207.233.105"
 daliPort=6383
 dali=None
 #daliUri = "wss://www.seis.sc.edu/dragracews/datalink"
