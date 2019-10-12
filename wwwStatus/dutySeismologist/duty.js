@@ -42,11 +42,12 @@ let today = moment()
     'Pro-Mod-Qualifying-Session','Pro-Stock-Qualifying Session','Nitro-Qualifying-Funny-Car','Nitro-Qualifying-Top-Fuel','Drag-Week','Speedway-Charities','Pro-Mod','Pro-Stock-Motorcycle-Q2','Pro-Stock-Q2','Funny-Car-Q2','Top-Fuel-Q2','Wheelstander','Top-Alcohol-Dragster-Q2','Secure-Track'];
   }else if(today.weekday() === 6){
     classList=['SATURDAY','Sportsman-Eliminations','Midway-Open','Competition-Qualifying-Session',
-    'Top-Alcohol-Eliminations-R1','Nitro-School','Competition-Eliminations-R1','Pro-Mod-Qualifying-Session',
+    'Top-Alcohol-Dragster-Q3','Top-Alcohol-Funny-Car-Q3',
+    'Competition-Eliminations-R1','Drag-Week-TT3','Pro-Mod-Q3',
     'Pro-Stock-Motorcycle-Qual','Pro-Stock-Car-Qual','Nitro-Top-Fuel-Q1','Nitro-Funny-Car-Q1','Pro-Mod-Qualifying Session',
-    'Pro-Stock-Motorcycle-Q2','Pro-Stock-Car-Q2','Nitro-Top-Fuel-Q2','Nitro-Funny-Car-Q2','Top-Alcohol-Eliminations-R2',
-    'Competition-Eliminations-R2','Sportsman-Eliminations-2','Competition-Eliminations-R3',
-    'Sportsman-Eliminations-3','Secure-Track'];
+    'Pro-Stock-Car-Q3','Pro-Stock-Motorcycle-Q3','Top-Fuel-Q3','Funny-Car-Q3','Drag-Week-TT4','Wally-Race-Final',
+    'Speedway-Charities-TT2','Pro-Mod-Q4','Pro-Stock-Q4','Pro-Stock-Motorcycle-Q4',
+    'Top-Fuel-Q4','Funny-Car-Q4','Secure-Track'];
   }else if(today.weekday() === 7){
     classList=['SUNDAY','Midway-Open','Pre-Race-Walk','Nitro-Eliminations-R1','Pro-Stock-Eliminations-R1',
     'Pro-Mod-Eliminations-R1','Nitro-Eliminations-R2','Pro-Stock-Eliminations-R2','Pro-Mod-Eliminations-R2',
