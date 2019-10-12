@@ -46,7 +46,7 @@ class MaxAccArchive:
             self.miniseedBuffers[station].close()
         self.miniseedBuffers[station] = dataBuffer.DataBuffer(self.net, station, self.loc, self.chan,
                  sps, archive=True,
-                 encoding=simpleMiniseed.ENC_SHORT, dali=None,
+                 encoding=simpleMiniseed.ENC_INT, dali=None,
                  continuityFactor=2, verbose=self.verbose)
 
     def calcSps(self, maxJson):
