@@ -209,33 +209,33 @@ d3.select("div.class2 button.heatcollapse").on("click", function(d) {
 //end trying to make heat buttons work
 
 // equalizer scale buttons
+const updateYScale = function(gValue) {
+  seisGraphMax = gValue;
+  liveEqualizer.updateMaxG(gValue);
+  if (lastRaceEqualizer) {
+    lastRaceEqualizer.updateMaxG(gValue);
+  }
+  allSeisPlots.forEach(function(value, key) {
+      value.seismographConfig.fixedYScale = [-0.1, gValue]];
+      value.calcAmpScaleDomain();
+      value.draw();
+  });
+}
 d3.select("button#halfG").on("click", function(d) {
   console.log("buttonclick "+d);
-  liveEqualizer.updateMaxG(0.5);
-  if (lastRaceEqualizer) {
-    lastRaceEqualizer.updateMaxG(0.5);
-  }
+  updateYScale(0.5);
 });
 d3.select("button#oneAndHalfG").on("click", function(d) {
   console.log("buttonclick "+d);
-  liveEqualizer.updateMaxG(1.5);
-  if (lastRaceEqualizer) {
-    lastRaceEqualizer.updateMaxG(1.5);
-  }
+  updateYScale(1.5);
 });
 d3.select("button#twoG").on("click", function(d) {
   console.log("buttonclick "+d);
-  liveEqualizer.updateMaxG(2.0);
-  if (lastRaceEqualizer) {
-    lastRaceEqualizer.updateMaxG(2.0);
-  }
+  updateYScale(2.0);
 });
 d3.select("button#threeG").on("click", function(d) {
   console.log("buttonclick "+d);
-  liveEqualizer.updateMaxG(3.0);
-  if (lastRaceEqualizer) {
-    lastRaceEqualizer.updateMaxG(3.0);
-  }
+  updateYScale(3.0);
 });
 
 let packetCount = 0;
