@@ -115,14 +115,14 @@ let updateClassHeat = function(day, classname, heatname) {
 }
 
 let loadSeismograms = function(result) {
-  let staList = ['FL','NL','NR','FR'];
+  let staList = ['FL','NL', 'FL0', 'FL4G', 'FL60', 'FL330', 'FL660', 'FL1K'];
   let chanList = ['HNM', 'HNX', 'HNY', 'HNZ'];
   let protocol = 'http:';
   if ("https:" == document.location.protocol) {
     protocol = 'https:'
   }
   const host = document.location.hostname;
-  let subdir = "mseed"
+  let subdir = ""
   if (host === 'www.seis.sc.edu') {
     subdir = "dragrace";
   }
@@ -143,8 +143,9 @@ let loadSeismograms = function(result) {
             chanObj, timeWindow));
     }
   }
-  mseedQ.loadSeismograms(chanTR)
+  return mseedQ.loadSeismograms(chanTR)
   .then(sddList => {
+    resultsSddList = sddList;
     let seisPlotConfig = new seisplotjs.seismographconfig.SeismographConfig();
     seisPlotConfig.doRMean = false;
     let maxaccsSeisPlotConfig = seisPlotConfig.clone();
@@ -280,5 +281,6 @@ if ( ! day) {
 let classname = params.get('class');
 let heatname = params.get('heat');
 let allSeisPlots = [];
+let resultsSddList = [];
 console.log(`class: ${classname}  heat: ${heatname}`);
 updateClassHeat(day, classname, heatname);
