@@ -21,7 +21,8 @@ let updateClassHeat = function(day, classname, heatname) {
     if (heatname) {
       let result = fetchHeatResult(day, classname, heatname)
           .then(function(result) {
-            console.log(`fetchHeatResult ${day}, ${classname}, ${heatname} ${result}`)
+            console.log(`fetchHeatResult ${day}, ${classname}, ${heatname} ${result}`);
+            heatResult = result;
             let floatFormat = d3.format(".2f");
             let cR = d3.select("div.currentRace");
             cR.select("span.dayName").select("a").attr("href", d =>  {
@@ -54,9 +55,8 @@ let updateClassHeat = function(day, classname, heatname) {
             accText = `max: ${floatFormat(max)} of ${accText}}`
             cR.select("div.maxacc").select("span").text(accText);
 
-            let equalizer = new Equalizer("div.raceEqualizer");
             let eqMap = createEqualizerMap(result)
-            equalizer.updateEqualizer(eqMap);
+            lastRaceEqualizer.updateEqualizer(eqMap);
             loadSeismograms(result);
           }).catch(function(err) {
             console.error(err);
@@ -257,17 +257,37 @@ let plotTimeAdjust = function(adjType) {
   }
 };
 
-d3.select("button#zoomLeft").on("click", function(d) {
-  plotTimeAdjust("zoomLeft")
+d3.select("button#replay").on("click", function(d) {
+  replayEqualizer(lastRaceEqualizer, heatResult, resultsSddList);
 });
-d3.select("button#zoomIn").on("click", function(d) {
-  plotTimeAdjust("zoomIn")
+
+// equalizer scale buttons
+const updateYScale = function(gValue) {
+  seisGraphMax = gValue;
+  if (lastRaceEqualizer) {
+    lastRaceEqualizer.updateMaxG(gValue);
+  }
+  allSeisPlots.forEach(function(value, key) {
+      value.seismographConfig.fixedYScale = [-0.1, gValue*4096];
+      value.calcAmpScaleDomain();
+      value.draw();
+  });
+}
+d3.select("button#halfG").on("click", function(d) {
+  console.log("buttonclick "+d);
+  updateYScale(0.5);
 });
-d3.select("button#zoomOut").on("click", function(d) {
-  plotTimeAdjust("zoomOut")
+d3.select("button#oneAndHalfG").on("click", function(d) {
+  console.log("buttonclick "+d);
+  updateYScale(1.5);
 });
-d3.select("button#zoomRight").on("click", function(d) {
-  plotTimeAdjust("zoomRight")
+d3.select("button#twoG").on("click", function(d) {
+  console.log("buttonclick "+d);
+  updateYScale(2.0);
+});
+d3.select("button#threeG").on("click", function(d) {
+  console.log("buttonclick "+d);
+  updateYScale(3.0);
 });
 
 
@@ -280,6 +300,7 @@ if ( ! day) {
 }
 let classname = params.get('class');
 let heatname = params.get('heat');
+let lastRaceEqualizer = new Equalizer("div.raceEqualizer");
 let allSeisPlots = [];
 let resultsSddList = [];
 console.log(`class: ${classname}  heat: ${heatname}`);
