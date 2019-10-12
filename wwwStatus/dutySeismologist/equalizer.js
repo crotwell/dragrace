@@ -12,11 +12,12 @@ class Equalizer{
     this.margin = {top: 20, right: 10, bottom: 30, left: 30};
     this.width = 600 - this.margin.left - this.margin.right;  //330
     this.height = 400 - this.margin.top - this.margin.bottom;
+    this.maxG = 2.0;
     this.yScale = d3.scaleLinear()
-    .domain([0,(2.0)])
+    .domain([0,this.maxG])
     .range([this.height, 0]);
     console.log(`yscaletest ${this.yScale(1)}`)
-    this.yAxis = d3.axisLeft(this.yScale).ticks(10, "0.1f");
+    this.yAxis = d3.axisLeft(this.yScale).ticks(10, "0.2f");
     // this.yAxis = d3.axisLeft(this.yScale);
     // this.yAxis.ticks(10);
     this.barPadding = 1;
@@ -24,6 +25,12 @@ class Equalizer{
 
     this.createEqualizer(selector);
     this.updateEqualizer(this.createZeros());
+  }
+  updateMaxG(g){
+    this.maxG = g;
+    this.yScale.domain([0,this.maxG]);
+    let svg = d3.select(this.selector).select("svg").select("g.axisLeft").call(this.yAxis);
+    this.updateEqualizer(this.lastJson);
   }
 createZeros(){
   let dataset=new Map();
@@ -119,6 +126,7 @@ titleForStation(d) {
 }
 
 updateEqualizer(allmaxaccJson){
+  this.lastJson = allmaxaccJson;
   let dataset = new Array();
   for (let x of allmaxaccJson.values()){
     if( this.plotStations.includes(x.station)){

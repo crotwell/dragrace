@@ -155,6 +155,7 @@ if (protocol == 'https:') {
 }
 
 let liveEqualizer = new Equalizer("div.liveEqualizer");
+let lastRaceEqualizer = null;
 
 d3.select('#classChoice')
   .selectAll("option")
@@ -206,6 +207,36 @@ d3.select("div.class2 button.heatcollapse").on("click", function(d) {
 });
 
 //end trying to make heat buttons work
+
+// equalizer scale buttons
+const updateYScale = function(gValue) {
+  seisGraphMax = gValue;
+  liveEqualizer.updateMaxG(gValue);
+  if (lastRaceEqualizer) {
+    lastRaceEqualizer.updateMaxG(gValue);
+  }
+  allSeisPlots.forEach(function(value, key) {
+      value.seismographConfig.fixedYScale = [-0.1, gValue];
+      value.calcAmpScaleDomain();
+      value.draw();
+  });
+}
+d3.select("button#halfG").on("click", function(d) {
+  console.log("buttonclick "+d);
+  updateYScale(0.5);
+});
+d3.select("button#oneAndHalfG").on("click", function(d) {
+  console.log("buttonclick "+d);
+  updateYScale(1.5);
+});
+d3.select("button#twoG").on("click", function(d) {
+  console.log("buttonclick "+d);
+  updateYScale(2.0);
+});
+d3.select("button#threeG").on("click", function(d) {
+  console.log("buttonclick "+d);
+  updateYScale(3.0);
+});
 
 let packetCount = 0;
 
@@ -323,7 +354,6 @@ let animationDrawLoop = function() {
 window.requestAnimationFrame(animationDrawLoop);
 
 let dlMaxAccelerationCallback = function(dlPacket) {
-console.log(`dlMaxAccelerationCallback ${dlPacket}`)
     let s = makeString(dlPacket.data, 0, dlPacket.dataSize);
     let maxaccJson = JSON.parse(s);
 
@@ -688,8 +718,13 @@ updateCurrentResult = function(result) {
   cR.select("div.maxacc").select("span").text(accText);
 
   if ( ! d3.select(".raceEqualizer").empty()) {
+    let maxG = 2.0;
+    if (lastRaceEqualizer) {
+      maxG = lastRaceEqualizer.maxG;
+    }
     d3.select(".raceEqualizer").select("svg").remove();
-    let lastRaceEqualizer = new Equalizer(".raceEqualizer");
+    lastRaceEqualizer = new Equalizer(".raceEqualizer");
+    lastRaceEqualizer.updateMaxG(maxG);
     let eqMap = createEqualizerMap(result)
     lastRaceEqualizer.updateEqualizer(eqMap);
   }
@@ -705,7 +740,7 @@ updateHeatNumber = function(heatE) {
       let num = parseInt(matchinfo[2]) +1;
       console.log(`updateHeatNumber prefix: ${prefix}  num: ${num}`)
       heatE = `${prefix}${num}`
-      d3.select('#heatE').text(heatE);
+      d3.select('#heatE').attr("value", heatE).text(heatE);
     }
 }
 
