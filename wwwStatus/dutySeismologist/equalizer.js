@@ -17,7 +17,7 @@ class Equalizer{
     .domain([0,this.maxG])
     .range([this.height, 0]);
     console.log(`yscaletest ${this.yScale(1)}`)
-    this.yAxis = d3.axisLeft(this.yScale).ticks(10, "0.1f");
+    this.yAxis = d3.axisLeft(this.yScale).ticks(10, "0.2f");
     // this.yAxis = d3.axisLeft(this.yScale);
     // this.yAxis.ticks(10);
     this.barPadding = 1;
