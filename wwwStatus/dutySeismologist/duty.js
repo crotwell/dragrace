@@ -216,7 +216,7 @@ const updateYScale = function(gValue) {
     lastRaceEqualizer.updateMaxG(gValue);
   }
   allSeisPlots.forEach(function(value, key) {
-      value.seismographConfig.fixedYScale = [-0.1, gValue]];
+      value.seismographConfig.fixedYScale = [-0.1, gValue];
       value.calcAmpScaleDomain();
       value.draw();
   });
