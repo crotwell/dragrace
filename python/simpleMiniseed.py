@@ -280,14 +280,8 @@ def unpackMiniseedRecord(recordBytes):
             try:
                 b = unpackBlockette(recordBytes, nextBOffset, endianChar)
                 blockettes.append(b)
-        #        print('blockette name',type(b).__name__)
-                # return added just to get past this ... no help
                 if type(b).__name__ == 'Blockette1000':
                     header.encoding = b.encoding
-    #            else:
-    #                print("Found non-1000 blockette: {}".format(type(b).__name__))
-                    #return added by tjo just to get out of the loop
-    #                return
                 nextBOffset = b.nextOffset
             except struct.error as e:
                 print("Unable to unpack blockette, fail codes: {} start: {} {}".format(header.codes(), header.starttime, e))
