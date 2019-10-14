@@ -56,7 +56,7 @@ let today = moment()
     'Sportsman Eliminations-Finals','Competition-Eliminations-Final','Top-Alcohol-Eliminations-Finals','Jr-Dragsters',
     'Parade-of-Champions','Pro-Mod-Eliminations-Final','Pro-Stock-Eliminations-Final','Nitro-Elimination-Final'];
   }else if(today.weekday() === 1){
-    classList=['Top-Fuel-R2','Funny-Car-R2','Pro-Stock-R2','Top-Fuel-R3','Funny-Car-R3','Pro-Stock-R3','Pro-Stock-Final','Funny-Car-Final','Top-Fuel-Final'];
+    classList=['Pro-Stock-R1','Top-Fuel-R2','Funny-Car-R2','Pro-Stock-R2','Top-Fuel-R3','Funny-Car-R3','Pro-Stock-R3','Pro-Stock-Final','Funny-Car-Final','Top-Fuel-Final'];
     }else{
     classList=['Not Race Day','Test1','Test2','Test3'];
 }
