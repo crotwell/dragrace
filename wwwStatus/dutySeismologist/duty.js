@@ -29,7 +29,7 @@ let staList = ['FL', 'NL', 'FL0','FL60','FL330','FL660','FL1K','FL4G'];
 //monday = 1
 //friday = 5
 //saturday = 6
-//sunday = 7
+//sunday = 0
 let classList = [];
 let heatNumber = 1;
 let prevHeat= "";
@@ -55,7 +55,9 @@ let today = moment()
     'Nitro-Elimination-Semi-Final','Pro-Stock-Elimination-Semi-Final','Pro-Mod-Eliminations-Semi-Final',
     'Sportsman Eliminations-Finals','Competition-Eliminations-Final','Top-Alcohol-Eliminations-Finals','Jr-Dragsters',
     'Parade-of-Champions','Pro-Mod-Eliminations-Final','Pro-Stock-Eliminations-Final','Nitro-Elimination-Final'];
-  }else{
+  }else if(today.weekday() === 1){
+    classList=['Top-Fuel-R2','Funny-Car-R2','Pro-Stock-R2','Top-Fuel-R3','Funny-Car-R3','Pro-Stock-R3','Pro-Stock-Final','Funny-Car-Final','Top-Fuel-Final'];
+    }else{
     classList=['Not Race Day','Test1','Test2','Test3'];
 }
 
