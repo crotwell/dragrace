@@ -1,8 +1,13 @@
 
 ubuntu server
 --------------
-sudo apt-get install python3-websockets
+sudo apt-get install git python3 python3-websockets python3-dateutil
+sudo apt-get install build-essential make autoconf libjwt-dev
 
+ringserver auth is authorization branch
+wget http://www.digip.org/jansson/releases/jansson-2.12.tar.gz
+
+set up lets encrypt
 
 pi
 ---------------
@@ -40,7 +45,7 @@ dtoverlay=i2c-rtc,pcf8523
 sudo apt-get -y remove fake-hwclock
 sudo update-rc.d -f fake-hwclock remove
 sudo systemctl disable fake-hwclock
-# edit /lib/udev/hwclock-set and uncomment
+# edit /lib/udev/hwclock-set and comment
 #if [ -e /run/systemd/system ] ; then
 # exit 0
 #fi
@@ -51,7 +56,7 @@ and
 /sbin/hwclock --rtc=$dev --systz
 
 after ntp syncs clock
-sudo hwclock -w
+sudo hwclock  -w
 
 
 sudo apt-get install python3-netifaces python3-websockets python3-pip i2c-tools python3-gpiozero git apache2 ntp python3-defusedxml
