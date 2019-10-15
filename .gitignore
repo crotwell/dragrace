@@ -9,7 +9,8 @@ ringserverDemo/ringserver
 sensorNode/Adafruit_CircuitPython_MMA8451
 docs/*.xlsx
 python/tjotoken.jwt
-
-
+RawData*
+*.jwt
 seisplotjs*.js
 Oct_Stuff
+auth
