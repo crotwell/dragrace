@@ -7,7 +7,7 @@ import requests
 from requests import HTTPError
 
 baseUrlPattern = 'http://www.seis.sc.edu/dragdata/{race}/{datatype}/XX/{sta}/{year}/{dofy}/XX.{sta}.00.{chan}.{year}.{dofy}.{hour}'
-resultsPattern = 'http://www.seis.sc.edu/dragdata/{race}/results'
+resultsPattern = 'http://www.seis.sc.edu/dragdata/{race}/results/allResults.json'
 
 AllChanList = ['HNZ', 'HNY', 'HNX']
 FALL2019 = {
@@ -25,15 +25,7 @@ SPRING2019 = {
   'chanList': AllChanList
 }
 
-def getMseed(start, duration, racename=None, staList=None, chanList=None):
-    return getDataAsMseed('mseed', start, duration, racename=racename, staList=staList, chanList=chanList)
-
-def getMinMax(start, duration, racename=None, staList=None, chanList=None):
-    if chanList is None:
-        chanList = ['HNM']
-    return getDataAsMseed('minmax', start, duration, racename=racename, staList=staList, chanList=chanList)
-
-def getDataAsMseed(datatype, start, duration, racename=None, staList=None, chanList=None):
+def getRace(start, duration):
     start = obspy.UTCDateTime(start)
     end = obspy.UTCDateTime(start) + duration
     race = None
@@ -42,8 +34,21 @@ def getDataAsMseed(datatype, start, duration, racename=None, staList=None, chanL
     elif end > FALL2019['starttime'] and start < FALL2019['endtime']:
         race = FALL2019
     else:
-        print("Can't figure out which race for dates {} - {}".format(start, end))
-        return None
+        raise Error("Can't figure out which race for dates {} - {}".format(start, end))
+    return race
+
+def getMseed(start, duration, staList=None, chanList=None):
+    return getDataAsMseed('mseed', start, duration, staList=staList, chanList=chanList)
+
+def getMinMax(start, duration, staList=None, chanList=None):
+    if chanList is None:
+        chanList = ['HNM']
+    return getDataAsMseed('minmax', start, duration, staList=staList, chanList=chanList)
+
+def getDataAsMseed(datatype, start, duration, staList=None, chanList=None):
+    start = obspy.UTCDateTime(start)
+    end = obspy.UTCDateTime(start) + duration
+    race = getRace(start, duration)
     print('getDragrace {} {}  {}'.format(race['name'], start, end))
     if staList is None:
         staList = race.staList
@@ -132,5 +137,17 @@ def fixMaskedArrayIssue(st):
     return st
 
 
-#def getResults(onday, racename=None):
-#    classnames =
+def getResults(start, duration, racename=None):
+    start = obspy.UTCDateTime(start)
+    end = obspy.UTCDateTime(start) + duration
+    racename = getRace(start, duration)
+    req = requests.get(resultsPattern.format(racename))
+    allResults = req.json()
+    out = []
+    for r in allResults:
+        r.startTime = obspy.UTCDateTime(r.startTime)
+        r.time = obspy.UTCDateTime(r.time)
+        r.endTime = obspy.UTCDateTime(r.endTime)
+        if r.startTime < end and r.endTime > start:
+            out.append(r)
+    return out

@@ -9,8 +9,8 @@ serveSeis = serveobspy.ServeObsPy('www')
 serveSeis.serveData()
 
 start = '2019-04-26T14:10:00'
-start = '2019-10-12T14:10:00'
-#st = dragrace.getMseed(start, 300, staList=['FL', 'NL'])
+start = '2019-10-11T20:36:00' # 2019-10-11T20:36 Nito Funny Car
+
 st = dragrace.getMseed(start, 300, staList=['FL'], chanList=['HNZ'])
 
 serveSeis.stream=st
