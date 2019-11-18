@@ -17,11 +17,12 @@ for d in days:
             classNames = json.load(cfile)
             # first item is day name
             for c in classNames[1:]:
-                with open(heatNamesFile.format(d, c)) as hfile:
-                    heats = json.load(hfile)
-                    for h in heats:
-                        with open(resultsFile.format(d,c,h)) as rfile:
-                            result = json.load(rfile)
-                            allResults.append(result)
+                if os.path.exists(heatNamesFile.format(d, c)):
+                    with open(heatNamesFile.format(d, c)) as hfile:
+                        heats = json.load(hfile)
+                        for h in heats:
+                            with open(resultsFile.format(d,c,h)) as rfile:
+                                result = json.load(rfile)
+                                allResults.append(result)
 with open(allResultsFile, 'w') as f:
     json.dump(allResults, f)
