@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset='utf-8'>
+    <title>Obspy Dataset View</title>
+    <style>
+      div.seismograph {
+        height: 300px;
+      }
+      #title {
+        text-align: center;
+      }
+      .errormsg {
+        color: red;
+      }
+      div.tools {
+        display:none;
+      }
+      span.toggletools :target {
+        display:block;
+      }
+      input#show, input#hide {
+          display:none;
+      }
+
+      div.tools {
+          display:none;
+      }
+      .drop {
+        cursor: pointer;
+        display: block;
+      }
+
+      input[type="checkbox"].hidetools  {
+       display: none; /* hide the checkboxes */
+      }
+      input +.hidetools +  div
+      {
+        display:none;
+      }
+      .hidetools:before {
+        content:'▶';
+        }
+      :checked  + .hidetools:before {
+        content:'▼';
+        }
+      input:checked + .hidetools + div{
+        display:block;
+      }
+      label.hidetools span {
+        font-size: larger;
+      }
+    </style>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+  </head>
+  <body>
+    <div id='message'></div>
+    <h3>ObsPy Plotting</h3>
+    <input id="_1" type="checkbox" class="hidetools">
+    <label class="hidetools" for="_1"><span> Tools:</span></label>
+    <div class='tools'>
+      <div>
+        <button id="refresh">Refresh</button>
+        <button id="reprocess">Reprocess</button>
+        <button id="reconnect">Reconnect</button>
+        <button id="websocketHi">Say Hi</button>
+      </div>
+      <div>
+        <button id="rmean">RMean</button>
+        <button id="taper">Taper</button>
+        <label for="taperwidth">Taper Width: </label>
+        <input type="text" id="taperwidth" name="taperwidth" value="0.05"></input>
+      </div>
+      <div>
+        <button id="lowpass">Lowpass</button>
+        <button id="bandpass">Bandpass</button>
+        <button id="highpass">Highpass</button>
+        <label for="lowfreq">Low Freq: </label>
+        <input type="text" id="lowfreq" name="lowfreq" value="1.0"></input>
+        <label for="lowfreq">High Freq: </label>
+        <input type="text" id="highfreq" name="highfreq" value=10.0></input>
+      </div>
+      <div>
+        <input type="checkbox" id="linkx" name="linkx" checked>
+        <label for="linkx">Link Time Axis</label>
+        <input type="checkbox" id="linky" name="linky" checked>
+        <label for="linky">Link Amp Axis</label>
+      </div>
+      <div id="station_checkbox">
+      </div>
+      <div>
+        <input type="checkbox" id="orientz" name="orientz" checked>
+        <label for="orientz">Orient Z</label>
+        <input type="checkbox" id="orienty" name="orienty" checked>
+        <label for="orienty">Orient N,1,Y</label>
+        <input type="checkbox" id="orientx" name="orientx" checked>
+        <label for="orientx">Orient E,2,X</label>
+      </div>
+    </div>
+    <div id="messages"></div>
+    <h3 id="title">Seismograph!</h3>
+    <div id="myseismograph">
+    </div>
+    <div id="processChain">
+      <h5>Process Chain</h5>
+      <ul>
+      </ul>
+    </div>
+    <script src="seisplotjs_2.0.0-alpha.6_standalone.js"></script>
+    <script src="viewObspy.js"></script>
+    <script src="tools.js"></script>
+    <script src="dragracetools.js"></script>
+    <script>
+      overrideDraw();
+      //const baseUrl = document.URL;
+      const baseUrl = 'http://localhost:8000';
+      loadAllAndPlot(baseUrl);
+      const wsUrl = 'ws://localhost:8001';
+      const handler = function(json) {
+        console.log("hey I got something!");
+      };
+      const errHandler = function(err) {
+        console.assert(false, err);
+        console.log(`oops ${err}`);
+        console.log(`   ${err.message}`)
+      }
+      let obspyConn = new ObsPyConnection(wsUrl, baseUrl, handler, errHandler);
+      let obspyConnIsOK = false;
+      obspyConn.connect().then( () => {
+        console.log("after ws connect");
+        obspyConnIsOK = true;
+      });
+
+      seisplotjs.d3.select("button#reconnect").on("click", function(d) {
+        if (obspyConn) {
+          try {
+            obspyConn.close();
+          } catch(e) {
+            // oh well
+          }
+        }
+        obspyConn.connect().then( () => {
+          console.log("after ws reconnect, send something back...");
+          obspyConn.sendMessage("hi obspy!");
+          obspyConnIsOK = true;
+        })
+      });
+
+      seisplotjs.d3.select("button#websocketHi").on("click", function(d) {
+        if (obspyConnIsOK) {
+          obspyConn.sendMessage("Howdy howdy");
+        } else {
+          console.log("obspyConn not yet ok");
+        }
+      });
+
+    </script>
+  </body>
+</html>
