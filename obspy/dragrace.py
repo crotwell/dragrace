@@ -51,9 +51,9 @@ def getDataAsMseed(datatype, start, duration, staList=None, chanList=None):
     race = getRace(start, duration)
     print('getDragrace {} {}  {}'.format(race['name'], start, end))
     if staList is None:
-        staList = race.staList
+        staList = race['staList']
     if chanList is None:
-        chanList = race.chanList
+        chanList = race['chanList']
     outStream = None
     for s in staList:
         print("station: {}".format(s))
