@@ -31,6 +31,7 @@ function findRace(timeRange) {
 }
 
 function loadResults(timeRange) {
+  if ( ! timeRange ) { return Promise.resolve([]);}
   let race = findRace(timeRange)
   resultsUrl = `http://www.seis.sc.edu/dragdata/${race.name}/results/allResults.json`
   return seisplotjs.util.doFetchWithTimeout(resultsUrl)
@@ -65,38 +66,43 @@ function markersForResults(results) {
   return out;
 }
 
+
 /**
- * Override redrawSeismographs to also plot markers for heats.
+ * Override plotDataset to also plot markers for heats.
  */
-function overrideDraw() {
-  if (redrawSeismographs) {
-    const origRedraw = redrawSeismographs;
-    redrawSeismographs = function(dataset) {
-      origRedraw(dataset);
-      let timeRange = null;
+class DragraceViewObsPy extends ViewObsPy {
+
+  plotDataset(dataset, plottype, seisChanQuakeFilter) {
+    super.plotDataset(dataset, plottype, seisChanQuakeFilter);
+    this.dragracePlotDataset(dataset, plottype, seisChanQuakeFilter);
+  }
+
+  dragracePlotDataset(dataset, plottype, seisChanQuakeFilter) {
+    let timeRange = null;
+    dataset.data.relationships.seismograms.data.forEach(d => {
+      const seisUrl = `/seismograms/${d.id}`;
+      if (this.processedData.has(seisUrl)) {
+        let seismogram = this.processedData.get(seisUrl);
+        if (timeRange) {
+          timeRange = timeRange.union(seismogram.timeRange);
+        } else {
+          timeRange = seismogram.timeRange;
+        }
+      }
+    });
+    return loadResults(timeRange).then(results => {
+      console.log(`Got ${results.length} results`);
+      results.forEach(r => {console.log(`result: ${r.Trigger_Info.startTime} ${r.Trigger_Info.heat}`)});
+      let markers = markersForResults(results);
       dataset.data.relationships.seismograms.data.forEach(d => {
-        const seisUrl = `/seismograms/${d.id}`;
-        if (obspyDataset.has(seisUrl)) {
-          let seismogram = obspyDataset.get(seisUrl);
-          if (timeRange) {
-            timeRange = timeRange.union(seismogram.timeRange);
-          } else {
-            timeRange = seismogram.timeRange;
-          }
+        let graph = this.processedData.get(`/seismograph/${d.id}`);
+        if (graph) {
+          graph.seisDataList.forEach(sdd => sdd.addMarkers(markers));
+          graph.drawMarkers();
         }
       });
-      return loadResults(timeRange).then(results => {
-        console.log(`Got ${results.length} results`);
-        results.forEach(r => {console.log(`result: ${r.Trigger_Info.startTime} ${r.heat}`)});
-        let markers = markersForResults(results);
-        dataset.data.relationships.seismograms.data.forEach(d => {
-          let graph = obspyDataset.get(`/seismograph/${d.id}`);
-          if (graph) {
-            graph.seisDataList.forEach(sdd => sdd.addMarkers(markers));
-            graph.drawMarkers();
-          }
-        });
-      });
-    };
+      return markers;
+    });
   }
+
 }
