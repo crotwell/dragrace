@@ -1,5 +1,5 @@
 
-const odsp = seisplotjs.filter.OregonDSP;
+const odsp = seisplotjs.OregonDSP;
 const d3 = seisplotjs.d3;
 
 
@@ -8,7 +8,7 @@ d3.select("button#load").on("click", function(d) {
   let mseedUrl = document.getElementsByName('mseedUrl')[0].value;
   d3.select("div.message").selectAll("*").remove();
   loadTestData(mseedUrl).then(trace => {
-    console.log(`after loadTestData ${trace}  ${trace.seisArray.length}`);
+    console.log(`after loadTestData ${trace}`);
     let doRMean = d3.select("input[name=rmean]").property('checked');
     if (doRMean) {
       trace = seisplotjs.filter.rMean(trace);
@@ -133,9 +133,9 @@ let createFIR = function(testData) {
   let xScaleFFT = d3.scaleLog().range([0, width]).domain([1.0/NumPoints/2, 1]);
   let yScaleFFT = d3.scaleLinear().range([height, 0]).domain([-1, 1]);
 
-  let inDataFFT = seisplotjs.filter.fftForward(inData);
-  let outDataFFT = seisplotjs.filter.fftForward(outData.slice(delayCorrection));
-  let timeDomainDataFFT = seisplotjs.filter.fftForward(timeDomainData.slice(delayCorrection));
+  let inDataFFT = fftForwardArray(inData, inData.sampleRate);
+  let outDataFFT = fftForwardArray(outData.slice(delayCorrection));
+  let timeDomainDataFFT = fftForwardArray(timeDomainData.slice(delayCorrection));
   console.log(`fft in: ${inDataFFT.amp.length}  out: ${outDataFFT.amp.length} `);
   // for(let i=0; i<1000;i+=20) {
   //   console.log(`fft ${i} in: ${inDataFFT.amp[i]}  out: ${outDataFFT.amp[i]}  ratio: ${outDataFFT.amp[i]/inDataFFT.amp[i]}`);
@@ -156,16 +156,19 @@ let createFIR = function(testData) {
 
   d3.select("div.fft").selectAll("*").remove();
   d3.select("div.fftratio").selectAll("*").remove();
-  seisplotjs.waveformplot.simpleOverlayFFTPlot([inDataFFT, outDataFFT, timeDomainDataFFT], "div.fft", 1, doLogLog);
+  const plotConfig = new seisplotjs.seismographconfig.SeismographConfig();
+  const fftPlot = new seisplotjs.fftplot.FFTPlot("div.fft", plotConfig, [inDataFFT, outDataFFT, timeDomainDataFFT],  doLogLog);
+  fftPlot.draw();
   let longCoeff = new Array(NumPoints).fill(0);
   for(let i=0; i<firLp.getCoefficients().length; i++) {
     longCoeff[i] = firLp.getCoefficients()[i];
   }
-  let impulseResponse = seisplotjs.filter.fftForward(longCoeff)
-  seisplotjs.waveformplot.simpleOverlayFFTPlot([impulseResponse, inOutAmpRatio, inTimeAmpRatio], "div.fftratio", 2, doLogLog);
+  let impulseResponse = fftForwardArray(longCoeff)
+  const fftRatioPlot = new seisplotjs.fftplot.FFTPlot("div.fftratio", plotConfig, [impulseResponse, inOutAmpRatio, inTimeAmpRatio], doLogLog);
+  fftRatioPlot.draw();
   d3.select("div.fftfir").selectAll("*").remove();
-  seisplotjs.waveformplot.simpleOverlayFFTPlot([impulseResponse], "div.fftfir", 2, doLogLog);
-
+  const firPlot = new seisplotjs.fftplot.FFTPlot("div.fftfir", plotConfig, [impulseResponse],  doLogLog);
+  firPlot.draw();
   d3.select("div.message").append('p').text(`Zero Freq Gain: ${impulseResponse.amp[0]}`);
 }
 
@@ -202,16 +205,22 @@ function loadTestData(mseedUrl) {
     let dataRecords = seisplotjs.miniseed.parseDataRecords(rawBuffer);
     return dataRecords;
   }).then(function(dataRecords) {
-    let traceMap = seisplotjs.miniseed.mergeByChannel(dataRecords);
-    return traceMap;
-  }).then(function(traceMap) {
+    let traceArr = seisplotjs.miniseed.seismogramPerChannel(dataRecords);
+    return traceArr;
+  }).then(function(traceArr) {
     console.log("After fetch promise resolve");
-    return traceMap.values().next().value; // should only be one
+    return traceArr[0]; // should only be one
   // }).catch( function(error) {
   //   d3.select("div.message").append('p').text("Error loading data." +error);
   //   console.assert(false, error);
   //   throw error;
   });
+}
+
+function fftForwardArray(dataArray, sampRate=1) {
+  let packetFreq = seisplotjs.fft.calcDFT(dataArray);
+  let tryFFT = seisplotjs.fft.FFTResult.createFromPackedFreq(packetFreq, dataArray.length, sampRate);
+  return tryFFT;
 }
 
 function zeroFreqPlot(OmegaP, Wp, OmegaS, Ws) {
@@ -227,7 +236,7 @@ function zeroFreqPlot(OmegaP, Wp, OmegaS, Ws) {
   for (let tryN=min; tryN<firZeroGain.length; tryN++) {
     tryLp = new odsp.filter.fir.equiripple.EquirippleLowpass(tryN, OmegaP, Wp, OmegaS, Ws);
     let impulse = Array.from(tryLp.getCoefficients());
-    let tryFFT = seisplotjs.filter.fftForward(impulse);
+    let tryFFT = fftForwardArray(impulse);
     firZeroGain[tryN] = tryFFT.amp[0];
   }
 
