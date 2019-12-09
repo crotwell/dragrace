@@ -55,6 +55,9 @@ function loadResults(timeRange) {
         'race': race
       };
       return allResults.filter( r => r.timeRange.overlaps(timeRange));
+    }).catch(err => {
+      console.warn(`Error loading dragrace results, using empty results`);
+      return [];
     });
 }
 
@@ -100,16 +103,16 @@ class DragraceViewObsPy extends ViewObsPy {
     const dataset = this.obspyData.get('dataset');
     console.log(`dataset size ${dataset.data.relationships.seismograms.data.length}`)
     dataset.data.relationships.seismograms.data.forEach(d => {
-      const seisUrl = `/seismograms/${d.id}`;
-      if (this.obspyData.has(seisUrl)) {
-        let seismogram = this.obspyData.get(seisUrl);
+      const seisKey = this.createSeisKey(d);
+      if (this.obspyData.has(seisKey)) {
+        let seismogram = this.obspyData.get(seisKey);
         if (timeRange) {
           timeRange = timeRange.union(seismogram.timeRange);
         } else {
           timeRange = seismogram.timeRange;
         }
       } else {
-        console.warn(`processedData doesn't have ${seisUrl}`)
+        console.warn(`processedData doesn't have ${seisKey}`)
         console.log(Array.from(this.processedData.keys()))
       }
     });
