@@ -122,7 +122,7 @@ class DragraceViewObsPy extends ViewObsPy {
       let markers = markersForResults(results);
       console.log(`markers ${markers.length}`)
       dataset.data.relationships.seismograms.data.forEach(d => {
-        let graph = this.processedData.get(`/seismograph/${d.id}`);
+        let graph = this.processedData.get(`graph${d.id}`);
         if (graph) {
           graph.seisDataList.forEach(sdd => sdd.addMarkers(markers));
           graph.seismographConfig.doMarkers=true;
